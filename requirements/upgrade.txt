@@ -1,0 +1,18 @@
+# Flask
+Flask==3
+Flask-Login
+Flask-Babel
+Flask-JWT-Extended
+
+# database
+SQLAlchemy
+GeoAlchemy2
+psycopg2-binary
+alembic
+redis
+
+# environments
+python-dotenv
+
+# tools
+Markdown

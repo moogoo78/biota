@@ -1,0 +1,67 @@
+services:
+  flask:
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile
+      args:
+        PYTHON_VERSION: 3.12
+        DEBIAN_RELEASE: bookworm
+        PIP_REQUIREMENTS: requirements/base.txt
+    image: biota/flask-${WEB_ENV}
+    container_name: biota-flask-${WEB_ENV}-container
+    restart: no
+    environment:
+      - PYTHONUNBUFFERED=1
+      - FLASK_APP=app
+      - WEB_ENV=${WEB_ENV}
+      - POSTGRES_HOST=${POSTGRES_HOST}
+      - POSTGRES_PORT=${POSTGRES_PORT}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    volumes:
+      - .:/code
+    command: /srv/start
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  # postgres:
+  #   build:
+  #     context: .
+  #     dockerfile: ./docker/Dockerfile_postgres
+  #     args:
+  #       POSTGRES_VERSION: 17
+  #       DEBIAN_RELEASE: bookworm
+  #   image: machataxa/postgres-${WEB_ENV}
+  #   container_name: machataxa-postgres-${WEB_ENV}-container
+  #   restart: no
+  #   environment:
+  #     - POSTGRES_HOST=${POSTGRES_HOST}
+  #     - POSTGRES_PORT=${POSTGRES_PORT}
+  #     - POSTGRES_USER=${POSTGRES_USER}
+  #     - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+  #     - POSTGRES_DB=${POSTGRES_DB}
+  #     - PGDATA=/var/lib/postgresql/data/pgdata
+  #   volumes:
+  #     - ../biota-volumes/pgdata:/var/lib/postgresql/data/pgdata
+  #     - ./initdb:/docker-entrypoint-initdb.d
+  #     - ../biota-volumes/bucket:/bucket
+  #   #command: ["postgres", "-c", "log_statement=all"]
+
+  mysql:
+    image: mysql:8.0.27
+    restart: no
+    environment:
+      MYSQL_DATABASE: taicol
+      MYSQL_ROOT_PASSWORD: example
+    volumes:
+      - ../biota-volumes/mysql-data:/var/lib/mysql
+      - ../biota-volumes/bucket:/bucket
+    #command: --secure-file-priv=/var/lib/mysql
+    #command: --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5

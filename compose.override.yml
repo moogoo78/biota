@@ -1,0 +1,13 @@
+services:
+  flask:
+    ports:
+      - 5000:5000
+
+  adminer:
+    image: adminer
+    restart: no
+    depends_on:
+      #- postgres
+      - mysql
+    ports:
+      - 8080:8080

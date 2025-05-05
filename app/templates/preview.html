@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Biota Taiwanica</title>
+  <!-- link rel="stylesheet" href="{{ url_for('static', filename='vendor/mvp.css' )}}">-->
+  <!-- link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sakura.css/css/sakura.css" type="text/css" -->
+</head>
+<body>
+  <h1>Biota Taiwanica</h1>
+  [{% for section in data %} <a href="#sec-{{ loop.index }}">{{ section.title }}</a>{% if not loop.last %} |{% endif %}{% endfor %} ]
+  <p><button id="download-docx">download docx</button></p>
+  <hr>
+  {# data #}
+  {% for section in data %}
+  <div>
+    <h2 id="sec-{{ loop.index }}">{{ section.title }} | {{ section.author }}</h2>
+    <h3>LITERATURES</h3>
+    <ul>
+      {% for t in section.literatures %}
+      <li>{{ t }}</li>
+      {% endfor %}
+    </ul>
+    {% for item in section['items'] %}
+    <h4>{{ item.scientificName }}{% if item.commonNames %} - {% for x in item.commonNames %}{{ x }}{% if not loop.last %}, {% endif %}{% endfor %}{% endif %}</h4>
+    <h5>SYNONYMS</h5>
+    <ul>
+      {% for x in item.synonyms %}
+      <li>{{ x[0] }} [{{ x[1] }}]</li>
+      {% endfor %}
+    </ul>
+    <h5>Additional Fields</5>
+      <dl>
+        {% for k, v in item.addFields.items() %}
+        <dt>{{ k }}</dt>
+        <dd>{{ v }}</dd>
+        {% endfor %}
+      </dl>
+
+    {% if item.note %}
+    <h5>NOTE</h5>
+    <div>{{ item.note }}</div>
+    {% endif %}
+    {% endfor %}
+  </div>
+  {% endfor %}
+  <script src="{{ url_for('static', filename='js/preview.js') }}"></script>  
+</body>
+</html>

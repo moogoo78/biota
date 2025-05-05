@@ -1,0 +1,17 @@
+# Flask
+Flask==3.1.0
+
+# database
+SQLAlchemy==2.0.39
+psycopg2-binary==2.9.10
+alembic==1.15.1
+
+#-- MySQL
+PyMySQL==1.1.1
+cryptography==44.0.2
+
+# environments
+python-dotenv==1.0.1
+
+# tools
+python-docx==1.1.2

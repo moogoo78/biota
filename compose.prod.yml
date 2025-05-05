@@ -13,8 +13,8 @@ services:
       - "traefik.http.routers.myapp1.tls.certresolver=myresolver"
       - "traefik.http.services.flask.loadbalancer.server.port=8001"
 
-  postgres:
-    restart: always
+#  postgres:
+#    restart: always
 
   redis:
     restart: always

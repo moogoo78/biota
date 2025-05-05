@@ -16,8 +16,8 @@ services:
 #  postgres:
 #    restart: always
 
-  redis:
-    restart: always
+ # redis:
+ #   restart: always
 
   traefik:
     image: traefik:3.2

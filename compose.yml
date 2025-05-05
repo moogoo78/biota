@@ -58,6 +58,7 @@ services:
     volumes:
       - ../biota-volumes/mysql-data:/var/lib/mysql
       - ../biota-volumes/bucket:/bucket
+      - ./initdb:/docker-entrypoint-initdb.d
     #command: --secure-file-priv=/var/lib/mysql
     #command: --default-authentication-plugin=mysql_native_password
     healthcheck:

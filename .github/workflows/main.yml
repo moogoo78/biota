@@ -1,0 +1,20 @@
+name: test Biota GitHub Actions
+run-name: ${{ github.actor }} is push to main branch, go deploy production server 🚀
+on:
+  push:
+    branches: [ main ]
+jobs:
+  deploy:
+    name: Deploy to AWS EC2
+    runs-on: ubuntu-latest
+    steps:
+      - name: executing remote ssh commands using password
+        uses: appleboy/ssh-action@v1.2.1
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.KEY }}
+          script: |
+            cd biota
+            git pull origin main
+            sudo docker compose -f compose.yml -f compose.prod.yml restart

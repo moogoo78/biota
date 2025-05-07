@@ -14,6 +14,7 @@ from flask import (
     flash,
     url_for,
     abort,
+    Response,
 )
 
 #from app.database import session
@@ -47,6 +48,15 @@ apply_blueprints(flask_app)
 @flask_app.route('/')
 def index():
     return render_template('index.html')
+
+@flask_app.route('/robots.txt')
+def robots_txt():
+    robots_content = """
+User-agent: *
+Disallow: /
+"""
+    robots_content = robots_content.lstrip()
+    return Response(robots_content, mimetype='text/plain')
 
 @flask_app.route('/url_maps')
 def debug_url_maps():

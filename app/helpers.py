@@ -8,6 +8,7 @@ from docx.oxml.ns import nsdecls, qn
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.enum.section import WD_SECTION, WD_ORIENT, WD_SECTION_START
 from docx.enum.table import WD_ALIGN_VERTICAL
+import yaml
 
 import pymysql
 pymysql.install_as_MySQLdb()
@@ -169,9 +170,17 @@ def get_namespace_data(namespace_id):
         distribution = ''
         add_fields = {}
         specimens = []
+        source_data = {
+            'usages': [],
+            'type': [],
+            'props': [],
+        }
+        if x := row[3]:
+            source_data['usages'] = yaml.dump(json.loads(x), default_flow_style=False, sort_keys=False, allow_unicode=True)
         if x := row[5]:
             props = json.loads(x)
-            #print(props)
+            source_data['props'] = yaml.dump(props, default_flow_style=False, sort_keys=False, allow_unicode=True)
+
             if names := props.get('common_names'):
                 for n in names:
                     if x := n['name']:
@@ -187,6 +196,7 @@ def get_namespace_data(namespace_id):
 
         if x := row[4]:
             sp = json.loads(x)
+            source_data['type'] = yaml.dump(sp, default_flow_style=False, sort_keys=False, allow_unicode=True)
             for i in sp:
                 if sp_list := i.get('specimens'):
                     for j in sp_list:
@@ -221,6 +231,7 @@ def get_namespace_data(namespace_id):
             'note': note,
             'synonyms': synonyms,
             'specimens': specimens,
+            'sourceData': source_data,
         })
 
     return data

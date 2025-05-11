@@ -1,9 +1,19 @@
+{% macro details(summary, data) %}
+    <details>
+      <summary>{{ summary }}</summary>
+      <pre>{{ data }}</pre>
+    </details>
+{% endmacro %}
+
 <!DOCTYPE html>
 <html>
 <head>
   <title>Biota Taiwanica</title>
-  <!-- link rel="stylesheet" href="{{ url_for('static', filename='vendor/mvp.css' )}}">-->
-  <!-- link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sakura.css/css/sakura.css" type="text/css" -->
+  {#
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/mvp.css' )}}">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sakura.css/css/sakura.css" type="text/css">
+  #}
+  <link rel="stylesheet" href="/static/css/mvp.css"> 
 </head>
 <body>
   <h1>Biota Taiwanica</h1>
@@ -21,7 +31,14 @@
       {% endfor %}
     </ul>
     {% for item in section['items'] %}
-    <h4>{{ item.scientificName }}{% if item.commonNames %} - {% for x in item.commonNames %}{{ x }}{% if not loop.last %}, {% endif %}{% endfor %}{% endif %}</h4>
+    <h4><a href="">{{ item.scientificName }}</a>{% if item.commonNames %} - {% for x in item.commonNames %}{{ x }}{% if not loop.last %}, {% endif %}{% endfor %}{% endif %}</h4>
+
+    <mark>原始資料</mark>
+    {{ details('Usages', item.sourceData.usages) }}
+    {{ details('Type Specimen', item.sourceData.type) }}
+    {{ details('Properties', item.sourceData.props) }}
+
+
     <h5>SYNONYMS</h5>
     <ul>
       {% for x in item.synonyms %}

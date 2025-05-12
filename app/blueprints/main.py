@@ -21,6 +21,7 @@ import pymysql
 
 pymysql.install_as_MySQLdb()
 import MySQLdb
+import requests
 
 mysql_conn = MySQLdb.connect(host="mysql", user="root", passwd="example", db="taicol")
 mysql_cursor = mysql_conn.cursor()
@@ -100,6 +101,71 @@ def get_namespaces_data_api(namespace_ids):
     for namespace_id in namespace_ids.split(','):
         data.append(get_namespace_data(namespace_id))
     return jsonify(data)
+
+@bp.route('/api/external/names/<q>')
+def get_external_names_api(q):
+    source = request.args.get('source')
+    data = []
+    if source == 'taicol':
+        nlist = q.split(' ')
+        cname = nlist[0]
+        if len(nlist) > 1:
+            cname = f'{cname} {nlist[1]}'
+        resp = requests.get(f'https://api.taicol.tw/v2/taxon?scientific_name={cname}')
+        results = resp.json()
+        if results['status']['code'] == 200:
+            for d in results['data']:
+                nlist = []
+                nlist.append(d['simple_name'])
+                if x := d.get('name_author'):
+                    nlist.append(x)
+                if x := d.get('common_name_c'):
+                    nlist.append(x)
+                data.append({
+                    'recid': d['taxon_id'],
+                    'speciesKey': d['taxon_id'],
+                    'scientificName': ' '.join(nlist),
+                    'taxonomicStatus': d['taxon_status'],
+                    'accordingTo': 'TaiCOL',
+                })
+
+    # According to GBIF taxon API response
+    return jsonify({
+        'count': len(data),
+        'limit': 20,
+        'offset': 0,
+        'results': data,
+        'endOfRecords': True,
+    })
+
+@bp.route('/api/external/gbif-occurrences/<key>', methods=['GET', 'POST'])
+def get_external_data_api(key):
+    offset = 0
+    limit = 100
+    records = []
+    if q := request.args.get('request'):
+        payload = json.loads(q)
+        limit = payload.get('limit')
+        offset = payload.get('offset')
+
+    url = f'https://api.gbif.org/v1/occurrence/search?basisOfRecord=PreservedSpecimen&taxon_key={key}&limit={limit}&offset={offset}'
+    resp = requests.get(url)
+    data = resp.json()
+
+    for i in data['results']:
+        d = {}
+        for k, v in i.items():
+            if 'associa' in k:
+                print(k, v)
+            d[k] = v
+        d['recid'] = i['key']
+        records.append(d)
+
+    return jsonify({
+        'status': 'success',
+        'total': data['count'],
+        'records': records,
+    })
 
 @bp.route('/api/publish', methods=['POST'])
 def post_publish():

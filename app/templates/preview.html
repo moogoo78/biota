@@ -10,10 +10,10 @@
 <head>
   <title>Biota Taiwanica</title>
   {#
-  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/mvp.css' )}}">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sakura.css/css/sakura.css" type="text/css">
   #}
-  <link rel="stylesheet" href="/static/css/mvp.css"> 
+  <link href="{{ url_for('static', filename='vendor/w2ui-2.0.min.css') }}" rel="stylesheet" />
+  {#<link rel="stylesheet" href="/static/vendor/mvp.css"> #}
 </head>
 <body>
   <h1>Biota Taiwanica</h1>
@@ -31,8 +31,7 @@
       {% endfor %}
     </ul>
     {% for item in section['items'] %}
-    <h4><a href="">{{ item.scientificName }}</a>{% if item.commonNames %} - {% for x in item.commonNames %}{{ x }}{% if not loop.last %}, {% endif %}{% endfor %}{% endif %}</h4>
-
+    <h4><a href="">{{ item.scientificName }}</a>{% if item.commonNames %} - {% for x in item.commonNames %}{{ x }}{% if not loop.last %}, {% endif %}{% endfor %}{% endif %} <button data-q="{{ item.scientificName }}" data-source="gbif" class="item-names">match GBIF backbone</button> {#<button data-q="{{ item.scientificName }}" data-source="taicol" class="item-names">match TaiCOL</button>#}</h4>
     <mark>原始資料</mark>
     {{ details('Usages', item.sourceData.usages) }}
     {{ details('Type Specimen', item.sourceData.type) }}
@@ -60,6 +59,7 @@
     {% endfor %}
   </div>
   {% endfor %}
+  <script src="{{ url_for('static', filename='vendor/w2ui-2.0.min.js') }}"></script>
   <script src="{{ url_for('static', filename='js/preview.js') }}"></script>  
 </body>
 </html>

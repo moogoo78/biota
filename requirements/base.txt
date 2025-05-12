@@ -16,3 +16,4 @@ python-dotenv==1.0.1
 # tools
 python-docx==1.1.2
 PyYAML==6.0.2
+requests==2.32.3

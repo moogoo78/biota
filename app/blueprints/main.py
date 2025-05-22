@@ -22,7 +22,9 @@ import pymysql
 
 pymysql.install_as_MySQLdb()
 import MySQLdb
+
 import requests
+from bs4 import BeautifulSoup
 
 mysql_conn = MySQLdb.connect(host="mysql", user="root", passwd="example", db="taicol")
 mysql_cursor = mysql_conn.cursor()
@@ -117,7 +119,7 @@ def get_external_names_api(source, key):
             sci_name = v['scientificName']
             if x := v['authorship']:
                 sciName = f'{sci_name} {x}';
-            print(i, v)
+            #print(i, v)
             records.append({
                 'recid': i,
                 'key': v['speciesKey'],
@@ -127,6 +129,12 @@ def get_external_names_api(source, key):
                 'status': v['taxonomicStatus'],
             })
 
+        return jsonify({
+            'status': 'success',
+            'total': len(records),
+            'records': records,
+        })
+
     if source == 'taicol':
         if m := re.match(r'\[([0-9]+)\](.+)', key):
             nameid = m.group(1)
@@ -135,6 +143,7 @@ def get_external_names_api(source, key):
             resp = requests.get(f'https://api.taicol.tw/v2/name?name_id={nameid}')
             results = resp.json()
             inc = 0
+
             if results['status']['code'] == 200:
                 for i,v in enumerate(results['data']):
                     nlist = []
@@ -155,11 +164,57 @@ def get_external_names_api(source, key):
                         })
                         inc += 1
 
-    return jsonify({
-        'status': 'success',
-        'total': len(records),
-        'records': records,
-    })
+                return jsonify({
+                    'status': 'success',
+                    'total': len(records),
+                    'records': records,
+                })
+            else:
+                return jsonify({
+                    'status': 'error',
+                    'message': f"[{source}]{results['status']['message']}",
+                })
+    if source == 'nametool':
+        if m := re.match(r'\[([0-9]+)\](.+)', key):
+            nameid = m.group(1)
+            q = m.group(2)
+
+            mysql_cursor.execute(f'SELECT t.taxon_id, r.title FROM api_taxon t LEFT JOIN `references` r ON r.id = t.fixed_reference_id WHERE fixed_taxon_name_id={nameid}')
+            rows = mysql_cursor.fetchall()
+            inc = 0
+            for r in rows:
+                records.append({
+                    'recid': inc,
+                    'key': r[0],
+                    'scientificName': q,
+                    'status': '',
+                    'ref': r[1],
+                    'accordingTo': 'nametool',
+                })
+            return jsonify({
+                'status': 'success',
+                'total': len(records),
+                'records': records,
+            })
+    if source == 'pass':
+        names = key.split(' ')
+        cname = names[0]
+        if len(names) > 1:
+            cname = f'{cname} {names[1]}'
+
+        records.append({
+            'recid': 0,
+            'key': cname,
+            'scientificName': key,
+            'status': '',
+            'ref': '',
+            'accordingTo': '',
+        })
+        return jsonify({
+            'status': 'success',
+            'total': len(records),
+            'records': records,
+        })
 
 @bp.route('/api/external/data/<source>/<taxon_key>', methods=['GET', 'POST'])
 def get_external_data_api(source, taxon_key):
@@ -173,10 +228,10 @@ def get_external_data_api(source, taxon_key):
         offset = payload.get('offset')
 
     if source == 'gbif':
-        url = f'https://api.gbif.org/v1/occurrence/search?basisOfRecord=PreservedSpecimen&taxonKey={taxon_key}&limit={limit}&offset={offset}'
+        url = f'https://api.gbif.org/v1/occurrence/search?basisOfRecord=PreservedSpecimen&basisOfRecord=LivingSpecimen&taxonKey={taxon_key}&limit={limit}&offset={offset}'
         resp = requests.get(url)
         data = resp.json()
-        print(data)
+        #print(data)
         dataset_map = {}
         for i, v in enumerate(data['results']):
 
@@ -188,19 +243,38 @@ def get_external_data_api(source, taxon_key):
                 data2 = resp2.json()
                 dataset_title = data2['title']
                 dataset_map[dataset_key] = dataset_title
+                #print(data2['title'])
+
+            locality_list = []
+            if x:= v.get('county'):
+                locality_list.append(x)
+            if x:= v.get('locality'):
+                locality_list.append(x)
+
+            media = []
+            if m := v.get('media'):
+                for i in m:
+                    if i['type'] == 'StillImage':
+                        if iden := i.get('identifier'):
+                            media.append(iden)
 
             #for k2, v2 in v.items():
-            #    if 'associa' in k2:
+            #    if 'media' in k2:
             #        print(k2, v2)
-            print(v)
+            #print(v)
             records.append({
                 'recid': i,
-                'recordedBy': v['recordedBy'],
+                'url': f"https://www.gbif.org/occurrence/{v.get('key')}",
+                'institutionCode': v.get('institutionCode', ''),
+                'basisOfRecord': v['basisOfRecord'],
+                'recordedBy': v.get('recordedBy', ''),
                 'recordNumber': v.get('recordNumber', ''),
                 'catalogNumber': v.get('catalogNumber', ''),
+                'date': f"{v.get('year', 'Y')}.{v.get('month', 'M')}.{v.get('day', 'D')}",
                 'remarks': v.get('occurrenceRemarks', ''),
-                'locality': v.get('locality', ''),
-                'datasetTitle': dataset_map[dataset_key]
+                'locality': '|'.join(locality_list),
+                'datasetTitle': dataset_map[dataset_key],
+                'media': media,
             })
 
         return jsonify({
@@ -212,13 +286,85 @@ def get_external_data_api(source, taxon_key):
         url = f'https://tbiadata.tw/api/v1/occurrence?basisOfRecord=PreservedSpecimen&taxonID={taxon_key}&limit={limit}'
         resp = requests.get(url)
         data = resp.json()
-        #print(data)
+        if data['status']['code'] == 200:
+            for i,v in enumerate(data['data']):
+                media = []
+                if x := v['associatedMedia']:
+                    media.append(x)
+
+                locality_list = []
+                if x:= v.get('county'):
+                    locality_list.append(x)
+                if x:= v.get('locality'):
+                    locality_list.append(x)
+
+                date = ''
+                if x := v.get('eventDate'):
+                    y = x[0:4]
+                    m = x[5:7]
+                    d = x[8:10]
+                    date = f'{y}.{m}.{d}'
+
+                records.append({
+                    'recid': i,
+                    'url': v['references'],
+                    'institutionCode': '',
+                    'recordedBy': v['recordedBy'],
+                    'basisOfRecord': v['basisOfRecord'],
+                    'recordNumber': v['recordNumber'],
+                    'catalogNumber': v['catalogNumber'],
+                    'date': date,
+                    'remarks': '',
+                    'locality': '|'.join(locality_list),
+                    'datasetTitle': v['datasetName'],
+                    'media': media,
+                })
+            return jsonify({
+                'status': 'success',
+                'total': data['meta']['total'],
+                'records': records,
+            })
+        else:
+            return jsonify({
+                'status': 'error',
+                'message': data['status']['message'],
+            })
+
+    elif source == 'taif':
+        response = requests.get('https://taif.tfri.gov.tw/search/result.php?l=Cht&ol=1&keyword=berberis%20pengii')
+        soup = BeautifulSoup(response.text, 'lxml')
+        inc = 0
+        for row in soup.find_all('div', class_='table-rows'):
+            coll_data = row.find('div', class_="collector").contents
+            collector = coll_data[0].text
+            coll_num = coll_data[1].text
+
+            date = row.find('div', class_='cdate').text # format need change
+            locality = row.find('div', class_='locality').text
+            catalog_number = row.find('div', class_='hno').contents[0].text
+            url = row['onclick'].replace("window.open('", '').replace("', '_blank')", '')
+            url = f'https://taif.tfri.gov.tw/search/{url}'
+            #media = ['https://taif.tfri.gov.tw/specimen-images-tiles/20221004/541064_005_000_000.jpg']
+            media = []
+            records.append({
+                'recid': inc,
+                'url': url,
+                'catologNumber': catalog_number,
+                'recordedBy': collector,
+                'recordNumber': coll_num,
+                'locality': locality,
+                'date': date,
+                'remarks': '',
+                'datasetTitle': 'TAIF',
+                'institutionCode': 'TAIF',
+                'basisOfRecord': 'PreservedSpecimen',
+                'media': [],
+            })
         return jsonify({
             'status': 'success',
-            'total': 0,
+            'total': len(records),
             'records': records,
         })
-
 @bp.route('/api/publish', methods=['POST'])
 def post_publish():
     if request.method == 'POST':

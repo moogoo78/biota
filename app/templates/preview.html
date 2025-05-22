@@ -45,7 +45,7 @@
       {% endfor %}
     </ul>
     {% for item in section['items'] %}
-    <h4><a href="">{{ item.scientificName }}</a>{% if item.commonNames %} - {% for x in item.commonNames %}{{ x }}{% if not loop.last %}, {% endif %}{% endfor %}{% endif %} <button data-q="{{ item.scientificName }}" data-source="gbif" class="item-names">Search GBIF backbone</button> <button data-q="{{ item.scientificName }}" data-source="tbia" data-nameid="{{ item.taicol_taxon_name_id }}" class="item-names">Search TBIA</button></h4>
+    <h4><a href="">{{ item.scientificName }}</a>{% if item.commonNames %} - {% for x in item.commonNames %}{{ x }}{% if not loop.last %}, {% endif %}{% endfor %}{% endif %} <button data-q="{{ item.scientificName }}" data-source="gbif" class="item-names">Search GBIF</button> <button data-q="{{ item.scientificName }}" data-source="tbia-taicol" data-nameid="{{ item.taicol_taxon_name_id }}" class="item-names">Search TBIA via TaiCOL</button> <button data-q="{{ item.scientificName }}" data-source="tbia-nametool" data-nameid="{{ item.taicol_taxon_name_id }}" class="item-names">Search TBIA via nametool</button> <button data-q="{{ item.scientificName }}" data-source="taif" data-nameid="{{ item.taicol_taxon_name_id }}" class="item-names">Search TAIF</button></h4>
     <mark>原始資料</mark>
     {{ details('Usages', item.sourceData.usages) }}
     {{ details('Type Specimen', item.sourceData.type) }}

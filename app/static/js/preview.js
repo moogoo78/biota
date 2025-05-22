@@ -105,18 +105,25 @@ function fetchGBIFData(params) {
     let sourceAPI = `/api/external/names/${source}/${q}`;
     if (source === 'gbif') {
       sourceLabel = 'GBIF backbone';
-    } else if (source === 'tbia') {
-      sourceLabel = '';
+    } else if (source === 'tbia-taicol') {
+      sourceLabel = 'TaiCOL';
       sourceAPI = `/api/external/names/taicol/[${nameid}]${q}`;
+    } else if (source === 'tbia-nametool') {
+      sourceLabel = 'nametool';
+      sourceAPI = `/api/external/names/nametool/[${nameid}]${q}`;
+    } else if (source === 'taif') {
+      sourceLabel = 'TAIF:';
+      sourceAPI = `/api/external/names/pass/${q}`;
     }
     w2popup.open({
       title: `${sourceLabel}: ${q}`,
-      width: 1000,
+      width: 1200,
       height: 600,
       showMax: true,
-      body: '<div style="position: relative; height: 300px;"><div id="grid1" style="display: inline-block; width: 1000px; height: 150px;"></div><div id="grid2" style="display: inline-block; width: 1000px; height: 400px;"></div></div>',
+      body: '<div style="position: relative; height: 300px;"><div id="grid1" style="display: inline-block; width: 1200px; height: 150px;"></div><div id="grid2" style="display: inline-block; width: 1200px; height: 400px;"></div></div>',
     })
       .then(() => {
+        let dataSource = (source.indexOf('tbia') >=0 ) ? 'tbia' : source;
         let grid = new w2grid({
           name: 'grid1',
           box: '#grid1',
@@ -137,16 +144,31 @@ function fetchGBIFData(params) {
               box: '#grid2',
               header: 'Found Specimens',
               show: { header: true , footer: true},
-              url: `/api/external/data/${source}/${record.key}`,
+              url: `/api/external/data/${dataSource}/${record.key}`,
               autoLoad: false,
               columns: [
+                { field: 'basisOfRecord', text: 'Basis Of Record', size: '50px' },
+                { field: 'institutionCode', text: 'Institution Code', size: '30px' },
+                { field: 'catalogNumber', text: 'Catalog Number', size: '80px' },
                 { field: 'recordedBy', text: 'Collector', size: '120px' },
-                { field: 'recordNumber', text: 'Coll. Number', size: '60px' },
+                { field: 'recordNumber', text: 'Coll. Number', size: '80px' },
+                { field: 'date', text: 'Date', size: '80px' },
                 { field: 'locality', text: 'Locality', size: '250px' },
-                { field: 'county', text: 'County', size: '120px' },
-                { field: 'datasetTitle', text: 'Dataset', size: '100px'},
-                { field: 'catalogNumber', text: 'Catalog Number', size: '180px' },
-                { field: 'remarks', text: 'remarks', size: '40px' }
+                { field: 'datasetTitle', text: 'Dataset', size: '150px'},
+                { field: 'remarks', text: 'remarks', size: '200px' },
+                { field: 'media', text: 'media', size: '100px',
+                  render: function (record, extra) {
+                    let mlist = record.media.map( x => {
+                      return `<img src="${x}" height="50" />`;
+                    });
+                    return `<div>${mlist}</div>`;
+                  }
+                },
+                { field: 'url', text: 'Link', size: '40px',
+                  render: function (record) {
+                    return `<a href="${record.url}" target="_blank">go</a>`;
+                  }
+                }
               ],
               onClick(event) {
               },

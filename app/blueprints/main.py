@@ -1,4 +1,5 @@
 import json
+import re
 from io import BytesIO
 
 from flask import (
@@ -102,44 +103,67 @@ def get_namespaces_data_api(namespace_ids):
         data.append(get_namespace_data(namespace_id))
     return jsonify(data)
 
-@bp.route('/api/external/names/<q>')
-def get_external_names_api(q):
-    source = request.args.get('source')
-    data = []
-    if source == 'taicol':
-        nlist = q.split(' ')
+@bp.route('/api/external/names/<source>/<key>')
+def get_external_names_api(source, key):
+    records = []
+    if source == 'gbif':
+        nlist = key.split(' ')
         cname = nlist[0]
         if len(nlist) > 1:
             cname = f'{cname} {nlist[1]}'
-        resp = requests.get(f'https://api.taicol.tw/v2/taxon?scientific_name={cname}')
+        resp = requests.get(f'https://api.gbif.org/v1/species/search?q=${cname}&rank=SPECIES&datasetKey=d7dddbf4-2cf0-4f39-9b2a-bb099caae36c')
         results = resp.json()
-        if results['status']['code'] == 200:
-            for d in results['data']:
-                nlist = []
-                nlist.append(d['simple_name'])
-                if x := d.get('name_author'):
-                    nlist.append(x)
-                if x := d.get('common_name_c'):
-                    nlist.append(x)
-                data.append({
-                    'recid': d['taxon_id'],
-                    'speciesKey': d['taxon_id'],
-                    'scientificName': ' '.join(nlist),
-                    'taxonomicStatus': d['taxon_status'],
-                    'accordingTo': 'TaiCOL',
-                })
+        for i, v in enumerate(results['results']):
+            sci_name = v['scientificName']
+            if x := v['authorship']:
+                sciName = f'{sci_name} {x}';
+            print(i, v)
+            records.append({
+                'recid': i,
+                'key': v['speciesKey'],
+                'scientificName': sciName,
+                'ref': v['publishedIn'],
+                'accordingTo': 'gbif-backbone',
+                'status': v['taxonomicStatus'],
+            })
 
-    # According to GBIF taxon API response
+    if source == 'taicol':
+        if m := re.match(r'\[([0-9]+)\](.+)', key):
+            nameid = m.group(1)
+            q = m.group(2)
+            #resp = requests.get(f'https://api.taicol.tw/v2/taxon?scientific_name={cname}')
+            resp = requests.get(f'https://api.taicol.tw/v2/name?name_id={nameid}')
+            results = resp.json()
+            inc = 0
+            if results['status']['code'] == 200:
+                for i,v in enumerate(results['data']):
+                    nlist = []
+                    nlist.append(v['simple_name'])
+                    if x := v.get('name_author'):
+                        nlist.append(x)
+                    if x := v.get('common_name_c'):
+                        nlist.append(x)
+
+                    for t in v['taxon']:
+                        records.append({
+                            'recid': inc,
+                            'key': t.get('taxon_id', ''),
+                            'scientificName': ' '.join(nlist),
+                            'status': t['taicol_name_status'],
+                            'ref': v['protologue'],
+                            'accordingTo': 'taicol',
+                        })
+                        inc += 1
+
     return jsonify({
-        'count': len(data),
-        'limit': 20,
-        'offset': 0,
-        'results': data,
-        'endOfRecords': True,
+        'status': 'success',
+        'total': len(records),
+        'records': records,
     })
 
-@bp.route('/api/external/gbif-occurrences/<key>', methods=['GET', 'POST'])
-def get_external_data_api(key):
+@bp.route('/api/external/data/<source>/<taxon_key>', methods=['GET', 'POST'])
+def get_external_data_api(source, taxon_key):
+    '''w2ui style request & response'''
     offset = 0
     limit = 100
     records = []
@@ -148,24 +172,52 @@ def get_external_data_api(key):
         limit = payload.get('limit')
         offset = payload.get('offset')
 
-    url = f'https://api.gbif.org/v1/occurrence/search?basisOfRecord=PreservedSpecimen&taxon_key={key}&limit={limit}&offset={offset}'
-    resp = requests.get(url)
-    data = resp.json()
+    if source == 'gbif':
+        url = f'https://api.gbif.org/v1/occurrence/search?basisOfRecord=PreservedSpecimen&taxonKey={taxon_key}&limit={limit}&offset={offset}'
+        resp = requests.get(url)
+        data = resp.json()
+        print(data)
+        dataset_map = {}
+        for i, v in enumerate(data['results']):
 
-    for i in data['results']:
-        d = {}
-        for k, v in i.items():
-            if 'associa' in k:
-                print(k, v)
-            d[k] = v
-        d['recid'] = i['key']
-        records.append(d)
+            # fetch dataset
+            dataset_title = ''
+            dataset_key = v['datasetKey']
+            if dataset_key not in dataset_map:
+                resp2 = requests.get(f'https://api.gbif.org/v1/dataset/{dataset_key}')
+                data2 = resp2.json()
+                dataset_title = data2['title']
+                dataset_map[dataset_key] = dataset_title
 
-    return jsonify({
-        'status': 'success',
-        'total': data['count'],
-        'records': records,
-    })
+            #for k2, v2 in v.items():
+            #    if 'associa' in k2:
+            #        print(k2, v2)
+            print(v)
+            records.append({
+                'recid': i,
+                'recordedBy': v['recordedBy'],
+                'recordNumber': v.get('recordNumber', ''),
+                'catalogNumber': v.get('catalogNumber', ''),
+                'remarks': v.get('occurrenceRemarks', ''),
+                'locality': v.get('locality', ''),
+                'datasetTitle': dataset_map[dataset_key]
+            })
+
+        return jsonify({
+            'status': 'success',
+            'total': data['count'],
+            'records': records,
+        })
+    elif source == 'tbia':
+        url = f'https://tbiadata.tw/api/v1/occurrence?basisOfRecord=PreservedSpecimen&taxonID={taxon_key}&limit={limit}'
+        resp = requests.get(url)
+        data = resp.json()
+        #print(data)
+        return jsonify({
+            'status': 'success',
+            'total': 0,
+            'records': records,
+        })
 
 @bp.route('/api/publish', methods=['POST'])
 def post_publish():

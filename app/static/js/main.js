@@ -98,7 +98,7 @@
       let sidebar = new w2sidebar({
         name: 'sidebar',
         nodes: [
-          { id: 'general', text: 'Tables', group: true, expanded: true, nodes: nodes}
+          { id: 'general', text: 'Sources', group: true, expanded: true, nodes: nodes}
         ],
         onClick(event) {
           const schema = event.target;

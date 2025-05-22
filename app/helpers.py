@@ -170,6 +170,8 @@ def get_namespace_data(namespace_id):
         distribution = ''
         add_fields = {}
         specimens = []
+        taicol_name_id = None
+
         source_data = {
             'usages': [],
             'type': [],
@@ -207,6 +209,7 @@ def get_namespace_data(namespace_id):
                 data['literatures'].append(x)
 
         if x:= row[2]:
+            taicol_name_id = x
             mysql_cursor.execute(f"SELECT ru.id, ru.status, t.name, t._authorship, r.title FROM reference_usages ru LEFT JOIN `references` r ON r.id = ru.reference_id LEFT JOIN taxon_names t ON t.id = ru.taxon_name_id WHERE ru.accepted_taxon_name_id={x} and ru.status != 'accepted'")
             results = mysql_cursor.fetchall()
             sci_name = ''
@@ -232,6 +235,7 @@ def get_namespace_data(namespace_id):
             'synonyms': synonyms,
             'specimens': specimens,
             'sourceData': source_data,
+            'taicol_taxon_name_id': taicol_name_id,
         })
 
     return data

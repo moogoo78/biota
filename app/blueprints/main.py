@@ -135,7 +135,7 @@ def get_external_names_api(source, key):
             'records': records,
         })
 
-    if source == 'taicol':
+    elif source == 'taicol':
         if m := re.match(r'\[([0-9]+)\](.+)', key):
             nameid = m.group(1)
             q = m.group(2)
@@ -174,7 +174,7 @@ def get_external_names_api(source, key):
                     'status': 'error',
                     'message': f"[{source}]{results['status']['message']}",
                 })
-    if source == 'nametool':
+    elif source == 'nametool':
         if m := re.match(r'\[([0-9]+)\](.+)', key):
             nameid = m.group(1)
             q = m.group(2)
@@ -196,7 +196,39 @@ def get_external_names_api(source, key):
                 'total': len(records),
                 'records': records,
             })
-    if source == 'pass':
+    elif source == 'tai2':
+        nlist = key.split(' ')
+        cname = nlist[0]
+        if len(nlist) > 1:
+            cname = f'{cname} {nlist[1]}'
+
+        resp = requests.get(f'https://tai2.ntu.edu.tw/search_name/{cname}')
+        for i, v in enumerate(resp.json()['result2']):
+
+            # get ref info
+            resp2 = requests.get(f"https://tai2.ntu.edu.tw/species/{v['code']}")
+            soup = BeautifulSoup(resp2.text, 'lxml')
+            ref_container = soup.find('div', class_='name1')
+            ref_tags = soup.find('div', class_='name1').contents
+            ref_tags = [x for x in ref_tags if x.get_text(strip=True)]
+            refs = []
+            refs.append(f"{ref_tags[0].get_text(strip=True)}: {ref_tags[1].get_text(strip=True)}")
+            refs.append(f"{ref_tags[2].get_text(strip=True)}: {ref_tags[3].get_text(strip=True)}")
+            records.append({
+                'recid': i,
+                'key': v['code'],
+                'scientificName': v['ebooksearch'],
+                'status': '',
+                'ref': '|'.join(refs),
+                'accordingTo': 'Tai2',
+            })
+
+        return jsonify({
+            'status': 'success',
+            'total': len(records),
+            'records': records,
+        })
+    elif source == 'pass':
         names = key.split(' ')
         cname = names[0]
         if len(names) > 1:
@@ -283,7 +315,7 @@ def get_external_data_api(source, taxon_key):
             'records': records,
         })
     elif source == 'tbia':
-        url = f'https://tbiadata.tw/api/v1/occurrence?basisOfRecord=PreservedSpecimen&taxonID={taxon_key}&limit={limit}'
+        url = f'https://tbiadata.tw/api/v1/occurrence?isCollection=true&taxonID={taxon_key}&limit={limit}'
         resp = requests.get(url)
         data = resp.json()
         if data['status']['code'] == 200:
@@ -305,14 +337,15 @@ def get_external_data_api(source, taxon_key):
                     d = x[8:10]
                     date = f'{y}.{m}.{d}'
 
+                #print(v)
                 records.append({
                     'recid': i,
-                    'url': v['references'],
+                    'url': v.get('references', ''),
                     'institutionCode': '',
-                    'recordedBy': v['recordedBy'],
-                    'basisOfRecord': v['basisOfRecord'],
-                    'recordNumber': v['recordNumber'],
-                    'catalogNumber': v['catalogNumber'],
+                    'recordedBy': v.get('recordedBy', ''),
+                    'basisOfRecord': v.get('basisOfRecord', ''),
+                    'recordNumber': v.get('recordNumber', ''),
+                    'catalogNumber': v.get('catalogNumber', ''),
                     'date': date,
                     'remarks': '',
                     'locality': '|'.join(locality_list),
@@ -329,9 +362,60 @@ def get_external_data_api(source, taxon_key):
                 'status': 'error',
                 'message': data['status']['message'],
             })
+    elif source == 'tai2':
+        resp = requests.get(f'https://tai2.ntu.edu.tw/species/{taxon_key}')
+        soup = BeautifulSoup(resp.text, 'lxml')
 
+        # find specimens
+        specimens = []
+        for x in soup.find_all('script'):
+            text = x.get_text(strip=True)
+            if 'var spcm=new Array();' in text:
+                start = text.index('var spcm=new Array();') + len('var spcm=new Array();\nvar spcm=') + 1
+                end = text.index('var spcmtype=new Array();')
+                s = text[start:end].strip()
+                specimens = json.loads(s[0:-1])
+
+        #print(len(specimens))
+        for i, v in enumerate(specimens):
+            print(v)
+            locs = []
+            if info := v['locinfo']:
+                if x := info['district']:
+                    locs.append(x)
+                if x := info['loc']:
+                    locs.append(x)
+
+            media = []
+            if x := v['imgsmall']:
+                media.append(f"https://tai2.ntu.edu.tw{x}")
+
+            date = ''
+            if x:= v['date']:
+                date = x.replace('/', '.')
+
+            records.append({
+                'recid': i,
+                'recordedBy': v.get('collinfo', ''),
+                'catalogNumber': v.get('TAIID', ''),
+                'recordNumber': v.get('collno', ''),
+                'date': date,
+                'basisOfRecord': '',
+                'locality': '|'.join(locs),
+                'institutionCode': v['herb'],
+                'media': media,
+                'remarks': '',
+                'datasetTitle': 'Tai2',
+                'url': f"https://tai2.ntu.edu.tw/species/{taxon_key}/{v['TAIID']}"
+            })
+        return jsonify({
+            'status': 'success',
+            'total': 0,
+            'records': records,
+        })
     elif source == 'taif':
-        response = requests.get('https://taif.tfri.gov.tw/search/result.php?l=Cht&ol=1&keyword=berberis%20pengii')
+        # DEPRECATED, use tbia API
+        response = requests.get(f'https://taif.tfri.gov.tw/search/result.php?l=Cht&ol=1&keyword={key}')
         soup = BeautifulSoup(response.text, 'lxml')
         inc = 0
         for row in soup.find_all('div', class_='table-rows'):
@@ -365,6 +449,8 @@ def get_external_data_api(source, taxon_key):
             'total': len(records),
             'records': records,
         })
+
+
 @bp.route('/api/publish', methods=['POST'])
 def post_publish():
     if request.method == 'POST':

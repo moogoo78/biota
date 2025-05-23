@@ -103,18 +103,28 @@ function fetchGBIFData(params) {
   function handleNameClick(source, q, nameid) {
     let sourceLabel = '';
     let sourceAPI = `/api/external/names/${source}/${q}`;
+    let source2Label = '';
     if (source === 'gbif') {
       sourceLabel = 'GBIF backbone';
+      source2Label = 'GBIF Occurrences';
     } else if (source === 'tbia-taicol') {
       sourceLabel = 'TaiCOL';
+      source2Label = 'TBIA Occurrences';
       sourceAPI = `/api/external/names/taicol/[${nameid}]${q}`;
     } else if (source === 'tbia-nametool') {
       sourceLabel = 'nametool';
+      source2Label = 'TBIA Specimens';
       sourceAPI = `/api/external/names/nametool/[${nameid}]${q}`;
     } else if (source === 'taif') {
       sourceLabel = 'TAIF:';
+      source2Label = 'TAIF Specimens';
       sourceAPI = `/api/external/names/pass/${q}`;
+    } else if (source === 'tai2') {
+      sourceLabel = 'TAI:';
+      source2Label = 'TAI2';
+      sourceAPI = `/api/external/names/tai2/${q}`;
     }
+
     w2popup.open({
       title: `${sourceLabel}: ${q}`,
       width: 1200,
@@ -130,7 +140,7 @@ function fetchGBIFData(params) {
           header: 'Available Scientific Names',
           show: { header: true, footer: true },
             columns: [
-              { field: 'key', text: 'taxonKey', size: '80px' },
+              { field: 'key', text: 'taxonKey', size: '120px' },
               { field: 'scientificName', text: 'Scientific Name', size: '350px' },
               { field: 'status', text: 'Status', size: '80px' },
               { field: 'ref', text: 'Reference', size: '280px' },
@@ -142,7 +152,7 @@ function fetchGBIFData(params) {
             let grid2 = new w2grid({
               name: 'grid2',
               box: '#grid2',
-              header: 'Found Specimens',
+              header: `${source2Label} - Specimens`,
               show: { header: true , footer: true},
               url: `/api/external/data/${dataSource}/${record.key}`,
               autoLoad: false,

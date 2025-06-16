@@ -384,8 +384,8 @@ def get_external_data_api(source, taxon_key):
         resp = requests.get(url)
         data = resp.json()
         if data['status']['code'] == 200:
-            named_areas = {}
             for i,v in enumerate(data['data']):
+                named_areas = {}
                 for term, field in DWC_TERMS.items():
                     if x := v.get(term):
                         key = term if field == '' else field

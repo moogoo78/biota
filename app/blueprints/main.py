@@ -248,6 +248,60 @@ def get_external_names_api(source, key):
             'records': records,
         })
 
+DWC_TERMS = {
+    'countryCode': 'cc',
+    'stateProvince': 'adm1',
+    'county': 'adm2',
+    'municipality': 'adm3',
+    'locationID': '',
+    'higherGeographyID': '',
+    'higherGeography': '',
+    'continent': '',
+    'waterBody': '',
+    'islandGroup': '',
+    'island': '',
+    'country': '',
+    'locality': '',
+    'verbatimLocality': '',
+    'minimumElevationInMeters': '',
+    'maximumElevationInMeters': '',
+    'verbatimElevation': '',
+    'verticalDatum': '',
+    'minimumDepthInMeters': '',
+    'maximumDepthInMeters': '',
+    'verbatimDepth': '',
+    'minimumDistanceAboveSurfaceInMeters': '',
+    'maximumDistanceAboveSurfaceInMeters': '',
+    'locationAccordingTo': '',
+    'locationRemarks': '',
+    'decimalLatitude': '',
+    'decimalLongitude': '',
+    'geodeticDatum': '',
+    'coordinateUncertaintyInMeters': '',
+    'coordinatePrecision': '',
+    'pointRadiusSpatialFit': '',
+    'verbatimCoordinates': '',
+    'verbatimLatitude': '',
+    'verbatimLongitude': '',
+    'verbatimCoordinateSystem': '',
+    'verbatimSRS': '',
+    'footprintWKT': '',
+    'footprintSRS': '',
+    'footprintSpatialFit': '',
+    'georeferencedBy': '',
+    'georeferencedDate': '',
+    'georeferenceProtocol': '',
+    'georeferenceSources': '',
+    'georeferenceRemarks': '',
+}
+
+TBIA_TERMS = {
+    'county': 'adm1',
+    'municipality': 'adm2',
+}
+#    'standardDate',
+#    'standardLatitude',
+#    'standardLongitude',
 @bp.route('/api/external/data/<source>/<taxon_key>', methods=['GET', 'POST'])
 def get_external_data_api(source, taxon_key):
     '''w2ui style request & response'''
@@ -265,6 +319,7 @@ def get_external_data_api(source, taxon_key):
         data = resp.json()
         #print(data)
         dataset_map = {}
+        distribution = {}
         for i, v in enumerate(data['results']):
 
             # fetch dataset
@@ -278,17 +333,26 @@ def get_external_data_api(source, taxon_key):
                 #print(data2['title'])
 
             locality_list = []
+            #if x:= v.get('country'):
+            named_areas = {}
+            for term, field in DWC_TERMS.items():
+                if x := v.get(term):
+                    key = term if field == '' else field
+                    named_areas[key] = x
+
             if x:= v.get('county'):
                 locality_list.append(x)
             if x:= v.get('locality'):
                 locality_list.append(x)
 
+            print(named_areas)
             media = []
             if m := v.get('media'):
                 for i in m:
-                    if i['type'] == 'StillImage':
-                        if iden := i.get('identifier'):
-                            media.append(iden)
+                    if type_ := i.get('type'):
+                      if type_ == 'StillImage':
+                          if iden := i.get('identifier'):
+                              media.append(iden)
 
             #for k2, v2 in v.items():
             #    if 'media' in k2:
@@ -307,6 +371,7 @@ def get_external_data_api(source, taxon_key):
                 'locality': '|'.join(locality_list),
                 'datasetTitle': dataset_map[dataset_key],
                 'media': media,
+                'named_areas': named_areas,
             })
 
         return jsonify({
@@ -319,7 +384,13 @@ def get_external_data_api(source, taxon_key):
         resp = requests.get(url)
         data = resp.json()
         if data['status']['code'] == 200:
+            named_areas = {}
             for i,v in enumerate(data['data']):
+                for term, field in DWC_TERMS.items():
+                    if x := v.get(term):
+                        key = term if field == '' else field
+                        named_areas[key] = x
+
                 media = []
                 if x := v['associatedMedia']:
                     media.append(x)
@@ -338,6 +409,7 @@ def get_external_data_api(source, taxon_key):
                     date = f'{y}.{m}.{d}'
 
                 #print(v)
+                #print(named_areas)
                 records.append({
                     'recid': i,
                     'url': v.get('references', ''),
@@ -351,6 +423,7 @@ def get_external_data_api(source, taxon_key):
                     'locality': '|'.join(locality_list),
                     'datasetTitle': v['datasetName'],
                     'media': media,
+                    'named_areas': named_areas,
                 })
             return jsonify({
                 'status': 'success',

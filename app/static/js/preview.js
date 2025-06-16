@@ -125,12 +125,14 @@ function fetchGBIFData(params) {
       sourceAPI = `/api/external/names/tai2/${q}`;
     }
 
+    let summaryDistribution = [];
+
     w2popup.open({
       title: `${sourceLabel}: ${q}`,
       width: 1200,
       height: 600,
       showMax: true,
-      body: '<div style="position: relative; height: 300px;"><div id="grid1" style="display: inline-block; width: 1200px; height: 150px;"></div><div id="grid2" style="display: inline-block; width: 1200px; height: 400px;"></div></div>',
+      body: '<div style="position: relative; height: 300px;"><div id="grid1" style="display: inline-block; width: 1200px; height: 150px;"></div><div>Summary: <h3 id="summary-distribution"></h3></div><div id="grid2" style="display: inline-block; width: 1200px; height: 400px;"></div></div>',
     })
       .then(() => {
         let dataSource = (source.indexOf('tbia') >=0 ) ? 'tbia' : source;
@@ -168,6 +170,11 @@ function fetchGBIFData(params) {
                 { field: 'remarks', text: 'remarks', size: '200px' },
                 { field: 'media', text: 'media', size: '100px',
                   render: function (record, extra) {
+                    if ('adm2' in record.named_areas && summaryDistribution.indexOf(record.named_areas.adm2) < 0) {
+                      summaryDistribution.push(record.named_areas.adm2);
+                    }
+                    let d = document.getElementById('summary-distribution');
+                    d.textContent = `分布縣市: ${summaryDistribution.join('|')}`;
                     let mlist = record.media.map( x => {
                       return `<img src="${x}" height="50" />`;
                     });

@@ -98,6 +98,10 @@ def preview():
         data.append(get_namespace_data(namespace_id))
     return render_template('preview.html', data=data)
 
+@bp.route('/preview2/<int:namespace_id>')
+def preview2(namespace_id):
+    return render_template('preview2.html', namespace_id=namespace_id)
+
 @bp.route('/api/namespaces/<namespace_ids>')
 def get_namespaces_data_api(namespace_ids):
     data = []
@@ -392,7 +396,7 @@ def get_external_data_api(source, taxon_key):
                         named_areas[key] = x
 
                 media = []
-                if x := v['associatedMedia']:
+                if x := v.get('associatedMedia'):
                     media.append(x)
 
                 locality_list = []

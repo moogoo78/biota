@@ -152,6 +152,7 @@ def get_namespace_data(namespace_id):
         'author': '',
         'literatures': [],
         'items': [],
+        'id': namespace_id,
     }
 
     mysql_cursor.execute(f'SELECT n.title, u.name FROM my_namespaces n LEFT JOIN users u ON u.id = n.user_id WHERE n.id={namespace_id}')
@@ -159,7 +160,7 @@ def get_namespace_data(namespace_id):
     data['title'] = result[0]
     data['author'] = result[1]
 
-    mysql_cursor.execute(f"SELECT t.name, t._authorship, t.id, u.per_usages, u.type_specimens, u.properties, r.title FROM my_namespace_usages u LEFT JOIN taxon_names t ON u.taxon_name_id = t.id LEFT JOIN `references` r ON r.id = t.reference_id WHERE namespace_id={namespace_id} AND u.status='accepted'")
+    mysql_cursor.execute(f"SELECT t.name, t._authorship, t.id, u.per_usages, u.type_specimens, u.properties, r.title, u.id FROM my_namespace_usages u LEFT JOIN taxon_names t ON u.taxon_name_id = t.id LEFT JOIN `references` r ON r.id = t.reference_id WHERE namespace_id={namespace_id} AND u.status='accepted'")
 
     rows = mysql_cursor.fetchall()
     for row in rows:
@@ -236,6 +237,7 @@ def get_namespace_data(namespace_id):
             'specimens': specimens,
             'sourceData': source_data,
             'taicol_taxon_name_id': taicol_name_id,
+            'taicol_usage_id': row[7],
         })
 
     return data

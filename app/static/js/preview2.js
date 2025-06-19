@@ -42,8 +42,9 @@
         title   : `TBIA Specimens: ${q}`,
         body    : '<div id="gridx" style="width: 100%; height: 100%;"></div>',
         style   : 'padding: 15px 0px 0px 0px',
-        width   : 940,
+        width   : 1020,
         height  : 600,
+        resizable: true, // not work
         //showMax : true,
         async onToggle(event) {
           await event.complete
@@ -58,6 +59,14 @@
             show: { selectColumn: true },
             style: 'border: 1px solid #efefef',
             columns: [
+              { field: 'media', text: 'media', size: '100px',
+                render: function (record, extra) {
+                  let mlist = record.media.map( x => {
+                    return `<img src="${x}" height="50" class="found-specimen-img"/>`;
+                  });
+                  return `<div>${mlist}</div>`;
+                }
+              },
               { field: 'institutionCode', text: 'Institution Code', size: '30px' },
               { field: 'catalogNumber', text: 'Catalog Number', size: '80px' },
               { field: 'recordedBy', text: 'Collector', size: '120px' },
@@ -66,14 +75,6 @@
               { field: 'locality', text: 'Locality', size: '250px' },
               { field: 'datasetTitle', text: 'Dataset', size: '150px'},
               { field: 'remarks', text: 'remarks', size: '200px' },
-              { field: 'media', text: 'media', size: '100px',
-                render: function (record, extra) {
-                  let mlist = record.media.map( x => {
-                    return `<img src="${x}" height="50" />`;
-                  });
-                  return `<div>${mlist}</div>`;
-                }
-              },
               { field: 'url', text: 'Link', size: '40px',
                 render: function (record) {
                   return `<a href="${record.url}" target="_blank">go</a>`;
@@ -96,6 +97,18 @@
             }
           };
           let gridx = new w2grid(gridxconf);
+          let specimenImages = document.getElementsByClassName('found-specimen-img');
+          for (let i of specimenImages) {
+            i.onclick = function(e) {
+              let imgSrc = e.target.src;
+              w2popup.message({
+                text:`<img src="${imgSrc}" />`,
+                width: 1000,
+                height: 600,
+                hideOn: ['esc', 'click']
+              });
+            };
+          }
         });
     }
   }

@@ -153,6 +153,7 @@ def get_namespace_data(namespace_id):
         'literatures': [],
         'items': [],
         'id': namespace_id,
+        'reference_name': ''
     }
 
     mysql_cursor.execute(f'SELECT n.title, u.name FROM my_namespaces n LEFT JOIN users u ON u.id = n.user_id WHERE n.id={namespace_id}')
@@ -160,7 +161,7 @@ def get_namespace_data(namespace_id):
     data['title'] = result[0]
     data['author'] = result[1]
 
-    mysql_cursor.execute(f"SELECT t.name, t._authorship, t.id, u.per_usages, u.type_specimens, u.properties, r.title, u.id FROM my_namespace_usages u LEFT JOIN taxon_names t ON u.taxon_name_id = t.id LEFT JOIN `references` r ON r.id = t.reference_id WHERE namespace_id={namespace_id} AND u.status='accepted'")
+    mysql_cursor.execute(f"SELECT t.name, t._authorship, t.id, u.per_usages, u.type_specimens, u.properties, r.title, u.id, t.properties FROM my_namespace_usages u LEFT JOIN taxon_names t ON u.taxon_name_id = t.id LEFT JOIN `references` r ON r.id = t.reference_id WHERE namespace_id={namespace_id} AND u.status='accepted'")
 
     rows = mysql_cursor.fetchall()
     for row in rows:
@@ -227,8 +228,16 @@ def get_namespace_data(namespace_id):
         if row[1]:
             scname = f'{scname} {row[1]}'
 
+        reference_name = ''
+        if x := row[8]:
+            taxon_props = json.loads(x)
+            if y := taxon_props.get('reference_name'):
+                reference_name = y
+
         data['items'].append({
             'scientificName': scname,
+            'reference_title': row[6],
+            'reference_name': reference_name,
             'status': row[2],
             'commonNames': common_names,
             'addFields': add_fields,

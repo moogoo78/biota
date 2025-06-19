@@ -1,10 +1,8 @@
 (function() {
   'use strict';
 
-  let recordMap = {
-    specimen: {},
-    distribution: [],
-  }
+  let foundExtension = {};
+
   fetch(`/api/namespaces/${NAMESPACE_ID}`)
     .then( resp =>  resp.json() )
     .then( result => {
@@ -21,6 +19,25 @@
       const resp2 = await fetch(`/api/external/data/tbia/${taxonKey}`);
       const result2 = await resp2.json();
       console.log(result2);
+
+      let summaryDistribution = [];
+      result2.records.forEach( record => {
+        if ('adm2' in record.named_areas && summaryDistribution.indexOf(record.named_areas.adm2) < 0) {
+          summaryDistribution.push(record.named_areas.adm2);
+        }
+      });
+
+      foundExtension[recid] = {
+        specimen: [],
+        distribution: summaryDistribution,
+      };
+
+      // set form now
+      if (summaryDistribution.length > 0) {
+        w2ui.form.setValue('distribution', summaryDistribution);
+        w2ui.form.refresh();
+      }
+
       w2popup.open({
         title   : `TBIA Specimens: ${q}`,
         body    : '<div id="gridx" style="width: 100%; height: 100%;"></div>',
@@ -51,14 +68,6 @@
               { field: 'remarks', text: 'remarks', size: '200px' },
               { field: 'media', text: 'media', size: '100px',
                 render: function (record, extra) {
-
-                  // HACK distribution
-                  if ('adm2' in record.named_areas && recordMap[record.recid].distribution.indexOf(record.named_areas.adm2) < 0) {
-                    recordMap[record.recid].distribution.push(record.named_areas.adm2);
-                  }
-                  let d = document.getElementById('summary-distribution');
-                  d.textContent = `分布縣市: ${summaryDistribution.join('|')}`;
-
                   let mlist = record.media.map( x => {
                     return `<img src="${x}" height="50" />`;
                   });
@@ -75,10 +84,15 @@
             async onClick(event) {
               await event.complete // needs to wait for evnet complete cycle, so selection is right
               let sel = this.getSelection();
-              console.log(sel, recid);
-              recordMap[recid].specimen = sel.map( (x) => {
+              foundExtension[recid].specimen = sel.map( (x) => {
                 return result2.records[x];
               });
+              if (foundExtension[recid].specimen.length > 0) {
+                //console.log(foundExtension[recid].specimen);
+                let prettySpecimen = JSON.stringify(foundExtension[recid].specimen, null, 2);
+                w2ui.form.setValue('specimen', prettySpecimen);
+                w2ui.form.refresh();
+              }
             }
           };
           let gridx = new w2grid(gridxconf);
@@ -132,9 +146,14 @@
         if (sel.length == 1) {
           w2ui.form.recid = sel[0];
           w2ui.form.record = w2utils.extend({}, this.get(sel[0]));
-          if (recordMap[sel[0]]?.specimen) {
-            w2ui.form.setValue('specimens', recordMap[sel[0]]);
+
+          if (foundExtension[sel[0]]?.specimen.length > 0) {
+            let prettySpecimen = JSON.stringify(foundExtension[sel[0]].specimen, null, 2);
+            w2ui.form.setValue('specimen', prettySpecimen);
           }
+          if (foundExtension[sel[0]]?.distribution.length > 0) {
+            w2ui.form.setValue('distribution', foundExtension[sel[0]].distribution);
+            }
           w2ui.form.refresh();
         } else {
           w2ui.form.clear()
@@ -219,7 +238,7 @@
           attr: 'rows="12" cols=40'
         }
       }, {
-        field: 'specimens',
+        field: 'specimen',
         type: 'textarea',
         html: {
           label: 'Specimens',
@@ -275,18 +294,5 @@
         ]);
       }
     });
-    /*
-    let grid2 = new w2grid({
-      name: 'grid2',
-      box: '#grid2',
-      header: 'Details',
-      show: { header: true, columnHeaders: false ,toolbar: true},
-      name: 'grid2',
-      columns: [
-        { field: 'name', text: 'Name', size: '160px', style: 'background-color: #efefef; border-bottom: 1px solid white; padding-right: 5px;', attr: "align=right" },
-        { field: 'value', text: 'Value', size: '100%' }
-      ]
-      });
-      */
   }
 })();

@@ -10,6 +10,8 @@ from docx.enum.section import WD_SECTION, WD_ORIENT, WD_SECTION_START
 from docx.enum.table import WD_ALIGN_VERTICAL
 import yaml
 
+from bs4 import BeautifulSoup
+
 import pymysql
 pymysql.install_as_MySQLdb()
 import MySQLdb
@@ -156,12 +158,18 @@ def get_namespace_data(namespace_id):
         'reference_name': ''
     }
 
+    literature_sql = f'SELECT a.author, a.short_author, a.content FROM import_checklist_logs c LEFT JOIN api_citations a ON FIND_IN_SET(a.reference_id, c.included_references) > 0 WHERE c.namespace_id = {namespace_id}'
+    mysql_cursor.execute(literature_sql)
+    rows = mysql_cursor.fetchall()
+    for r in rows:
+        data['literatures'].append({'author': r[0], 'short_author': r[1], 'content': r[2]})
+
     mysql_cursor.execute(f'SELECT n.title, u.name FROM my_namespaces n LEFT JOIN users u ON u.id = n.user_id WHERE n.id={namespace_id}')
     result = mysql_cursor.fetchone()
     data['title'] = result[0]
     data['author'] = result[1]
 
-    mysql_cursor.execute(f"SELECT t.name, t._authorship, t.id, u.per_usages, u.type_specimens, u.properties, r.title, u.id, t.properties FROM my_namespace_usages u LEFT JOIN taxon_names t ON u.taxon_name_id = t.id LEFT JOIN `references` r ON r.id = t.reference_id WHERE namespace_id={namespace_id} AND u.status='accepted'")
+    mysql_cursor.execute(f"SELECT t.name, t._authorship, t.id, u.per_usages, u.type_specimens, u.properties, r.title, u.id, t.properties, u.name_remark FROM my_namespace_usages u LEFT JOIN taxon_names t ON u.taxon_name_id = t.id LEFT JOIN `references` r ON r.id = t.reference_id WHERE namespace_id={namespace_id} AND u.status='accepted'")
 
     rows = mysql_cursor.fetchall()
     for row in rows:
@@ -206,9 +214,9 @@ def get_namespace_data(namespace_id):
                     for j in sp_list:
                         specimens.append(j)
 
-        if x := row[6]:
-            if x not in data['literatures']:
-                data['literatures'].append(x)
+        #if x := row[6]:
+        #    if x not in data['literatures']:
+        #        data['literatures'].append(x)
 
         if x:= row[2]:
             taicol_name_id = x
@@ -224,9 +232,22 @@ def get_namespace_data(namespace_id):
                     ref_title = ref
                 synonyms.append([sci_name, ref_title])
 
-        scname = row[0]
-        if row[1]:
-            scname = f'{scname} {row[1]}'
+        scname = {'name': '', 'full': ''}
+        if name_remark := row[9]:
+            soup = BeautifulSoup(name_remark, 'lxml')
+            if soup.i:
+                name_remark = soup.i.string
+                full_name = soup.get_text()
+                full_name = full_name.replace(name_remark, '').strip()
+                scname.update({
+                    'name': name_remark,
+                    'full': full_name,
+                })
+        else:
+            scname['name'] = row[0]
+            if row[1]:
+                scname['name'] = f"{scname['name']} {row[1]}"
+        print(scname)
 
         reference_name = ''
         if x := row[8]:

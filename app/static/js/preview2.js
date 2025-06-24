@@ -29,6 +29,7 @@
 
       foundExtension[recid] = {
         specimen: [],
+        specimenDisplay: '',
         distribution: summaryDistribution,
       };
 
@@ -40,7 +41,7 @@
 
       w2popup.open({
         title   : `TBIA Specimens: ${q}`,
-        body    : '<div id="gridx" style="width: 100%; height: 100%;"></div>',
+        body    : '<div id="gridx" style="width: 100%; height: 500px;"></div><div class="w2ui-buttons">',
         style   : 'padding: 15px 0px 0px 0px',
         width   : 1020,
         height  : 600,
@@ -49,7 +50,12 @@
         async onToggle(event) {
           await event.complete
           w2ui.relForm.resize();
-        }
+        },
+        actions: {
+        Ok(event) {
+           w2popup.close()
+        },
+    }
       })
         .then((event) => {
           let  gridxconf = {
@@ -89,9 +95,15 @@
                 return result2.records[x];
               });
               if (foundExtension[recid].specimen.length > 0) {
-                //console.log(foundExtension[recid].specimen);
-                let prettySpecimen = JSON.stringify(foundExtension[recid].specimen, null, 2);
-                w2ui.form.setValue('specimen', prettySpecimen);
+                console.log(foundExtension[recid].specimen);
+                //let prettySpecimen = JSON.stringify(foundExtension[recid].specimen, null, 2);
+                let prettySpecimen = [];
+                for (let i of foundExtension[recid].specimen) {
+                  prettySpecimen.push(`${i.specimen_display.county}: ${i.specimen_display.locality}, ${i.recorded_by || '--'} ${i.record_number || '--'}.`);
+                }
+                let specimenDisplay = prettySpecimen.join(' ');
+                foundExtension[recid].specimenDisplay = specimenDisplay;
+                w2ui.form.setValue('specimen', specimenDisplay);
                 w2ui.form.refresh();
               }
             }
@@ -109,21 +121,24 @@
               });
             };
           }
-        });
+        }); // end of w2popup.open then
     }
   }
 
   function init(data) {
     let records = data.items.map( (v, i) => {
+      //console.log(v.item_title.scientific_name);
+      //let synonymsList = v.synonyms.map( x => (`${x[0]}`)).join(', ');
+
       return {
         recid: v.taicol_usage_id,
         scientificNameID: v.taicol_taxon_name_id,
-        scientificName: v.scientificName,
+        scientificName: v.item_title.scientific_name.canonical,
+        scientificNameAuthor: v.item_title.scientific_name.author,
         commonNames: v.commonNames.join(','),
         synonyms: v.synonyms.map( x => (`${x[0]} (${x[1]})`)).join('\n'),
+        //synonymsList: synonymsList,
         description: v.addFields.description || '',
-        referenceTitle: v.reference_title,
-        referenceName: v.reference_name,
       };
     });
 
@@ -148,9 +163,13 @@
     },
     columns: [
       { field: 'recid', text: 'ID', size: '60px'},
-      { field: 'scientificName', text: 'Scientific Name', size: '35%'},
-      { field: 'commonNames', text: 'Common Name', size: '10%'},
-      { field: 'referenceName', text: 'Reference', size: '35%'},
+      { field: 'scientificName', text: 'Scientific Name', size: '70%',
+        render: function (record) {
+          return `<i>${record.scientificName}</i> ${record.scientificNameAuthor}`;
+        }
+      },
+      { field: 'commonNames', text: 'Common Name', size: '20%'},
+      //{ field: 'synonymsList', text: 'Synonyms', size: '35%'},
     ],
     records: records,
     onClick(event) {
@@ -161,8 +180,8 @@
           w2ui.form.record = w2utils.extend({}, this.get(sel[0]));
 
           if (foundExtension[sel[0]]?.specimen.length > 0) {
-            let prettySpecimen = JSON.stringify(foundExtension[sel[0]].specimen, null, 2);
-            w2ui.form.setValue('specimen', prettySpecimen);
+            //let prettySpecimen = JSON.stringify(foundExtension[sel[0]].specimen, null, 2);
+            w2ui.form.setValue('specimen', foundExtension[sel[0].specimenDisplay]);
           }
           if (foundExtension[sel[0]]?.distribution.length > 0) {
             w2ui.form.setValue('distribution', foundExtension[sel[0]].distribution);
@@ -194,6 +213,16 @@
           }
         }
       },
+      actions: {
+        custom: {
+          text: 'OK',
+          class: 'w2ui-btn-blue',
+          style: 'text-transform: uppercase',
+          onClick(event) {
+            w2alert('Custom Action')
+          }
+        }
+      },
       fields: [{
         field: 'recid',
         type: 'text',
@@ -213,20 +242,6 @@
         type: 'text',
         html: {
           label: 'Scientific Name',
-          attr: 'size="60"',
-        }
-      }, {
-        field: 'referenceTitle',
-        type: 'text',
-        html: {
-          label: 'Reference Title',
-          attr: 'size="60"',
-        }
-      }, {
-        field: 'referenceName',
-        type: 'text',
-        html: {
-          label: 'Reference Name',
           attr: 'size="60"',
         }
       }, {
@@ -272,40 +287,4 @@
     layout.html('main', form);
   }
 
-  function init2(data) {
-    let records = data.items.map( (v, i) => {
-      return {
-        recid: v.taicol_usage_id,
-        scientificName: v.scientificName,
-        commonNames: v.commonNames.join(','),
-        synonyms: v.synonyms.map( x => (`${x[0]} (${x[1]})`)).join(','),
-        description: v.addFields.description || '',
-      };
-    });
-
-    let grid = new w2grid({
-      name: 'grid1',
-      box: '#grid1',
-      header: `${data.title} | ${data.author}`,
-      show: { header: true },
-      columns: [
-        { field: 'recid', text: 'ID', size: '50px'},
-        { field: 'scientificName', text: 'Scientific Name', size: '60%'},
-        { field: 'commonNames', text: 'Common Name', size: '30%'},
-        /*{ field: 'synonyms', text: 'Synonyms', size: '40%' },*/
-      ],
-      records: records,
-      onClick(event) {
-        let record = this.get(event.detail.recid)
-        grid2.clear()
-        grid2.add([
-          { recid: 0, name: 'ID:', value: record.recid },
-          { recid: 1, name: 'Scientific Name:', value: record.scientificName },
-          { recid: 2, name: 'Common Names:', value: record.commonNames },
-          { recid: 3, name: 'Synonyms:', value: record.synonyms },
-          { recid: 3, name: 'Description:', value: record.description },
-        ]);
-      }
-    });
-  }
 })();

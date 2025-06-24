@@ -187,8 +187,11 @@ def get_namespace_data(namespace_id):
             'type': [],
             'props': [],
         }
+        per_usages = []
+        type_specimens = []
         if x := row[3]:
             source_data['usages'] = yaml.dump(json.loads(x), default_flow_style=False, sort_keys=False, allow_unicode=True)
+            per_usages = json.loads(row[3])
         if x := row[5]:
             props = json.loads(x)
             source_data['props'] = yaml.dump(props, default_flow_style=False, sort_keys=False, allow_unicode=True)
@@ -209,10 +212,7 @@ def get_namespace_data(namespace_id):
         if x := row[4]:
             sp = json.loads(x)
             source_data['type'] = yaml.dump(sp, default_flow_style=False, sort_keys=False, allow_unicode=True)
-            for i in sp:
-                if sp_list := i.get('specimens'):
-                    for j in sp_list:
-                        specimens.append(j)
+            type_specimens = sp
 
         #if x := row[6]:
         #    if x not in data['literatures']:
@@ -232,39 +232,155 @@ def get_namespace_data(namespace_id):
                     ref_title = ref
                 synonyms.append([sci_name, ref_title])
 
-        scname = {'name': '', 'full': ''}
+        # item_title atomic struct
+        item_title = {
+            'scientific_name': {
+                'canonical': row[0],
+                'author': '',
+                'full': ''
+            },
+            'ref': '',
+            'name_in_ref': '',
+            'type': {
+                'use': '',
+                'gathering': {
+                    'country': '',
+                    'locality': '',
+                    'locality2': '',
+                    'year': '',
+                    'month': '',
+                    'day': '',
+                    'field_number': '',
+                },
+                'specimens': [],
+            },
+            #'display_name': ['', ['', '', ''],'',''], # ['canonical_name', ["author", "ref", "name-in-ref"], "type status:"]
+        }
+
+        if x := row[1]:
+            item_title['scientific_name']['author'] = x
+            item_title['scientific_name']['full'] = f"{item_title['scientific_name']['canonical']} {x}"
+            #item_title['display_name'][1][0] = x
+
+        if x := row[8]:
+            taxon_props = json.loads(x)
+            if y := taxon_props.get('reference_name'):
+                item_title['ref'] = y
+                #item_title['display_name'][1][1] = y
+
+        for u in per_usages:
+            if x := u.get('name_in_reference'):
+                item_title['name_in_ref'] = x
+                #item_title['display_name'][1][2] = x
+
+        for s in type_specimens:
+            if x := s.get('use'):
+                item_title['type']['use'] = x
+
+            # gathering
+            if country := s.get('country'):
+                if d := country.get('display'):
+                    if c := d.get('en-us'):
+                        item_title['type']['gathering']['country'] = c
+
+            if x := s.get('locality'):
+                item_title['type']['gathering']['locality1'] = x
+            if x := s.get('locality_verbatim'):
+                item_title['type']['gathering']['locality2'] = x
+
+            if x := s.get('collection_year'):
+                item_title['type']['gathering']['year'] = x
+            if x := s.get('collection_month'):
+                item_title['type']['gathering']['month'] = x
+            if x := s.get('collection_day'):
+                item_title['type']['gathering']['day'] = x
+
+            if x := s.get('specimens'):
+                item_title['type']['specimens'] = x
+
+
+        # format display string
+        #tmp = f"{item_title['scientific_name']}"
+        tmp = ''
+        if x := item_title['scientific_name']['author']:
+            tmp = x
+        if x := item_title['ref']:
+            tmp = f"{tmp}, {x}"
+        if x := item_title['name_in_ref']:
+            if tmp[-1] == '.':
+                tmp = tmp[:-1] # Berberis aristatoserrulata, ref 最後有一個. => 組起來要拿掉
+            tmp = f"{tmp}, {x}."
+
+        voucher = ''
+        if x:= item_title['type']['use']:
+            voucher = x.capitalize()
+        if x := item_title['type']['gathering']['country']:
+            voucher = f"{voucher}: {x.upper()}"
+        loc = ''
+        if x := item_title['type']['gathering']['locality1']:
+            loc = x
+            if x2 := item_title['type']['gathering']['locality2']:
+                loc = f'{loc}({x2})'
+        if loc:
+            voucher = f'{voucher}, {loc}'
+
+        ymd = []
+        if x := item_title['type']['gathering']['day']:
+            ymd.append(x)
+        if x := item_title['type']['gathering']['month']:
+            ymd.append(x)
+        if x := item_title['type']['gathering']['year']:
+            ymd.append(x)
+        if ymd:
+            voucher = f"{voucher}, {' '.join(ymd)}"
+
+        if x := item_title['type']['gathering']['field_number']:
+            vouche = f"{voucher}, {x}"
+        #else:
+        #    voucher = f"{voucher}, sine coll" # s.n.
+
+        sp = []
+        for index, x in enumerate(item_title['type']['specimens']):
+            s = x['herbarium']
+            prefix = ''
+            if index > 0:
+                prefix = 'isotype: '
+
+            if an := x.get('accession_number'):
+                sp.append(f"{prefix}{s} [{an}]")
+            else:
+                sp.append(f"{prefix}{s}")
+
+        if len(sp):
+            voucher = f"{voucher}. ({'; '.join(sp)})."
+
+        if voucher:
+            tmp = f"{tmp} {voucher}"
+
+        # parse name_remark
+        full_name = ''
         if name_remark := row[9]:
             soup = BeautifulSoup(name_remark, 'lxml')
             if soup.i:
                 name_remark = soup.i.string
                 full_name = soup.get_text()
                 full_name = full_name.replace(name_remark, '').strip()
-                scname.update({
-                    'name': name_remark,
-                    'full': full_name,
-                })
-        else:
-            scname['name'] = row[0]
-            if row[1]:
-                scname['name'] = f"{scname['name']} {row[1]}"
-        print(scname)
 
-        reference_name = ''
-        if x := row[8]:
-            taxon_props = json.loads(x)
-            if y := taxon_props.get('reference_name'):
-                reference_name = y
+        #print('---')
+        #print(full_name)
+        #print(tmp)
+        #print(item_title)
+        item_title['name_remark'] = full_name
+        item_title['voucher'] = voucher
+        item_title['display_name'] = tmp
 
         data['items'].append({
-            'scientificName': scname,
-            'reference_title': row[6],
-            'reference_name': reference_name,
+            'item_title': item_title,
             'status': row[2],
             'commonNames': common_names,
             'addFields': add_fields,
             'note': note,
             'synonyms': synonyms,
-            'specimens': specimens,
             'sourceData': source_data,
             'taicol_taxon_name_id': taicol_name_id,
             'taicol_usage_id': row[7],

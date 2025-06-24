@@ -303,6 +303,29 @@ TBIA_TERMS = {
     'county': 'adm1',
     'municipality': 'adm2',
 }
+
+taiwan_counties_english = {
+    '宜蘭縣': 'Yilan',
+    '桃園市': 'Taoyuan',
+    '新竹縣': 'Hsinchu',
+    '苗栗縣': 'Miaoli',
+    '彰化縣': 'Changhua',
+    '南投縣': 'Nantou',
+    '雲林縣': 'Yunlin',
+    '嘉義縣': 'Chiayi',
+    '屏東縣': 'Pingtung',
+    '臺東縣': 'Taitung',
+    '花蓮縣': 'Hualien',
+    '澎湖縣': 'Penghu',
+    '基隆市': 'Keelung',
+    '新竹市': 'Hsinchu',
+    '嘉義市': 'Chiayi',
+    '臺北市': 'Taipei',
+    '新北市': 'New Taipei',
+    '臺中市': 'Taichung',
+    '臺南市': 'Tainan',
+    '高雄市': 'Kaohsiung'
+}
 #    'standardDate',
 #    'standardLatitude',
 #    'standardLongitude',
@@ -389,12 +412,24 @@ def get_external_data_api(source, taxon_key):
         data = resp.json()
         if data['status']['code'] == 200:
             for i,v in enumerate(data['data']):
+                specimen_display = {
+                    'county': '',
+                    'locality': '',
+                    'collector': '',
+                    'record_number': '',
+                }
                 named_areas = {}
                 for term, field in DWC_TERMS.items():
                     if x := v.get(term):
                         key = term if field == '' else field
                         named_areas[key] = x
-
+                        if key == 'adm2':
+                            if county_en := taiwan_counties_english.get(x):
+                                specimen_display['county'] = county_en.upper()
+                        if key == 'locality':
+                            specimen_display['locality'] = x
+                            #'ILAN: Nanhutashan, Lu 24973.
+                            # NANTOU: Mt.Kiraishiu, Wilson 10074 (Type of B. nantoensis, A!);'
                 media = []
                 if x := v.get('associatedMedia'):
                     media.append(x)
@@ -414,13 +449,22 @@ def get_external_data_api(source, taxon_key):
 
                 #print(v)
                 #print(named_areas)
+                recorded_by = ''
+                if x := v.get('recordedBy', ''):
+                    recorded_by = x
+                    specimen_display['collector'] = recorded_by
+                record_number = ''
+                if x := v.get('recordNumber', ''):
+                    record_number = x
+                    specimen_display['record_number'] = x
+
                 records.append({
                     'recid': i,
                     'url': v.get('references', ''),
                     'institutionCode': '',
-                    'recordedBy': v.get('recordedBy', ''),
+                    'recordedBy': recorded_by,
                     'basisOfRecord': v.get('basisOfRecord', ''),
-                    'recordNumber': v.get('recordNumber', ''),
+                    'recordNumber': record_number,
                     'catalogNumber': v.get('catalogNumber', ''),
                     'date': date,
                     'remarks': '',
@@ -428,6 +472,7 @@ def get_external_data_api(source, taxon_key):
                     'datasetTitle': v['datasetName'],
                     'media': media,
                     'named_areas': named_areas,
+                    'specimen_display': specimen_display,
                 })
             return jsonify({
                 'status': 'success',

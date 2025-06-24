@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>biota - preview3</title>
+    <link href="{{ url_for('static', filename='vendor/w2ui-2.0.min.css') }}" rel="stylesheet" />
+</head>
+<body>
+  <h2>{{ data.title }}</h1>
+  <h3>LITERATURES</h2>
+  <ul>
+    {% for t in data.literatures %}
+    <li>{{ t.short_author }}. {{ t.content }}</li>
+    {% endfor %}
+  </ul>
+  <div id="nameItems">
+  </div>
+
+  <template id="item-name-template">
+    <h4><span id="item-name-index"></span> <i id="item-name-canonical"></i><span id="item-name-remark"></span></h4>
+
+    <div id="item-common-name"></div>
+    <div id="item-description"></div>
+
+    <div id="item-synonyms-wrapper">
+      <h5>SYNONYMS</h5>
+      <ul id="item-synonyms">
+      </ul>
+    </div>
+
+    <div id="item-specimen-wrapper">
+      <h5>Specimen</h5>
+      <div id="item-specimen"></div>
+    </div>
+
+    <div id="item-distribution-wrapper">
+      <h5>Distribution</h5>
+      <div id="item-distribution"></div>
+    </div>
+
+  </template>
+
+  <script src="{{ url_for('static', filename='vendor/w2ui-2.0.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/preview3.js') }}"></script>
+</body>
+</html>

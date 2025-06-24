@@ -126,10 +126,12 @@
   }
 
   function init(data) {
+    let nameItems = JSON.stringify(data.items);
+    localStorage.setItem('nameItems', nameItems);
+
     let records = data.items.map( (v, i) => {
       //console.log(v.item_title.scientific_name);
       //let synonymsList = v.synonyms.map( x => (`${x[0]}`)).join(', ');
-
       return {
         recid: v.taicol_usage_id,
         scientificNameID: v.taicol_taxon_name_id,
@@ -215,11 +217,15 @@
       },
       actions: {
         custom: {
-          text: 'OK',
+          text: 'Next Step',
           class: 'w2ui-btn-blue',
           style: 'text-transform: uppercase',
           onClick(event) {
-            w2alert('Custom Action')
+            //w2alert('Custom Action')
+            //window.open(`/preview3`, '_blank').focus();
+            let ext = JSON.stringify(foundExtension);
+            localStorage.setItem('biotaExt', ext);
+            window.open(`/preview3/${NAMESPACE_ID}`, '_blank').focus();
           }
         }
       },

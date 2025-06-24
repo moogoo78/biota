@@ -49,13 +49,13 @@
             toolbarColumns: true,
             selectColumn: true,
           },
-          multiSelect: true,
+          multiSelect: false,
           autoLoad: false,
           toolbar: {
             items: [
               { type: 'break' },
               //{ type: 'button', id: 'mybutton-docx', text: 'export docx', icon: 'fa fa-folder' },
-              { type: 'button', id: 'mybutton-content', text: 'show content', icon: 'fa fa-bolt' },
+              { type: 'button', id: 'mybutton-content', text: 'Prepare', icon: 'fa fa-bolt' },
             ],
             onClick: function (target, data) {
               console.log(target, data);
@@ -63,7 +63,8 @@
               case 'mybutton-content':
                 if (currentSelect.records.length > 0) {
                   const ids = currentSelect.records.join(',');
-                  window.open(`/preview?namespace_ids=${ids}`, '_blank').focus();
+                  //window.open(`/preview?namespace_ids=${ids}`, '_blank').focus();
+                  window.open(`/preview2/${ids}`, '_blank').focus();
                 }
                 break;
               }

@@ -89,6 +89,9 @@ def get_data(schema):
         'records': records,
     })
 
+@bp.route('/preview3/<int:namespace_id>')
+def preview3(namespace_id):
+    return render_template('preview3.html', data=get_namespace_data(namespace_id))
 
 @bp.route('/preview')
 def preview():

@@ -55,7 +55,7 @@
             items: [
               { type: 'break' },
               //{ type: 'button', id: 'mybutton-docx', text: 'export docx', icon: 'fa fa-folder' },
-              { type: 'button', id: 'mybutton-content', text: 'Prepare', icon: 'fa fa-bolt' },
+              { type: 'button', id: 'mybutton-content', text: 'Select Namespace', icon: 'fa fa-bolt' },
             ],
             onClick: function (target, data) {
               console.log(target, data);

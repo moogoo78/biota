@@ -110,7 +110,12 @@ def get_namespaces_data_api(namespace_ids):
     data = []
     for namespace_id in namespace_ids.split(','):
         data.append(get_namespace_data(namespace_id))
-    return jsonify(data)
+
+        # TODO: CORS
+        resp = jsonify(data)
+        resp.headers.add('Access-Control-Allow-Origin', '*')
+        resp.headers.add('Access-Control-Allow-Methods', '*')
+        return resp
 
 @bp.route('/api/external/names/<source>/<key>')
 def get_external_names_api(source, key):
@@ -171,11 +176,15 @@ def get_external_names_api(source, key):
                         })
                         inc += 1
 
-                return jsonify({
+                # TODO: CORS
+                resp = jsonify({
                     'status': 'success',
                     'total': len(records),
                     'records': records,
                 })
+                resp.headers.add('Access-Control-Allow-Origin', '*')
+                resp.headers.add('Access-Control-Allow-Methods', '*')
+                return resp
             else:
                 return jsonify({
                     'status': 'error',
@@ -477,11 +486,16 @@ def get_external_data_api(source, taxon_key):
                     'named_areas': named_areas,
                     'specimen_display': specimen_display,
                 })
-            return jsonify({
+
+            # TODO: CORS
+            resp = jsonify({
                 'status': 'success',
                 'total': data['meta']['total'],
                 'records': records,
             })
+            resp.headers.add('Access-Control-Allow-Origin', '*')
+            resp.headers.add('Access-Control-Allow-Methods', '*')
+            return resp
         else:
             return jsonify({
                 'status': 'error',

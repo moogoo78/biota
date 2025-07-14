@@ -1,9 +1,15 @@
 <script>
-  import '../app.css';
+  import './app.css';
+  import Namespace from './lib/Namespace.svelte';
 
-  let { children } = $props();
-
-  import { Navbar, NavBrand, NavLi, NavUl, NavHamburger } from "flowbite-svelte";
+  import {
+    Navbar,
+    NavBrand,
+    NavLi,
+    NavUl,
+    NavHamburger
+  } from "flowbite-svelte";
+  export let namespaceId;
 </script>
 
 <Navbar>
@@ -19,5 +25,8 @@
 </Navbar>
 
 <div class="container mx-auto px-4 py-8">
-  {@render children()}
+  {#if namespaceId}
+    <Namespace {namespaceId} />
+  {/if}
 </div>
+

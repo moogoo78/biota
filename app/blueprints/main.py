@@ -35,6 +35,11 @@ bp = Blueprint('main', __name__)
 def index():
     return render_template('main.html')
 
+@bp.route('/client')
+def client():
+    return render_template('client.html')
+
+
 @bp.route('/api/schema')
 def get_schema():
     tables = {

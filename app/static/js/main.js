@@ -56,6 +56,7 @@
               { type: 'break' },
               //{ type: 'button', id: 'mybutton-docx', text: 'export docx', icon: 'fa fa-folder' },
               { type: 'button', id: 'mybutton-content', text: 'Select Namespace', icon: 'fa fa-bolt' },
+              { type: 'button', id: 'mybutton-client', text: 'new Client', icon: 'fa fa-bolt' },
             ],
             onClick: function (target, data) {
               console.log(target, data);
@@ -65,6 +66,14 @@
                   const ids = currentSelect.records.join(',');
                   //window.open(`/preview?namespace_ids=${ids}`, '_blank').focus();
                   window.open(`/preview2/${ids}`, '_blank').focus();
+                }
+                break;
+              case 'mybutton-client':
+                if (currentSelect.records.length === 1) {
+                  //const ids = currentSelect.records.join(',');
+                  //console.log(currentSelect.records);
+                  const namespaceId = currentSelect.records[0];
+                  window.open(`/client?namespace_id=${namespaceId}`, '_blank').focus();
                 }
                 break;
               }

@@ -12,18 +12,26 @@
     selected: 'indigo',
     edited: 'teal'
   });
-  let titles = ['Found TBIA Specimens', 'Edit Specimen Data'];
+  let titles = {
+    table: 'Found TBIA Specimens',
+    form: 'Edit Specimen Data',
+    image: 'Specimen Image',
+  };
   //let isLoading = $state(true);
   let error = $state(null);
   let isModalOpen = $state(false);
-  let modalStep = $state(0);
-  let modalTitle = $derived(titles[modalStep]);
+  let modalView = $state('table');
+  let modalTitle = $derived(titles[modalView]);
   let foundResults = $state({});
   let currentItemIndex = $state(-1);
+  let currentSpecimenImage = $state('');
+
   import {
     Button,
     Checkbox,
+    CloseButton,
     DescriptionList,
+    Drawer,
     Heading,
     Indicator,
     Input,
@@ -45,7 +53,7 @@
     $infoState[itemIndex].loading = true;
     currentItemIndex = itemIndex;
     error = null;
-    modalStep = 0;
+    modalView = 'table';
 
     try {
       // find taxonKey
@@ -111,7 +119,9 @@
   }
 
   function handleModalOK(itemIndex) {
-    if (modalStep === 1) {
+    if (modalView === 'table') {
+      modalView = 'form';
+    } else if (modalView === 'form') {
       const form = document.getElementById('specimen-form');
       const formData = new FormData(form);
       //console.log(form, formData);
@@ -125,10 +135,10 @@
           $speciesInfo[itemIndex].specimenData.push(JSON.parse(value));
         }
       }
-      modalStep = 0;
       isModalOpen = false;
+    } else if (modalView === 'image') {
+      modalView = 'table';
     }
-    modalStep += 1;
   }
 </script>
 
@@ -148,7 +158,7 @@
         <TableBodyCell>{item.commonNames}</TableBodyCell>
         <TableBodyCell>{$speciesInfo[index].distributions}</TableBodyCell>
         <TableBodyCell>{$speciesInfo[index].specimens}</TableBodyCell>
-        <TableBodyCell><span class="flex items-center"><Indicator size="sm" color={progressColor[$infoState[index].progress]} class="me-1.5" /></span></TableBodyCell>
+        <TableBodyCell><span class="flex items-center"><Indicator size="sm" color={progressColor[$infoState[index].progress]} class="me-1.5" />{$infoState[index].progress}</span></TableBodyCell>
         <TableBodyCell>
           <Button onclick={() => findSpecimen(index, item.taicol_taxon_name_id, item.item_title.scientific_name.canonical)}>{#if $infoState[index].loading}<Spinner class="me-3" size="4" /> {/if}Find Specimen</Button>
         </TableBodyCell>
@@ -159,7 +169,7 @@
 
 
 <Modal title={modalTitle} bind:open={isModalOpen} size="xl">
-  {#if modalStep === 0}
+  {#if modalView === 'table'}
     <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
       <div class="flex flex-col sm:flex-row justify-between items-center text-sm text-gray-600 bg-gray-200 p-2">
         <div>
@@ -189,7 +199,7 @@
               <TableBodyCell class="p-4!">
                 <Checkbox onclick={(e) => handleItemSelect(e, currentItemIndex, recordIndex)} />
               </TableBodyCell>
-            <TableBodyCell>{#if record.media.length > 0}<img src="{record.media[0]}" alt="specimen">{/if}</TableBodyCell>
+            <TableBodyCell>{#if record.media.length > 0}<img src="{record.media[0]}" alt="specimen" onclick={() => {modalView = 'image'; currentSpecimenImage = record.media[0]}}/>{/if}</TableBodyCell>
               <TableBodyCell>{record.catalogNumber}</TableBodyCell>
               <TableBodyCell>{record.recordedBy}</TableBodyCell>
               <TableBodyCell>{record.recordNumber}</TableBodyCell>
@@ -202,7 +212,7 @@
         </TableBody>
       </Table>
     </div>
-  {:else if modalStep === 1}
+  {:else if modalView === 'form'}
     a{$speciesInfo[currentItemIndex].selectedIds}b
     {currentItemIndex}
     <form id="specimen-form">
@@ -227,6 +237,8 @@
         </div>
       {/each}
     </form>
+  {:else if modalView === 'image'}
+    <img src={currentSpecimenImage} alt="specimen image"/>
   {/if}
   {#snippet footer()}
       <Button onclick={() => handleModalOK(currentItemIndex)}>OK</Button>

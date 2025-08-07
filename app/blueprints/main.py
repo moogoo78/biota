@@ -18,16 +18,16 @@ from flask import (
 #from flask.views import MethodView
 from app.helpers import get_namespace_data, generate_docx
 
-import pymysql
+#import pymysql
 
-pymysql.install_as_MySQLdb()
-import MySQLdb
+#pymysql.install_as_MySQLdb()
+#import MySQLdb
 
 import requests
 from bs4 import BeautifulSoup
 
-mysql_conn = MySQLdb.connect(host="mysql", user="root", passwd="example", db="taicol")
-mysql_cursor = mysql_conn.cursor()
+#mysql_conn = MySQLdb.connect(host="mysql", user="root", passwd="example", db="taicol")
+#mysql_cursor = mysql_conn.cursor()
 
 bp = Blueprint('main', __name__)
 
@@ -100,11 +100,14 @@ def preview3(namespace_id):
 
 @bp.route('/preview')
 def preview():
-    namespace_ids = request.args.get('namespace_ids')
-    data = []
-    for namespace_id in namespace_ids.split(','):
-        data.append(get_namespace_data(namespace_id))
-    return render_template('preview.html', data=data)
+    #namespace_ids = request.args.get('namespace_ids')
+    #data = []
+    #for namespace_id in namespace_ids.split(','):
+    #    data.append(get_namespace_data(namespace_id))
+    #return render_template('preview.html', data=data)
+    if namespace_id := request.args.get('namespace_id'):
+        data = get_namespace_data(namespace_id)
+        return render_template('preview.html', data=data)
 
 @bp.route('/preview2/<int:namespace_id>')
 def preview2(namespace_id):
@@ -621,4 +624,3 @@ def post_publish():
                 response.headers['filename'] = filename
 
                 return response
-

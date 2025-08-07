@@ -1,6 +1,7 @@
 import json
 from datetime import datetime
 
+from flask import g
 from docx import Document
 from docx.shared import Pt, Mm, Cm, Inches
 from docx.oxml import OxmlElement, parse_xml
@@ -12,12 +13,24 @@ import yaml
 
 from bs4 import BeautifulSoup
 
-import pymysql
-pymysql.install_as_MySQLdb()
-import MySQLdb
+#import pymysql
+#pymysql.install_as_MySQLdb()
+#import MySQLdb
 
-mysql_conn = MySQLdb.connect(host="mysql", user="root", passwd="example", db="taicol")
-mysql_cursor = mysql_conn.cursor()
+#mysql_conn = MySQLdb.connect(host="mysql", user="root", passwd="example", db="taicol")
+#mysql_cursor = mysql_conn.cursor()
+
+import pymysql.cursors
+
+def get_db_connection():
+    """Opens a new database connection if there is none for the current context."""
+    if 'db' not in g:
+        g.db = pymysql.connect(host='mysql',
+                                 user='root',
+                                 password='example',
+                                 database='taicol',
+                                 cursorclass=pymysql.cursors.DictCursor)
+    return g.db
 
 class BiotaPrint(object):
     doc = None
@@ -149,6 +162,7 @@ def generate_docx(data):
 
 
 def get_namespace_data(namespace_id):
+    conn = get_db_connection()
     data = {
         'title': '',
         'author': '',
@@ -158,21 +172,25 @@ def get_namespace_data(namespace_id):
         'reference_name': ''
     }
 
+    #mysql_cursor.execute(literature_sql)
+    mysql_cursor = conn.cursor()
+    #with conn.cursor() as cursor:
     literature_sql = f'SELECT a.author, a.short_author, a.content FROM import_checklist_logs c LEFT JOIN api_citations a ON FIND_IN_SET(a.reference_id, c.included_references) > 0 WHERE c.namespace_id = {namespace_id}'
     mysql_cursor.execute(literature_sql)
     rows = mysql_cursor.fetchall()
     for r in rows:
-        data['literatures'].append({'author': r[0], 'short_author': r[1], 'content': r[2]})
+        data['literatures'].append({'author': r['author'], 'short_author': r['short_author'], 'content': r['content']})
 
     mysql_cursor.execute(f'SELECT n.title, u.name FROM my_namespaces n LEFT JOIN users u ON u.id = n.user_id WHERE n.id={namespace_id}')
     result = mysql_cursor.fetchone()
-    data['title'] = result[0]
-    data['author'] = result[1]
+    data['title'] = result['title']
+    data['author'] = result['name']
 
     mysql_cursor.execute(f"SELECT t.name, t._authorship, t.id, u.per_usages, u.type_specimens, u.properties, r.title, u.id, t.properties, u.name_remark FROM my_namespace_usages u LEFT JOIN taxon_names t ON u.taxon_name_id = t.id LEFT JOIN `references` r ON r.id = t.reference_id WHERE namespace_id={namespace_id} AND u.status='accepted'")
 
     rows = mysql_cursor.fetchall()
     for row in rows:
+        #print(row)
         common_names = []
         synonyms = []
         note = ''
@@ -189,10 +207,10 @@ def get_namespace_data(namespace_id):
         }
         per_usages = []
         type_specimens = []
-        if x := row[3]:
+        if x := row['per_usages']:
             source_data['usages'] = yaml.dump(json.loads(x), default_flow_style=False, sort_keys=False, allow_unicode=True)
-            per_usages = json.loads(row[3])
-        if x := row[5]:
+            per_usages = json.loads(row['per_usages'])
+        if x := row['properties']:
             props = json.loads(x)
             source_data['props'] = yaml.dump(props, default_flow_style=False, sort_keys=False, allow_unicode=True)
 
@@ -209,7 +227,7 @@ def get_namespace_data(namespace_id):
                     #description:"特徵描述",diagnosis:"鑑定特徵",distribution:"物種分布",etymology:"語源",habitat:"棲地",substrata:"基質",measurements:"測量",coloration:"顏色",otherExaminedMaterial:"其他引證標本"
                     add_fields[x['field_name']] = x['field_value']
 
-        if x := row[4]:
+        if x := row['type_specimens']:
             sp = json.loads(x)
             source_data['type'] = yaml.dump(sp, default_flow_style=False, sort_keys=False, allow_unicode=True)
             type_specimens = sp
@@ -218,24 +236,24 @@ def get_namespace_data(namespace_id):
         #    if x not in data['literatures']:
         #        data['literatures'].append(x)
 
-        if x:= row[2]:
+        if x:= row['id']:
             taicol_name_id = x
             mysql_cursor.execute(f"SELECT ru.id, ru.status, t.name, t._authorship, r.title FROM reference_usages ru LEFT JOIN `references` r ON r.id = ru.reference_id LEFT JOIN taxon_names t ON t.id = ru.taxon_name_id WHERE ru.accepted_taxon_name_id={x} and ru.status != 'accepted'")
             results = mysql_cursor.fetchall()
             sci_name = ''
             ref_title = ''
             for i in results:
-                sci_name = i[2]
-                if author := i[3]:
+                sci_name = i['name']
+                if author := i['_authorship']:
                     sci_name = f'{sci_name} {author}'
-                if ref := i[4]:
+                if ref := i['title']:
                     ref_title = ref
                 synonyms.append([sci_name, ref_title])
 
         # item_title atomic struct
         item_title = {
             'scientific_name': {
-                'canonical': row[0],
+                'canonical': row['name'],
                 'author': '',
                 'full': ''
             },
@@ -257,12 +275,12 @@ def get_namespace_data(namespace_id):
             #'display_name': ['', ['', '', ''],'',''], # ['canonical_name', ["author", "ref", "name-in-ref"], "type status:"]
         }
 
-        if x := row[1]:
+        if x := row['name']:
             item_title['scientific_name']['author'] = x
             item_title['scientific_name']['full'] = f"{item_title['scientific_name']['canonical']} {x}"
             #item_title['display_name'][1][0] = x
 
-        if x := row[8]:
+        if x := row['properties']:
             taxon_props = json.loads(x)
             if y := taxon_props.get('reference_name'):
                 item_title['ref'] = y
@@ -359,7 +377,7 @@ def get_namespace_data(namespace_id):
 
         # parse name_remark
         full_name = ''
-        if name_remark := row[9]:
+        if name_remark := row['name_remark']:
             soup = BeautifulSoup(name_remark, 'lxml')
             if soup.i:
                 name_remark = soup.i.string
@@ -376,14 +394,14 @@ def get_namespace_data(namespace_id):
 
         data['items'].append({
             'item_title': item_title,
-            'status': row[2],
+            'status': row['id'],
             'commonNames': common_names,
             'addFields': add_fields,
             'note': note,
             'synonyms': synonyms,
             'sourceData': source_data,
             'taicol_taxon_name_id': taicol_name_id,
-            'taicol_usage_id': row[7],
+            'taicol_usage_id': row['id'],
         })
 
     return data

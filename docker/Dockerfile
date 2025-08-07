@@ -7,7 +7,7 @@ FROM python:${PYTHON_VERSION}-slim-${DEBIAN_RELEASE}
 ARG PIP_REQUIREMENTS
 
 RUN apt-get update \
-  && apt-get install -y build-essential \
+  && apt-get install -y build-essential pkg-config python3-dev default-libmysqlclient-dev build-essential \
   && apt-get purge -y --auto-remove \
   && rm -fr /var/lib/apt/lists/*
 

@@ -8,6 +8,8 @@ from flask import (
     url_for,
     current_app,
 )
+import requests
+
 from app.database import session
 from app.models import (
     WebhookEvent,
@@ -28,9 +30,21 @@ def activate_namespace():
 
             if email := data['data'].get('email'):
                 if user := User.query.filter(User.email==email).scalar():
-                    n = Notification(event_id=w.id, user_id=user.id)
-                    session.add(n)
-                    session.commit()
+
+                    resp = requests.get(f'https://staging.taicol.tw/api/user/namespace?email={email}')
+g                    if resp.ok:
+                        resp_json = resp.json()
+                        available_namespaces = resp_json.get('namespaces', [])
+                        namespace_id = data['data']['namespace_id']
+                        print(namespace_id, data)
+                        if namespace_id in available_namespaces:
+                            n = Notification(event_id=w.id, user_id=user.id, content=f'namespace [{namespace_id}] published')
+                            session.add(n)
+                            session.commit()
+                        else:
+                            return jsonify({'message': 'namespace not available'})
+                    else:
+                        return jsonify({'message': 'email namespace not available'})
                 else:
                     return jsonify({'message': 'no user'})
             else:

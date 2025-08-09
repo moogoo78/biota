@@ -56,10 +56,10 @@ class SourceMixin(object):
     #     default=uuid.uuid4
     # )
     #version: Mapped[int] = mapped_column(default=1)
-    source_id = mapped_column(Integer)
-    source_name = mapped_column(String(500))
-    source_data: Mapped[Dict[str, Any]] = mapped_column(JSONB)
-    fetched_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
+    source_id: Mapped[Optional[int]] = mapped_column(Integer)
+    source_name: Mapped[Optional[str]] = mapped_column(String(500))
+    source_data: Mapped[Dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    fetched_at: Mapped[Optional[datetime]] = mapped_column(default=datetime.utcnow)
 
 
 class WebhookEvent(Base, TimestampMixin):
@@ -104,6 +104,7 @@ class Collection(Base, SourceMixin):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(500))
+    user_id: Mapped[int] = mapped_column(ForeignKey('user.id'))
 
 
 class Item(Base, TimestampMixin, SourceMixin):

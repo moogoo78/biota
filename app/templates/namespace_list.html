@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block main %}
+<ul>
+  {% for i in collections %}
+  <li><a href="{{ url_for('main.preview') }}?namespace_id={{ i.source_id }}">{{ i.name }}</li>
+  {% endfor %}
+</ul>
+{% endblock %}

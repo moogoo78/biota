@@ -15,9 +15,20 @@ from flask import (
     send_file,
 )
 
+from flask_login import (
+    login_required,
+    logout_user,
+)
+
 #from flask.views import MethodView
 from app.helpers import get_namespace_data, generate_docx
+from app.database import session
 
+from app.models import (
+    User,
+    Collection,
+    Notification,
+)
 #import pymysql
 
 #pymysql.install_as_MySQLdb()
@@ -33,7 +44,17 @@ bp = Blueprint('main', __name__)
 
 @bp.route('/')
 def index():
+    return render_template('dashboard.html')
+
+@bp.route('/main')
+def main():
     return render_template('main.html')
+
+@bp.route('/namespaces/')
+def namespace_list():
+    current_user = session.get(User, 2)
+    collections = Collection.query.filter(Collection.user_id==current_user.id).all()
+    return render_template('namespace_list.html', collections=collections)
 
 @bp.route('/client')
 def client():

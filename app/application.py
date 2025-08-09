@@ -1,8 +1,9 @@
 import os
 import re
 import json
-#import logging
+import logging
 from logging.config import dictConfig
+from logging.handlers import RotatingFileHandler
 
 from flask import (
     g,
@@ -22,9 +23,24 @@ from werkzeug.security import (
 from flask_login import (
     LoginManager,
     login_user,
+    logout_user,
 )
 import pymysql.cursors
 #from app.database import session
+
+logger = logging.getLogger("myapp")
+logger.setLevel(logging.DEBUG)
+
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.DEBUG)
+console_handler.setFormatter(logging.Formatter('[CONSOLE] %(levelname)s: %(message)s'))
+
+#file_handler = RotatingFileHandler('/var/log/biota/flask.log', maxBytes=5 * 1024 * 1024, backupCount=10)
+#file_handler.setLevel(logging.DEBUG)
+#file_handler.setFormatter(logging.Formatter('[%(asctime)s] %(levelname)s in %(module)s: %(message)s'))
+
+logger.addHandler(console_handler)
+#logger.addHandler(file_handler)
 
 
 def apply_blueprints(app):
@@ -84,6 +100,14 @@ def login():
 
     return abort(404)
 
+@flask_app.route('/logout')
+def logout():
+    logout_user()
+
+    response = jsonify({"msg": "logout successful"})
+    #unset_jwt_cookies(response)
+    #return response
+    return redirect(url_for('login'))
 
 @flask_app.route('/robots.txt')
 def robots_txt():

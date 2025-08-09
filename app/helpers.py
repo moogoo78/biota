@@ -276,7 +276,7 @@ def get_namespace_data(namespace_id):
                 },
                 'specimens': [],
             },
-            'description': destription,
+            'description': description,
             'distributions': distribution,
             #'display_name': ['', ['', '', ''],'',''], # ['canonical_name', ["author", "ref", "name-in-ref"], "type status:"]
         }
@@ -308,7 +308,7 @@ def get_namespace_data(namespace_id):
                         item_title['type']['gathering']['country'] = c
 
             if x := s.get('locality'):
-                item_title['type']['gathering']['locality1'] = x
+                item_title['type']['gathering']['locality'] = x
             if x := s.get('locality_verbatim'):
                 item_title['type']['gathering']['locality2'] = x
 
@@ -341,7 +341,7 @@ def get_namespace_data(namespace_id):
         if x := item_title['type']['gathering']['country']:
             voucher = f"{voucher}: {x.upper()}"
         loc = ''
-        if x := item_title['type']['gathering']['locality1']:
+        if x := item_title['type']['gathering']['locality']:
             loc = x
             if x2 := item_title['type']['gathering']['locality2']:
                 loc = f'{loc}({x2})'

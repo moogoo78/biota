@@ -29,7 +29,9 @@ import pymysql.cursors
 
 def apply_blueprints(app):
     from app.blueprints.main import bp as main_bp;
+    from app.blueprints.api import bp as api_bp;
     app.register_blueprint(main_bp, url_prefix='/')
+    app.register_blueprint(api_bp, url_prefix='/api/v1')
 
 def apply_extensions(app):
     # login

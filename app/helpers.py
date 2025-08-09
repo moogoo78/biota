@@ -138,7 +138,7 @@ def generate_docx(data):
                 biota.add_content('DESCRIPTION', 'h3')
                 biota.add_content(x)
 
-            if x:= v['addFields'].get('description'):
+            if x:= v['addFields'].get('distribution'):
                 biota.add_content('DISTRIBUTION', 'h3')
                 biota.add_content(x)
 
@@ -226,6 +226,10 @@ def get_namespace_data(namespace_id):
                 for x in xlist:
                     #description:"特徵描述",diagnosis:"鑑定特徵",distribution:"物種分布",etymology:"語源",habitat:"棲地",substrata:"基質",measurements:"測量",coloration:"顏色",otherExaminedMaterial:"其他引證標本"
                     add_fields[x['field_name']] = x['field_value']
+                    if x['field_name'] == 'distribution':
+                        distribution = x['field_value']
+                    if x['field_name'] == 'description':
+                        destription = x['field_value']
 
         if x := row['type_specimens']:
             sp = json.loads(x)
@@ -272,6 +276,8 @@ def get_namespace_data(namespace_id):
                 },
                 'specimens': [],
             },
+            'description': destription,
+            'distributions': distribution,
             #'display_name': ['', ['', '', ''],'',''], # ['canonical_name', ["author", "ref", "name-in-ref"], "type status:"]
         }
 

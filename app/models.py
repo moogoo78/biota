@@ -62,6 +62,23 @@ class SourceMixin(object):
     fetched_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
 
 
+class WebhookEvent(Base, TimestampMixin):
+    __tablename__ = 'webhook_event'
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(500))
+    data: Mapped[Dict[str, Any]] = mapped_column(JSONB)
+
+
+class Notification(Base, TimestampMixin):
+    __tablename__ = 'notification'
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey('user.id'))
+    content: Mapped[Optional[str]] = mapped_column(Text)
+    event_id: Mapped[int] = mapped_column(ForeignKey('webhook_event.id'))
+    read_at: Mapped[Optional[datetime]] = mapped_column(DateTime)
+
 class Publication(Base, TimestampMixin):
     __tablename__ = 'publication'
 

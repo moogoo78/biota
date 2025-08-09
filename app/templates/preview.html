@@ -682,6 +682,7 @@ const COUNTY_MAP = {
          }
          let data = await response.json();
          namespacePart = data[0]; // get first
+         console.log('get_namespace', data[0]);
          namespacePart.items.forEach(x => {
            speciesInfo.push({
              recid: x.taicol_usage_id,

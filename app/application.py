@@ -61,7 +61,7 @@ def apply_extensions(app):
     @login_manager.unauthorized_handler
     def unauthorized():
         # do stuff
-        return redirect(url_for('admin.login') + '?next=' + request.path)
+        return redirect(url_for('login') + '?next=' + request.path)
 
 def create_app():
     app = Flask(__name__)

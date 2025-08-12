@@ -73,7 +73,8 @@
                   //const ids = currentSelect.records.join(',');
                   //console.log(currentSelect.records);
                   const namespaceId = currentSelect.records[0];
-                  window.open(`/client?namespace_id=${namespaceId}`, '_blank').focus();
+                 //window.open(`/client?namespace_id=${namespaceId}`, '_blank').focus();
+                  window.open(`/preview?namespace_id=${namespaceId}`, '_blank').focus();
                 }
                 break;
               }

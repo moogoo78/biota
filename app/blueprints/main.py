@@ -43,11 +43,12 @@ from bs4 import BeautifulSoup
 bp = Blueprint('main', __name__)
 
 @bp.route('/')
+@login_required
 def index():
     return render_template('dashboard.html')
 
-@bp.route('/main')
-def main():
+@bp.route('/nametool')
+def nametool():
     return render_template('main.html')
 
 @bp.route('/namespaces/')
@@ -60,9 +61,12 @@ def namespace_list():
 def client():
     return render_template('client.html')
 
-
 @bp.route('/api/schema')
 def get_schema():
+    from app.helpers import get_db_connection
+    conn = get_db_connection()
+    mysql_cursor = conn.cursor()
+
     tables = {
         'my_namespaces': [],
         #'references': [],
@@ -71,12 +75,17 @@ def get_schema():
     for k in tables:
         mysql_cursor.execute(f'SHOW COLUMNS FROM `{k}`')
         rows = mysql_cursor.fetchall()
-        tables[k] = [x[0] for x in rows]
+        #    tables[k] = [x[0] for x in rows]
+        tables[k] = [x['Field'] for x in rows]
 
     return jsonify(tables)
 
 @bp.route('/api/data/<schema>')
 def get_data(schema):
+    from app.helpers import get_db_connection
+    conn = get_db_connection()
+    mysql_cursor = conn.cursor()
+
     offset = 0
     limit = 100
     if q := request.args.get('request'):
@@ -85,30 +94,32 @@ def get_data(schema):
         offset = payload.get('offset')
 
     mysql_cursor.execute(f'SHOW COLUMNS FROM `{schema}`')
-    columns = [x[0] for x in mysql_cursor.fetchall()]
+    columns = [x['Field'] for x in mysql_cursor.fetchall()]
 
     total = 0
     mysql_cursor.execute(f'SELECT COUNT(*) FROM `{schema}`')
     if r := mysql_cursor.fetchone():
-        total = r[0]
+        total = r['COUNT(*)']
 
     mysql_cursor.execute(f'SELECT * FROM `{schema}` ORDER BY id DESC LIMIT {limit} OFFSET {offset}')
     rows = mysql_cursor.fetchall()
     records = []
     for i, v in enumerate(rows):
         r = {
-            'recid': v[0],
+            'recid': v['id'],
             'url': '<a href="http://w2ui.com" target="_blank" title="Click Me!"><u>http://w2ui.com</u></a>',
         }
-        for xi, x in enumerate(v):
-            r[columns[xi]] = x
-        records.append(r)
+        #for xi, x in enumerate(v):
+        #    print(xi, x, columns[xi])
+            #r[columns[xi]] = x
+        #r.update(v)
+        v['recid'] = v['id']
+        records.append(v)
 
     # {
     #     "status": "error",
     #     "message": "Error Message"
     # }
-
     return jsonify({
         'status': 'success',
         'total': total,

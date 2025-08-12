@@ -64,9 +64,9 @@
           #}
           <button id="user-menu-button" type="button" class="flex text-sm bg-gray-800 rounded-full focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600" aria-expanded="false" data-dropdown-toggle="user-dropdown" data-dropdown-placement="bottom">
             <span class="sr-only">Open user menu</span>
-            <img class="w-8 h-8 rounded-full" src="https://placehold.co/32x32/f97316/ffffff?text=M" alt="user photo">
+            {#<img class="w-8 h-8 rounded-full" src="https://placehold.co/32x32/f97316/ffffff?text=M" alt="user photo">#}
           </button>
-          <span class="text-white hidden sm:inline">moogoolee</span>
+          <span class="text-white hidden sm:inline">{{ current_user.email }}</span>
           <a href="{{ url_for('logout') }}"><button type="button" class="p-2 text-gray-400 hover:text-white rounded-full hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white">
             <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z"></path><path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z"></path></svg>
           </button></a>
@@ -74,8 +74,8 @@
           <!-- Dropdown menu -->
           <div class="z-50 hidden my-4 text-base list-none bg-white divide-y divide-gray-100 rounded-lg shadow dark:bg-gray-700 dark:divide-gray-600" id="user-dropdown">
             <div class="px-4 py-3">
-              <span class="block text-sm text-gray-900 dark:text-white">moogoolee</span>
-              <span class="block text-sm text-gray-500 truncate dark:text-gray-400">moogoolee@gmail.com</span>
+              <span class="block text-sm text-gray-900 dark:text-white">{{ current_user.username }}</span>
+              <span class="block text-sm text-gray-500 truncate dark:text-gray-400">{{ current_user.email }}</span>
             </div>
             <ul class="py-2" aria-labelledby="user-menu-button">
               <li><a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Dashboard</a></li>

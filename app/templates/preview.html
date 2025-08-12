@@ -494,6 +494,15 @@ const COUNTY_MAP = {
          const detailsContainer = detailsRow.querySelector('.details-container');
          detailsContainer.querySelector('.item-scientific-name').textContent = item.item_title.scientific_name.canonical;
          // You can add more details here, e.g., from item.addFields
+         if (item.item_title.name_remark) {
+           const p = document.createElement('p');
+           const bold = document.createElement('b');
+           bold.textContent = 'Title(name_remark)';
+           detailsContainer.appendChild(bold);
+           p.textContent = item.item_title.name_remark;
+           detailsContainer.appendChild(p);
+         }
+
          if (item.addFields) {
            if (item.addFields.description) {
              const desc = document.createElement('p');
@@ -511,6 +520,14 @@ const COUNTY_MAP = {
              dist.textContent = item.addFields.distribution;
              detailsContainer.appendChild(dist);
            }
+         }
+         if (item.item_title.type) {
+           const pre = document.createElement('pre');
+           const bold = document.createElement('b');
+           bold.textContent = 'Type Specimens';
+           detailsContainer.appendChild(bold);
+           pre.textContent = `${JSON.stringify(item.item_title.type, null, 2)}`;
+           detailsContainer.appendChild(pre);
          }
 
          itemTableBody.appendChild(clone);

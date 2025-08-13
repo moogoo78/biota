@@ -13,6 +13,7 @@ class Config(object):
     SECRET_KEY = 'no secret'
 
     WEB_ENV = os.getenv('WEB_ENV')
+    API_URL = os.getenv('API_URL')
 
 class ProductionConfig(Config):
     SECRET_KEY = os.getenv('SECRET_KEY')

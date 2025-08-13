@@ -18,6 +18,7 @@ from flask import (
 from flask_login import (
     login_required,
     logout_user,
+    current_user,
 )
 
 #from flask.views import MethodView
@@ -53,7 +54,6 @@ def nametool():
 
 @bp.route('/namespaces/')
 def namespace_list():
-    current_user = session.get(User, 2)
     collections = Collection.query.filter(Collection.user_id==current_user.id).all()
     return render_template('namespace_list.html', collections=collections)
 

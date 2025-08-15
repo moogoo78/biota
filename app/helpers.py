@@ -186,7 +186,7 @@ def get_namespace_data(namespace_id):
     data['title'] = result['title']
     data['author'] = result['name']
 
-    mysql_cursor.execute(f"SELECT t.name, t._authorship, t.id, u.per_usages, u.type_specimens, u.properties, r.title, u.id, t.properties, u.name_remark FROM my_namespace_usages u LEFT JOIN taxon_names t ON u.taxon_name_id = t.id LEFT JOIN `references` r ON r.id = t.reference_id WHERE namespace_id={namespace_id} AND u.status='accepted'")
+    mysql_cursor.execute(f"SELECT t.name, t._authorship, t.id, u.per_usages, u.type_specimens, u.properties, r.title, u.id, t.properties, u.name_remark, u.group FROM my_namespace_usages u LEFT JOIN taxon_names t ON u.taxon_name_id = t.id LEFT JOIN `references` r ON r.id = t.reference_id WHERE namespace_id={namespace_id} AND u.status='accepted' ORDER by `order`")
 
     rows = mysql_cursor.fetchall()
     for row in rows:
@@ -200,59 +200,56 @@ def get_namespace_data(namespace_id):
         specimens = []
         taicol_name_id = None
 
-        source_data = {
-            'usages': [],
-            'type': [],
-            'props': [],
-        }
         per_usages = []
-        type_specimens = []
+        type_specimens = {}
+        properties = {}
+
         if x := row['per_usages']:
-            source_data['usages'] = yaml.dump(json.loads(x), default_flow_style=False, sort_keys=False, allow_unicode=True)
+            #source_data['usages'] = yaml.dump(json.loads(x), default_flow_style=False, sort_keys=False, allow_unicode=True)
             per_usages = json.loads(row['per_usages'])
         if x := row['properties']:
-            props = json.loads(x)
-            source_data['props'] = yaml.dump(props, default_flow_style=False, sort_keys=False, allow_unicode=True)
+            #description:"特徵描述",diagnosis:"鑑定特徵",distribution:"物種分布",etymology:"語源",habitat:"棲地",substrata:"基質",measurements:"測量",coloration:"顏色",otherExaminedMaterial:"其他引證標本"
+            properties = json.loads(x)
+            #source_data['props'] = yaml.dump(props, default_flow_style=False, sort_keys=False, allow_unicode=True)
 
-            if names := props.get('common_names'):
+            if names := properties.get('common_names'):
                 for n in names:
                     if x := n['name']:
                         common_names.append(x.replace('\u0000', '').strip())
 
-            if x := props.get('note'):
-                note = x
-
-            if xlist := props.get('additional_fields'):
-                for x in xlist:
-                    #description:"特徵描述",diagnosis:"鑑定特徵",distribution:"物種分布",etymology:"語源",habitat:"棲地",substrata:"基質",measurements:"測量",coloration:"顏色",otherExaminedMaterial:"其他引證標本"
-                    add_fields[x['field_name']] = x['field_value']
-                    if x['field_name'] == 'distribution':
-                        distribution = x['field_value']
-                    if x['field_name'] == 'description':
-                        destription = x['field_value']
-
         if x := row['type_specimens']:
-            sp = json.loads(x)
-            source_data['type'] = yaml.dump(sp, default_flow_style=False, sort_keys=False, allow_unicode=True)
-            type_specimens = sp
+            type_specimens = json.loads(x)
+            #source_data['type'] = yaml.dump(sp, default_flow_style=False, sort_keys=False, allow_unicode=True)
 
         #if x := row[6]:
         #    if x not in data['literatures']:
         #        data['literatures'].append(x)
 
-        if x:= row['id']:
-            taicol_name_id = x
-            mysql_cursor.execute(f"SELECT ru.id, ru.status, t.name, t._authorship, r.title FROM reference_usages ru LEFT JOIN `references` r ON r.id = ru.reference_id LEFT JOIN taxon_names t ON t.id = ru.taxon_name_id WHERE ru.accepted_taxon_name_id={x} and ru.status != 'accepted'")
-            results = mysql_cursor.fetchall()
-            sci_name = ''
-            ref_title = ''
-            for i in results:
-                sci_name = i['name']
-                if author := i['_authorship']:
-                    sci_name = f'{sci_name} {author}'
-                if ref := i['title']:
-                    ref_title = ref
-                synonyms.append([sci_name, ref_title])
+        if x:= row['group']:
+            # taicol_name_id = x
+            # mysql_cursor.execute(f"SELECT ru.id, ru.status, t.name, t._authorship, r.title FROM reference_usages ru LEFT JOIN `references` r ON r.id = ru.reference_id LEFT JOIN taxon_names t ON t.id = ru.taxon_name_id WHERE ru.accepted_taxon_name_id={x} and ru.status != 'accepted'")
+            # results = mysql_cursor.fetchall()
+            # sci_name = ''
+            # ref_title = ''
+            # for i in results:
+            #     sci_name = i['name']
+            #     if author := i['_authorship']:
+            #         sci_name = f'{sci_name} {author}'
+            #     if ref := i['title']:
+            #         ref_title = ref
+            #     synonyms.append([sci_name, ref_title])
+
+            mysql_cursor.execute(f"SELECT t.name, t.formatted_authors, t.id, u.properties FROM my_namespace_usages u LEFT JOIN taxon_names t ON u.taxon_name_id = t.id WHERE u.namespace_id={namespace_id} AND u.status != 'accepted' AND u.group = {x}")
+
+            res_synonyms = mysql_cursor.fetchall()
+            for x in res_synonyms:
+                y = {}
+                for k, v in x.items():
+                    if k == 'properties':
+                        y[k] = json.loads(v)
+                    else:
+                        y[k] = v
+                synonyms.append(y)
 
         # item_title atomic struct
         item_title = {
@@ -402,10 +399,9 @@ def get_namespace_data(namespace_id):
             'item_title': item_title,
             'status': row['id'],
             'commonNames': common_names,
-            'addFields': add_fields,
-            'note': note,
             'synonyms': synonyms,
-            'sourceData': source_data,
+            'type_specimens': type_specimens,
+            'properties': properties,
             'taicol_taxon_name_id': taicol_name_id,
             'taicol_usage_id': row['id'],
         })

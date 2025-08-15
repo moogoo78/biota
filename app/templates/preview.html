@@ -479,10 +479,10 @@ const COUNTY_MAP = {
          const clone = template.content.cloneNode(true);
          const mainRow = clone.children[0];
          const detailsRow = clone.children[1];
-         
+
          let scientificNameEl = mainRow.querySelector('.item-scientific-name');
          let commonNameEl = mainRow.querySelector('.item-common-name');
-         
+
          // Set row id for later reference
          mainRow.setAttribute('data-index', index);
          mainRow.setAttribute('data-scientific-name', item.item_title.scientific_name.canonical);
@@ -493,45 +493,80 @@ const COUNTY_MAP = {
          // Populate details row
          const detailsContainer = detailsRow.querySelector('.details-container');
          detailsContainer.querySelector('.item-scientific-name').textContent = item.item_title.scientific_name.canonical;
-         // You can add more details here, e.g., from item.addFields
-         if (item.item_title.name_remark) {
+
+
+         const p1 = document.createElement('p');
+         const bold1 = document.createElement('b');
+         bold1.textContent = '[name_remark]';
+         detailsContainer.appendChild(bold1);
+         p1.textContent = item.item_title?.name_remark || '--';
+         detailsContainer.appendChild(p1);
+
+         const hrCls = 'inline-flex items-center justify-center w-full'.split(' ');
+
+         if (item.synonyms.length) {
+           const b = document.createElement('b');
+           b.textContent = 'Synonyms';
+           detailsContainer.appendChild(b);
+
+           item.synonyms.forEach( x => {
+             const p = document.createElement('p');
+             const s = document.createElement('span');
+             const i = document.createElement('i');
+             i.textContent = x.name;
+             p.appendChild(i);
+             console.log(x);
+             s.textContent = ` ${x.formatted_authors}`;
+             if (x.properties?.indications.length) {
+               s.textContent = ` ${s.textContent} ${x.properties?.indications.join(' ')}`;
+             }
+             p.appendChild(s);
+             detailsContainer.appendChild(p);
+           });
+         }
+
+         const p2 = document.createElement('p');
+         const bold2 = document.createElement('b');
+         bold2.textContent = 'Note';
+         detailsContainer.appendChild(bold2);
+         p2.textContent = item.properties.note || '';
+         detailsContainer.appendChild(p2);
+
+         item.properties.additional_fields.forEach( aField => {
            const p = document.createElement('p');
            const bold = document.createElement('b');
-           bold.textContent = 'Title(name_remark)';
+           bold.textContent = String(aField.field_name).charAt(0).toUpperCase() + String(aField.field_name).slice(1);
+           p.textContent = aField.field_value;
            detailsContainer.appendChild(bold);
-           p.textContent = item.item_title.name_remark;
            detailsContainer.appendChild(p);
-         }
+         });
+         // seperator
+         const hrDiv = document.createElement('div');
+         hrDiv.classList.add(...hrCls);
+         hrDiv.innerHTML = '<hr class="w-64 h-px my-8 bg-gray-200 border-0 dark:bg-gray-700"><span class="absolute px-3 font-medium text-gray-900 -translate-x-1/2 bg-white left-1/2 dark:text-white dark:bg-gray-900">custom</span></div>';
+         detailsContainer.appendChild(hrDiv);
 
-         if (item.addFields) {
-           if (item.addFields.description) {
-             const desc = document.createElement('p');
-             const bold = document.createElement('b');
-             bold.textContent = 'Description';
-             detailsContainer.appendChild(bold);
-             desc.textContent = item.addFields.description;
-            detailsContainer.appendChild(desc);
-           }
-           if (item.addFields.distribution) {
-             const dist = document.createElement('p');
-             const bold = document.createElement('b');
-             bold.textContent = 'Distribution';
-             detailsContainer.appendChild(bold);
-             dist.textContent = item.addFields.distribution;
-             detailsContainer.appendChild(dist);
-           }
-         }
-         if (item.item_title.type) {
-           const pre = document.createElement('pre');
+         item.properties.custom_fields.forEach( aField => {
+           const p = document.createElement('p');
            const bold = document.createElement('b');
-           bold.textContent = 'Type Specimens';
+           bold.textContent = String(aField.field_name_en).charAt(0).toUpperCase() + String(aField.field_name_en).slice(1) + ' / ' + aField.field_name_zh;
+           p.textContent = aField.field_value;
            detailsContainer.appendChild(bold);
-           pre.textContent = `${JSON.stringify(item.item_title.type, null, 2)}`;
-           detailsContainer.appendChild(pre);
-         }
+           detailsContainer.appendChild(p);
+         });
+
+         // seperator
+         const hrDiv2 = document.createElement('div');
+         hrDiv2.classList.add(...hrCls);
+         hrDiv2.innerHTML = '<hr class="w-64 h-px my-8 bg-gray-200 border-0 dark:bg-gray-700"><span class="absolute px-3 font-medium text-gray-900 -translate-x-1/2 bg-white left-1/2 dark:text-white dark:bg-gray-900">Type Specimens</span></div>';
+         detailsContainer.appendChild(hrDiv2);
+
+         const pre = document.createElement('pre');
+         pre.textContent = `${JSON.stringify(item.type_specimens, null, 2)}`;
+         detailsContainer.appendChild(pre);
 
          itemTableBody.appendChild(clone);
-    });
+       });
        initFlowbite();
      }
 

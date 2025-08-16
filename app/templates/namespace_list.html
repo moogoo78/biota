@@ -1,9 +1,12 @@
 {% extends "base.html" %}
 
 {% block main %}
-<ul>
-  {% for i in collections %}
-  <li><a href="{{ url_for('main.preview') }}?namespace_id={{ i.source_id }}">{{ i.name }}</li>
-  {% endfor %}
-</ul>
+<main class="flex-1 bg-white dark:bg-gray-900 p-6 overflow-y-auto">
+  <h2 class="mb-2 text-lg font-semibold text-gray-900 dark:text-white">我的名錄:</h2>
+  <ul class="max-w-md space-y-1 text-gray-500 list-disc list-inside dark:text-gray-400">
+    {% for i in collections %}
+    <li><a href="{{ url_for('main.preview') }}?namespace_id={{ i.source_id }}">{{ i.name }}</a></li>
+    {% endfor %}
+  </ul>
+</main>
 {% endblock %}

@@ -1,0 +1,86 @@
+{% macro details(summary, data) %}
+    <details>
+      <summary>{{ summary }}</summary>
+      <pre>{{ data }}</pre>
+    </details>
+{% endmacro %}
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Biota Taiwanica</title>
+  {#
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sakura.css/css/sakura.css" type="text/css">
+  #}
+  <link href="{{ url_for('static', filename='vendor/w2ui-2.0.min.css') }}" rel="stylesheet" />
+  {#<link rel="stylesheet" href="/static/vendor/mvp.css"> #}
+</head>
+<body>
+  <h1>Biota Taiwanica (TaiCOL data)</h1>
+  next step: [{% for section in data %} <a href="/preview2/{{ section.id }}">{{ section.title }}</a>{% if not loop.last %} |{% endif %}{% endfor %} ]
+  <h2>Namespaces</h2>
+  <ul>
+    {% for section in data %}
+    <li><a href="#sec-{{ loop.index }}">{{ section.title }}</a></li>
+    {% endfor %}
+  </ul>
+  <p><button id="download-docx">download docx</button></p>
+  {#
+  <fieldset>
+  <legend>Choose Occurrence Data Sources:</legend>
+  <div>
+    <input type="checkbox" id="gbif" name="gbif" checked />
+    <label for="gbif">GBIF</label>
+  </div>
+
+  <div>
+    <input type="checkbox" id="tbia" name="tbia" />
+    <label for="tbia">TBIA</label>
+  </div>
+  </fieldset>
+#}
+  <hr>
+  {# data #}
+  {% for section in data %}
+  <div>
+    <h2 id="sec-{{ loop.index }}">{{ section.title }} | {{ section.author }}</h2>
+    <h3>LITERATURES</h3>
+    <ul>
+      {% for t in section.literatures %}
+      <li>{{ t.short_author }}. {{ t.content }}</li>
+      {% endfor %}
+    </ul>
+    {% for item in section['items'] %}
+
+    <h4><i>{{ item.item_title.scientific_name.canonical }}</i>{% if item.item_title.name_remark %} {{ item.item_title.name_remark }}{% else %}{{ item.item_title.display_name }}{% endif %}{% if item.commonNames %} - {% for x in item.commonNames %}{{ x }}{% if not loop.last %}, {% endif %}{% endfor %}{% endif %} <button data-q="{{ item.scientificName }}" data-source="gbif" class="item-names">Search GBIF</button> <button data-q="{{ item.scientificName }}" data-source="tbia-taicol" data-nameid="{{ item.taicol_taxon_name_id }}" class="item-names">Search TBIA via TaiCOL</button> <button data-q="{{ item.scientificName }}" data-source="tbia-nametool" data-nameid="{{ item.taicol_taxon_name_id }}" class="item-names">Search TBIA via nametool</button> {#<button data-q="{{ item.scientificName }}" data-source="taif" data-nameid="{{ item.taicol_taxon_name_id }}" class="item-names">Search TAIF</button>#} <button data-q="{{ item.scientificName }}" data-source="tai2" data-nameid="{{ item.taicol_taxon_name_id }}" class="item-names">Search TAI2</button></h4>
+    <mark>原始資料</mark>
+    {{ details('Usages', item.sourceData.usages) }}
+    {{ details('Type Specimen', item.sourceData.type) }}
+    {{ details('Properties', item.sourceData.props) }}
+
+
+    <h5>SYNONYMS</h5>
+    <ul>
+      {% for x in item.synonyms %}
+      <li>{{ x[0] }} [{{ x[1] }}]</li>
+      {% endfor %}
+    </ul>
+    <h5>Additional Fields</5>
+      <dl>
+        {% for k, v in item.addFields.items() %}
+        <dt>{{ k }}</dt>
+        <dd>{{ v }}</dd>
+        {% endfor %}
+      </dl>
+
+    {% if item.note %}
+    <h5>NOTE</h5>
+    <div>{{ item.note }}</div>
+    {% endif %}
+    {% endfor %}
+  </div>
+  {% endfor %}
+  <script src="{{ url_for('static', filename='vendor/w2ui-2.0.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/preview.js') }}"></script>  
+</body>
+</html>

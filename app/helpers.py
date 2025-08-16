@@ -175,18 +175,18 @@ def get_namespace_data(namespace_id):
     #mysql_cursor.execute(literature_sql)
     mysql_cursor = conn.cursor()
     #with conn.cursor() as cursor:
-    literature_sql = f'SELECT a.author, a.short_author, a.content FROM import_checklist_logs c LEFT JOIN api_citations a ON FIND_IN_SET(a.reference_id, c.included_references) > 0 WHERE c.namespace_id = {namespace_id}'
+    literature_sql = f'SELECT a.author, a.reference_id, a.content FROM import_checklist_logs c LEFT JOIN api_citations a ON FIND_IN_SET(a.reference_id, c.included_references) > 0 WHERE c.namespace_id = {namespace_id}'
     mysql_cursor.execute(literature_sql)
     rows = mysql_cursor.fetchall()
     for r in rows:
-        data['literatures'].append({'author': r['author'], 'short_author': r['short_author'], 'content': r['content']})
+        data['literatures'].append({'author': r['author'], 'id': r['reference_id'], 'content': r['content']})
 
     mysql_cursor.execute(f'SELECT n.title, u.name FROM my_namespaces n LEFT JOIN users u ON u.id = n.user_id WHERE n.id={namespace_id}')
     result = mysql_cursor.fetchone()
     data['title'] = result['title']
     data['author'] = result['name']
 
-    mysql_cursor.execute(f"SELECT t.name, t._authorship, t.id, u.per_usages, u.type_specimens, u.properties, r.title, u.id, t.properties, u.name_remark, u.group FROM my_namespace_usages u LEFT JOIN taxon_names t ON u.taxon_name_id = t.id LEFT JOIN `references` r ON r.id = t.reference_id WHERE namespace_id={namespace_id} AND u.status='accepted' ORDER by `order`")
+    mysql_cursor.execute(f"SELECT t.name, t._authorship, t.id, u.per_usages, u.type_specimens, u.properties, r.title, u.id, t.properties, u.name_remark, u.group, u.updated_at FROM my_namespace_usages u LEFT JOIN taxon_names t ON u.taxon_name_id = t.id LEFT JOIN `references` r ON r.id = t.reference_id WHERE namespace_id={namespace_id} AND u.status='accepted' ORDER by `order`")
 
     rows = mysql_cursor.fetchall()
     for row in rows:
@@ -278,7 +278,7 @@ def get_namespace_data(namespace_id):
         }
 
         if x := row['name']:
-            item_title['scientific_name']['author'] = x
+            item_title['scientific_name']['author'] = row['_authorship']
             item_title['scientific_name']['full'] = f"{item_title['scientific_name']['canonical']} {x}"
             #item_title['display_name'][1][0] = x
 
@@ -403,6 +403,7 @@ def get_namespace_data(namespace_id):
             'properties': properties,
             'taicol_taxon_name_id': taicol_name_id,
             'taicol_usage_id': row['id'],
+            'updated': row['updated_at'].strftime('%Y-%m-%d %H:%M:%S'),
         })
 
     return data

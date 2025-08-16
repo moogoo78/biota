@@ -1,0 +1,377 @@
+<!-- Center Content -->
+  <div id="section-specimen-data">
+        <!-- Stepper -->
+        <div class="flex items-center mb-6">
+          <div class="flex items-center text-blue-600 dark:text-blue-500">
+            <div class="flex items-center justify-center w-10 h-10 bg-blue-100 rounded-full lg:h-12 lg:w-12 dark:bg-blue-800 shrink-0" id="step1-indicator">
+              <svg class="w-5 h-5 text-blue-600 lg:w-6 lg:h-6 dark:text-blue-300" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 16">
+                <path d="M18 0H2a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2ZM6.5 3a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5ZM3.014 13.021l.157-.625A3.427 3.427 0 0 1 6.5 9.571a3.426 3.426 0 0 1 3.322 2.805l.159.622-6.967.023ZM16 12h-3a1 1 0 0 1 0-2h3a1 1 0 0 1 0 2Zm0-3h-3a1 1 0 1 1 0-2h3a1 1 0 1 1 0 2Zm0-3h-3a1 1 0 1 1 0-2h3a1 1 0 1 1 0 2Z"/>
+              </svg>
+            </div>
+            <span class="ml-4 text-sm font-medium text-gray-500 dark:text-gray-400">Step 1</span>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-2.5 mx-2 dark:bg-gray-700">
+            <div class="bg-blue-600 h-2.5 rounded-full dark:bg-blue-500" style="width: 0%" id="progress-bar-1"></div>
+          </div>
+          <div class="flex items-center" id="step2-container">
+            <div class="flex items-center justify-center w-10 h-10 bg-gray-100 rounded-full lg:h-12 lg:w-12 dark:bg-gray-800 shrink-0" id="step2-indicator">
+              <svg class="w-4 h-4 text-gray-500 lg:w-5 lg:h-5 dark:text-gray-100" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 20">
+                <path d="M16 14V2a2 2 0 0 0-2-2H2a2 2 0 0 0-2 2v15a3 3 0 0 0 3 3h12a1 1 0 0 0 0-2h-1v-2a2 2 0 0 0 2-2ZM4 2h2v12H4V2Zm8 16H3a1 1 0 0 1 0-2h9v2Z"/>
+              </svg>
+            </div>
+            <span class="ml-4 text-sm font-medium text-gray-500 dark:text-gray-400">Step 2</span>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-2.5 mx-2 dark:bg-gray-700">
+            <div class="bg-blue-600 h-2.5 rounded-full dark:bg-blue-500" style="width: 0%" id="progress-bar-2"></div>
+          </div>
+          <div class="flex items-center" id="step3-container">
+            <div class="flex items-center justify-center w-10 h-10 bg-gray-100 rounded-full lg:h-12 lg:w-12 dark:bg-gray-800 shrink-0" id="step3-indicator">
+              <svg class="w-4 h-4 text-gray-500 lg:w-5 lg:h-5 dark:text-gray-100" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M5 20h10a1 1 0 0 0 1-1v-5H4v5a1 1 0 0 0 1 1Z"/>
+                <path d="M18 7H2a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2v1a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2Zm-1 9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-5a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v5Z"/>
+              </svg>
+            </div>
+            <span class="ml-4 text-sm font-medium text-gray-500 dark:text-gray-400">Step 3</span>
+          </div>
+        </div>
+
+        <!-- Step Buttons -->
+        <div class="flex gap-4 mb-6">
+          <button type="button" class="focus:outline-none text-white bg-purple-700 hover:bg-purple-800 focus:ring-4 focus:ring-purple-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-purple-600 dark:hover:bg-purple-700 dark:focus:ring-purple-900" id="get-specimen-btn">
+            Step 1: Get Specimen Data
+          </button>
+          <button type="button" class="text-white bg-gray-400 hover:bg-gray-500 focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-gray-600 dark:hover:bg-gray-700 dark:focus:ring-gray-800 cursor-not-allowed" id="select-specimens-btn" disabled>
+            Step 2: Select & Configure Specimens
+          </button>
+          <button type="button" class="text-white bg-gray-400 hover:bg-gray-500 focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-gray-600 dark:hover:bg-gray-700 dark:focus:ring-gray-800 cursor-not-allowed" id="preview-output-btn" disabled>
+            Step 3: Preview Output
+          </button>
+        </div>
+
+        <!-- Collapsible Table Section -->
+        <div id="table-section" class="transition-all duration-300">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">TaiCOL namespace data</h2>
+            <button type="button" id="table-collapse-btn" class="flex items-center text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors duration-200">
+              <svg class="w-4 h-4 mr-1 transition-transform duration-200" id="table-collapse-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+              </svg>
+              <span id="table-collapse-text">Hide Table</span>
+            </button>
+          </div>
+
+          <div id="init-literatures"></div>
+
+          <div id="table-container" class="relative overflow-x-auto transition-all duration-300">
+            <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400" id="namespace-table">
+              <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                <tr>
+                  <th scope="col" class="px-6 py-3">
+                    Scientific Name
+                  </th>
+                  <th scope="col" class="px-6 py-3">
+                    Common Name
+                  </th>
+                  <th scope="col" class="px-6 py-3">
+                    nametool Updated
+                  </th>
+                  <th scope="col" class="px-6 py-3">
+                    Progress
+                  </th>
+                  <th scope="col" class="px-6 py-3">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody id="item-table-body">
+              </tbody>
+            </table>
+          </div>
+        </div>
+        
+        <div id="preview-layout" class="hidden">
+          
+        </div>
+        
+        <!-- Step 3: Output Preview -->
+        <div id="output-preview-section" class="hidden mt-8">
+          <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Output Preview</h3>
+              <div class="flex gap-2">
+                <button type="button" class="text-blue-600 hover:text-blue-800 text-sm font-medium" onclick="downloadPreview('txt')">
+                  Download TXT
+                </button>
+                <button type="button" class="text-blue-600 hover:text-blue-800 text-sm font-medium" onclick="downloadPreview('json')">
+                  Download JSON
+                </button>
+                <button type="button" class="text-green-600 hover:text-green-800 text-sm font-medium" onclick="copyPreviewToClipboard()">
+                  Copy to Clipboard
+                </button>
+              </div>
+            </div>
+            
+            <!-- Preview Tabs -->
+            <div class="mb-4 border-b border-gray-200 dark:border-gray-700">
+              <nav class="-mb-px flex space-x-8">
+                <button class="py-2 px-1 border-b-2 border-blue-500 font-medium text-sm text-blue-600 dark:text-blue-400 preview-tab-btn" data-tab="formatted" onclick="switchPreviewTab('formatted')">
+                  Formatted Output
+                </button>
+                <button class="py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300 preview-tab-btn" data-tab="json" onclick="switchPreviewTab('json')">
+                  JSON Data
+                </button>
+              </nav>
+            </div>
+            
+            <!-- Formatted Output -->
+            <div id="preview-formatted" class="preview-tab-content">
+              <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 font-mono text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap overflow-auto max-h-96" id="formatted-output">
+                <!-- Formatted output will be generated here -->
+              </div>
+            </div>
+            
+            <!-- JSON Output -->
+            <div id="preview-json" class="preview-tab-content hidden">
+              <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 font-mono text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap overflow-auto max-h-96" id="json-output">
+                <!-- JSON output will be generated here -->
+              </div>
+            </div>
+            
+            <!-- Statistics -->
+            <div class="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+              <h4 class="text-sm font-medium text-blue-900 dark:text-blue-200 mb-2">Summary Statistics</h4>
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div>
+                  <span class="text-blue-600 dark:text-blue-400 font-medium" id="stats-species">0</span>
+                  <span class="text-gray-600 dark:text-gray-400">species</span>
+                </div>
+                <div>
+                  <span class="text-blue-600 dark:text-blue-400 font-medium" id="stats-specimens">0</span>
+                  <span class="text-gray-600 dark:text-gray-400">specimens</span>
+                </div>
+                <div>
+                  <span class="text-blue-600 dark:text-blue-400 font-medium" id="stats-counties">0</span>
+                  <span class="text-gray-600 dark:text-gray-400">counties</span>
+                </div>
+                <div>
+                  <span class="text-blue-600 dark:text-blue-400 font-medium" id="stats-images">0</span>
+                  <span class="text-gray-600 dark:text-gray-400">with images</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <template id="item-row-template">
+          <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-600 expandable-row">
+            <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+              <div class="flex items-center">
+                <svg class="w-3 h-3 mr-3 transition-transform duration-200 transform chevron-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
+                <span class="italic item-scientific-name"></span><span class="item-scientific-name-authors"></span>
+              </div>
+            </th>
+            <td class="px-6 py-4 item-common-name">
+              Silver
+            </td>
+            <td class="px-6 py-4 item-updated">
+            </td>
+            <td class="px-6 py-4 item-progress">
+              <span class="flex items-center progress-indicator">
+                <span class="h-2.5 w-2.5 rounded-full bg-gray-500 me-2 status-dot"></span>
+                <span class="status-text">Ready</span>
+              </span>
+            </td>
+            <td class="px-6 py-4 item-action">
+              <div class="spinner hidden" role="status">
+                <svg aria-hidden="true" class="w-8 h-8 text-gray-200 animate-spin dark:text-gray-600 fill-blue-600" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="currentColor"/>
+                  <path d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z" fill="currentFill"/>
+                </svg>
+                <span class="sr-only">Loading...</span>
+              </div>
+              <div class="specimen-count text-sm text-gray-600 hidden">
+                <span class="count">0</span> specimens found
+              </div>
+              <button type="button" class="hidden select-specimen-btn text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-3 py-1.5 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800" data-modal-target="specimen-modal" data-modal-toggle="specimen-modal">
+                Select Specimens
+              </button>
+            </td>
+          </tr>
+          <tr class="hidden bg-gray-50 dark:bg-gray-800/50">
+            <td colspan="4" class="px-6 py-4">
+              <div class="details-container p-4">
+                <p>Details about <span class="italic item-scientific-name"></span></p>
+                <!-- More details will be populated here -->
+              </div>
+            </td>
+          </tr>
+        </template>
+        
+        {#
+        <div class="flex justify-between items-center mb-4">
+          <p class="text-sm text-gray-500 dark:text-gray-400">TaiCOL: namespace</p>
+          <a href="#" class="flex items-center text-blue-600 dark:text-blue-400 hover:underline">
+            <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v3.586l-1.293-1.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V8z" clip-rule="evenodd"></path></svg>
+            PDF
+          </a>
+        </div>
+        
+        <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-4">Untitled</h1>
+        <p class="text-lg text-gray-700 dark:text-gray-300 mb-6">moogoolee </p>
+        
+        <div class="p-4 border border-gray-200 rounded-lg dark:border-gray-700 mb-8">
+          <p class="text-sm text-gray-600 dark:text-gray-400">Corresponding author: moogoolee (moogoolee@gmail.com)</p>
+          <div class="flex justify-between items-center mt-4">
+            <div>
+              <p class="text-sm text-gray-600 dark:text-gray-400">© moogoolee 쭈</p>
+              <p class="text-sm text-gray-600 dark:text-gray-400">Citation:</p>
+            </div>
+            <div class="flex items-center space-x-2 text-orange-500">
+              <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+              <span class="font-bold">OPEN ACCESS</span>
+            </div>
+          </div>
+        </div>
+        
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Introduction</h2>
+        <div class="space-y-4">
+          <div>
+            <label for="subsection-title" class="block mb-2 text-lg font-semibold text-gray-900 dark:text-white">Enter subsection title</label>
+            <input type="text" id="subsection-title" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Subsection Title">
+          </div>
+          <div>
+            <label for="subsection-text" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Enter subsection text</label>
+            <textarea id="subsection-text" rows="8" class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Start writing here..."></textarea>
+          </div>
+        </div>
+        #}
+      </div>{# end of section-specimen #}
+
+  </div>
+
+
+<!-- Specimen Selection Modal -->
+<div id="specimen-modal" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+    <div class="relative p-4 w-full max-w-4xl max-h-full">
+        <!-- Modal content -->
+        <div class="relative bg-white rounded-lg shadow-sm dark:bg-gray-700">
+            <!-- Modal header -->
+            <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600 border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                    Select Specimens for <span id="modal-species-name" class="italic"></span>
+                </h3>
+                <button type="button" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white" data-modal-toggle="specimen-modal">
+                    <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                    </svg>
+                    <span class="sr-only">Close modal</span>
+                </button>
+            </div>
+            <!-- Modal body -->
+            <div class="p-4 md:p-5">
+                <!-- Specimen Selection Options -->
+                <div class="mb-4">
+                    <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Selection Method</label>
+                    <div class="flex items-center space-x-4">
+                        <label class="inline-flex items-center">
+                            <input type="radio" class="form-radio text-blue-600" name="selection-method" value="auto" checked>
+                            <span class="ml-2 text-sm text-gray-900 dark:text-white">Auto-select best specimens</span>
+                        </label>
+                        <label class="inline-flex items-center">
+                            <input type="radio" class="form-radio text-blue-600" name="selection-method" value="manual">
+                            <span class="ml-2 text-sm text-gray-900 dark:text-white">Manual selection</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Auto Selection Criteria -->
+                <div id="auto-criteria" class="mb-4">
+                    <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Auto-selection Criteria</label>
+                    <div class="grid grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs text-gray-700 dark:text-gray-300">Target Counties</label>
+                            <select multiple class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 h-24 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" id="target-counties">
+                                <!-- Counties will be populated dynamically -->
+                            </select>
+                            <p class="text-xs text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple</p>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-700 dark:text-gray-300">Min Specimens per County</label>
+                            <input type="number" min="1" max="5" value="2" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" id="min-specimens-per-county">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-700 dark:text-gray-300">Max Total Specimens</label>
+                            <input type="number" min="1" max="20" value="6" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" id="max-specimens">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Specimens Table -->
+                <div class="relative overflow-x-auto max-h-96">
+                    <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                        <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400 sticky top-0">
+                            <tr>
+                                <th scope="col" class="px-3 py-2">Select</th>
+                                <th scope="col" class="px-3 py-2">Image</th>
+                                <th scope="col" class="px-3 py-2">Institution</th>
+                                <th scope="col" class="px-3 py-2">Collector</th>
+                                <th scope="col" class="px-3 py-2">Collection Date</th>
+                                <th scope="col" class="px-3 py-2">Locality</th>
+                                <th scope="col" class="px-3 py-2">Catalog #</th>
+                                <th scope="col" class="px-3 py-2">Link</th>
+                            </tr>
+                        </thead>
+                        <tbody id="specimens-table-body">
+                            <!-- Specimens will be dynamically populated here -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Selected Specimens Summary -->
+                <div class="mt-4 p-3 bg-gray-50 dark:bg-gray-600 rounded-lg">
+                    <h4 class="text-sm font-medium text-gray-900 dark:text-white mb-2">Selected Specimens Summary</h4>
+                    <div id="selected-specimens-summary" class="text-sm text-gray-700 dark:text-gray-300">
+                        <p>No specimens selected</p>
+                    </div>
+                </div>
+            </div>
+            <!-- Modal footer -->
+            <div class="flex items-center p-4 md:p-5 border-t border-gray-200 rounded-b dark:border-gray-600">
+                <button type="button" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800" id="save-specimens-btn">
+                    Save Selected Specimens
+                </button>
+                <button type="button" class="py-2.5 px-5 ms-3 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700" data-modal-toggle="specimen-modal">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Image Modal -->
+<div id="image-modal" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full bg-black bg-opacity-50">
+    <div class="relative p-4 w-full max-w-2xl max-h-full">
+        <!-- Modal content -->
+        <div class="relative bg-white rounded-lg shadow-lg dark:bg-gray-700">
+            <!-- Modal header -->
+            <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600 border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white" id="image-modal-title">
+                    Specimen Image
+                </h3>
+                <button type="button" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white" onclick="closeImageModal()">
+                    <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                    </svg>
+                    <span class="sr-only">Close modal</span>
+                </button>
+            </div>
+            <!-- Modal body -->
+            <div class="p-4 md:p-5 text-center">
+                <img id="image-modal-img" src="" alt="Specimen" class="max-w-full max-h-96 mx-auto rounded-lg shadow-md">
+                <div id="image-modal-info" class="mt-4 text-sm text-gray-600 dark:text-gray-400">
+                  <!-- Image info will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

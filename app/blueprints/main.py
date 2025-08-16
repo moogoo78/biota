@@ -46,7 +46,7 @@ bp = Blueprint('main', __name__)
 @bp.route('/')
 @login_required
 def index():
-    return render_template('dashboard.html')
+    return render_template('index.html', subheader='Index')
 
 @bp.route('/nametool')
 def nametool():
@@ -55,7 +55,7 @@ def nametool():
 @bp.route('/namespaces/')
 def namespace_list():
     collections = Collection.query.filter(Collection.user_id==current_user.id).all()
-    return render_template('namespace_list.html', collections=collections)
+    return render_template('namespace_list.html', collections=collections, subheader='TaiCOL Namespaces')
 
 @bp.route('/client')
 def client():
@@ -137,10 +137,10 @@ def preview():
     #for namespace_id in namespace_ids.split(','):
     #    data.append(get_namespace_data(namespace_id))
     #return render_template('preview.html', data=data)
-    
+
     if namespace_id := request.args.get('namespace_id'):
         data = get_namespace_data(namespace_id)
-        return render_template('preview.html', data=data, API_URL=current_app.config['API_URL'])
+        return render_template('preview.html', data=data, API_URL=current_app.config['API_URL'], subheader="Editing")
 
 @bp.route('/preview2/<int:namespace_id>')
 def preview2(namespace_id):

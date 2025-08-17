@@ -657,3 +657,17 @@ def post_publish():
                 response.headers['filename'] = filename
 
                 return response
+
+@bp.route('/api/fake-literatures')
+def get_fake_literatures_api():
+    from app.helpers import get_db_connection
+    conn = get_db_connection()
+    mysql_cursor = conn.cursor()
+
+    result = {}
+    if q := request.args.get('q'):
+        mysql_cursor.execute(f"SELECT * FROM `references` WHERE title LIKE '%{q}%'")
+        rows = mysql_cursor.fetchall()
+        result['data'] = [{'id': x['id'], 'title': x['title']} for x in rows]
+
+    return jsonify(result)

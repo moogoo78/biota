@@ -8,7 +8,13 @@
 {% include "_inc-preview-sidebar.html" %}
 <!-- Center Content -->
 <main class="flex-1 bg-white dark:bg-gray-900 p-6 overflow-y-auto" id="main-content">
-  <div id="main-content-literatures" class="main-content-panel hidden"></div>
+  <div id="main-content-literatures" class="main-content-panel hidden">
+    <h2 class="mb-2 text-lg font-semibold text-gray-900 dark:text-white">LITERATURES</h2>
+    <div id="literatures-table-wrapper"></div>
+
+    <select id="literatures-select" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"></select>
+    <button type="button" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800" id="literature-add-button">Add</button></a>
+  </div>
   <div id="main-content-specimens" class="main-content-panel hidden">{% include "_inc-preview-main.html" %}</div>
 </main>
 {#
@@ -55,6 +61,23 @@
  const COUNTY_ORDER = ['TAIPEI', 'KEELUNG', 'LIENCHIANG', 'NEW TAIPEI', 'YILAN', 'HSINCHU', 'TAOYUAN', 'MIAOLI', 'TAICHUNG', 'CHANGHUA', 'NANTOU', 'CHIAYI', 'YUNLIN', 'TAINAN', 'KAOHSIUNG', 'PENGHU', 'KINMEN', 'PINGTUNG', 'TAITUNG', 'HUALIEN'];
 
  document.addEventListener('DOMContentLoaded', function () {
+   new TomSelect('#literatures-select',{
+     valueField: 'id',
+     labelField: 'title',
+     searchField: 'title',
+     maxItems: 1,
+     load: function(query, callback) {
+       var url = '/api/fake-literatures?q=' + encodeURIComponent(query);
+       fetch(url)
+	 .then(response => response.json())
+	 .then(json => {
+           console.log(json)
+	   callback(json);
+	 }).catch(()=>{
+	   callback();
+	 });
+     },
+   });
    const getSpecimenBtn = document.getElementById('get-specimen-btn');
    const selectSpecimensBtn = document.getElementById('select-specimens-btn');
    const previewOutputBtn = document.getElementById('preview-output-btn');
@@ -156,11 +179,9 @@
 
    function render ( data ) {
 
-     let literatureHtml = '';
+     let literatureTable = '';
      if (data.literatures.length > 0) {
        let html = `
-         <h2 class="mb-2 text-lg font-semibold text-gray-900 dark:text-white">LITERATURES</h2>
-
          <div class="relative overflow-x-auto">
            <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
              <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
@@ -200,22 +221,18 @@ ${lit.author}
        html += `</tbody>
            </table>
          </div>`;
-       html += `<div id="literature-add-wrapper"><select id="literatures-select" placeholder="Search for a literature from TaiCOL..."></select><button type="button" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800" id="literature-add-button">Add</button></a>`;
+       //html += `<div id="literature-add-wrapper"><select id="literatures-select" placeholder="Search for a literature from TaiCOL... autocomplete="off"><option value="">-- 選擇') }} --</option></select><button type="button" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800" id="literature-add-button">Add</button></a>`;
        literatureHTML = html;
      }
+     document.getElementById('literatures-table-wrapper').innerHTML = literatureHTML;
 
-     document.getElementById('main-content-literatures').innerHTML = literatureHTML;
-
-
-
-
-
+     /*
      const litAddBtn = document.querySelector('#literature-add-button');
      litAddBtn.onclick = (e) => {
        e.preventDefault();
        const litSelect = document.querySelector('#select-lit');
        console.log(litSelect.value);
-     };
+     };*/
 
      const itemTableBody = document.getElementById('item-table-body');
      itemTableBody.innerHTML = '';

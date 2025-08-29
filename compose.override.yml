@@ -6,8 +6,8 @@ services:
   adminer:
     image: adminer
     restart: no
-    depends_on:
+    #depends_on:
       #- postgres
-      - mysql
+      #- mysql
     ports:
       - 8080:8080

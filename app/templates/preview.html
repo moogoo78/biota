@@ -15,7 +15,7 @@
     <select id="literatures-select" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"></select>
     <button type="button" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800" id="literature-add-button">Add</button></a>
   </div>
-  <div id="main-content-specimens" class="main-content-panel hidden">{% include "_inc-preview-main.html" %}</div>
+  <div id="main-content-groups" class="main-content-panel hidden">{% include "_inc-preview-main.html" %}</div>
 </main>
 {#
 <!-- Right Sidebar -->
@@ -60,6 +60,224 @@
 
  const COUNTY_ORDER = ['TAIPEI', 'KEELUNG', 'LIENCHIANG', 'NEW TAIPEI', 'YILAN', 'HSINCHU', 'TAOYUAN', 'MIAOLI', 'TAICHUNG', 'CHANGHUA', 'NANTOU', 'CHIAYI', 'YUNLIN', 'TAINAN', 'KAOHSIUNG', 'PENGHU', 'KINMEN', 'PINGTUNG', 'TAITUNG', 'HUALIEN'];
 
+ const TAICOL_RANKS = {
+   "1": [
+     "Domain",
+     "域"
+   ],
+   "2": [
+     "Superkingdom",
+     "總界"
+   ],
+   "3": [
+     "Kingdom",
+     "界"
+   ],
+   "4": [
+     "Subkingdom",
+     "亞界"
+   ],
+   "5": [
+     "Infrakingdom",
+     "下界"
+   ],
+   "6": [
+     "Superdivision",
+     "超部|總部"
+   ],
+   "7": [
+     "Division",
+     "部|類"
+   ],
+   "8": [
+     "Subdivision",
+     "亞部|亞類"
+   ],
+   "9": [
+     "Infradivision",
+     "下部|下類"
+   ],
+   "10": [
+     "Parvdivision",
+     "小部|小類"
+   ],
+   "11": [
+     "Superphylum",
+     "超門|總門"
+   ],
+   "12": [
+     "Phylum",
+     "門"
+   ],
+   "13": [
+     "Subphylum",
+     "亞門"
+   ],
+   "14": [
+     "Infraphylum",
+     "下門"
+   ],
+   "15": [
+     "Microphylum",
+     "微門"
+   ],
+   "16": [
+     "Parvphylum",
+     "小門"
+   ],
+   "17": [
+     "Superclass",
+     "超綱|總綱"
+   ],
+   "18": [
+     "Class",
+     "綱"
+   ],
+   "19": [
+     "Subclass",
+     "亞綱"
+   ],
+   "20": [
+     "Infraclass",
+     "下綱"
+   ],
+   "21": [
+     "Superorder",
+     "超目|總目"
+   ],
+   "22": [
+     "Order",
+     "目"
+   ],
+   "23": [
+     "Suborder",
+     "亞目"
+   ],
+   "24": [
+     "Infraorder",
+     "下目"
+   ],
+   "25": [
+     "Superfamily",
+     "超科|總科"
+   ],
+   "26": [
+     "Family",
+     "科"
+   ],
+   "27": [
+     "Subfamily",
+     "亞科"
+   ],
+   "28": [
+     "Tribe",
+     "族"
+   ],
+   "29": [
+     "Subtribe",
+     "亞族"
+   ],
+   "30": [
+     "Genus",
+     "屬"
+   ],
+   "31": [
+     "Subgenus",
+     "亞屬"
+   ],
+   "32": [
+     "Section",
+     "組|節"
+   ],
+   "33": [
+     "Subsection",
+     "亞組|亞節"
+   ],
+   "34": [
+     "Species",
+     "種"
+   ],
+   "35": [
+     "Subspecies",
+     "亞種"
+   ],
+   "36": [
+     "Nothosubspecies",
+     "雜交亞種"
+   ],
+   "37": [
+     "Variety",
+     "變種"
+   ],
+   "38": [
+     "Subvariety",
+     "亞變種"
+   ],
+   "39": [
+     "Nothovariety",
+     "雜交變種"
+   ],
+   "40": [
+     "Form",
+     "型"
+   ],
+   "41": [
+     "Subform",
+     "亞型"
+   ],
+   "42": [
+     "Special Form",
+     "特別品型"
+   ],
+   "43": [
+     "Race",
+     "種族"
+   ],
+   "44": [
+     "Stirp",
+     "血統"
+   ],
+   "45": [
+     "Morph",
+     "形態型"
+   ],
+   "46": [
+     "Aberration",
+     "異常個體"
+   ],
+   "47": [
+     "Hybrid Formula",
+     "雜交組合"
+   ],
+   "48": [
+     "Subrealm",
+     "病毒亞域"
+   ],
+   "49": [
+     "Realm",
+     "病毒域"
+   ],
+   "50": [
+     "Unranked",
+     "未定義階層"
+   ],
+   "51": [
+     "Megaclass",
+     "高綱"
+   ],
+   "52": [
+     "Grandclass",
+     "大綱"
+   ],
+   "53": [
+     "Mirclass",
+     "上綱"
+   ],
+   "54": [
+     "Epifamily",
+     "領科"
+   ]
+ };
  document.addEventListener('DOMContentLoaded', function () {
    new TomSelect('#literatures-select',{
      valueField: 'id',
@@ -125,7 +343,7 @@
    let isLoading = true;
    let error = null;
    let stepKey = 1;
-   let speciesInfo = [];
+   let groupData = [];
    let infoState = [];
    let currentSpecimenIndex = -1;
 
@@ -188,10 +406,10 @@
              <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                <tr>
                  <th scope="col" class="px-6 py-3">
-                   Title
+                   TaiCOL ref_id
                  </th>
                  <th scope="col" class="px-6 py-3">
-                   Author
+                   Citations
                  </th>
                  <th scope="col" class="px-6 py-3">
                    Edit
@@ -200,15 +418,14 @@
              </thead>
              <tbody>
        `;
-
        data.literatures.forEach(lit => {
          html += `
          <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200">
          <th scope="row" class="px-6 py-4 font-medium text-gray-900 dark:text-white">
-${lit.content}
+${lit.reference_id}
                  </th>
                  <td class="px-6 py-4">
-${lit.author}
+${lit.citation}
                  </td>
                  <td class="px-6 py-4">
 <a href="#" class="literatures-edit" data-litid="${lit.id}">
@@ -237,7 +454,7 @@ ${lit.author}
 
      const itemTableBody = document.getElementById('item-table-body');
      itemTableBody.innerHTML = '';
-     data.items.forEach( (item, index) => {
+     data.group.forEach( (item, index) => {
        const template = document.getElementById('item-row-template');
        const clone = template.content.cloneNode(true);
        const mainRow = clone.children[0];
@@ -249,70 +466,80 @@ ${lit.author}
 
        // Set row id for later reference
        mainRow.setAttribute('data-index', index);
-       mainRow.setAttribute('data-scientific-name', item.item_title.scientific_name.canonical);
+       mainRow.setAttribute('data-scientific-name', item.name);
 
-       scientificNameEl.textContent = item.item_title.scientific_name.canonical;
-       scientificNameAuthorsEl.innerHTML = `&nbsp;${item.item_title.scientific_name.author}` || '';
-       commonNameEl.textContent = item.commonNames.join(', ');
+       scientificNameEl.textContent = item.name.replace('<i>', '').replace('</i>', '');
+       scientificNameAuthorsEl.innerHTML = `&nbsp;${item.name_authors}` || '';
+       commonNameEl.textContent = item.common_names.join(', ');
 
-       let updatedEl = mainRow.querySelector('.item-updated');
-       updatedEl.textContent = item.updated;
+       let rankEl = mainRow.querySelector('.item-rank');
+       rankEl.textContent = TAICOL_RANKS[String(item.rank_id)][0];
 
        // Populate details row
        const detailsContainer = detailsRow.querySelector('.details-container');
-       detailsContainer.querySelector('.item-scientific-name').textContent = item.item_title.scientific_name.canonical;
-
-
-       const p1 = document.createElement('p');
-       const bold1 = document.createElement('b');
-       bold1.textContent = '[name_remark]';
-       detailsContainer.appendChild(bold1);
-       p1.textContent = item.item_title?.name_remark || '--';
-       detailsContainer.appendChild(p1);
-
-       const hrCls = 'inline-flex items-center justify-center w-full'.split(' ');
-
+       detailsContainer.querySelector('.item-scientific-name').innerHTML = item.usage_references_text;
        if (item.synonyms.length) {
+         const box = document.createElement('div');
+         box.classList.add('mt-4');
          const b = document.createElement('b');
          b.textContent = 'Synonyms';
-         detailsContainer.appendChild(b);
-
+         box.appendChild(b);
          item.synonyms.forEach( x => {
            const p = document.createElement('p');
-           const s = document.createElement('span');
-           const i = document.createElement('i');
-           i.textContent = x.name;
-           p.appendChild(i);
-           s.textContent = ` ${x.formatted_authors}`;
-           if (x.properties?.indications.length) {
-             s.textContent = ` ${s.textContent} ${x.properties?.indications.join(' ')}`;
-           }
-           p.appendChild(s);
-           detailsContainer.appendChild(p);
+           p.innerHTML = `<span>${x.usage_references_text}</span>`;
+           box.appendChild(p);
+           detailsContainer.appendChild(box);
          });
        }
 
-       const p2 = document.createElement('p');
-       const bold2 = document.createElement('b');
-       bold2.textContent = 'Note';
-       detailsContainer.appendChild(bold2);
-       p2.textContent = item.properties.note || '';
-       detailsContainer.appendChild(p2);
-
-       item.properties.additional_fields.forEach( aField => {
-         const p = document.createElement('p');
-         const bold = document.createElement('b');
-         bold.textContent = String(aField.field_name).charAt(0).toUpperCase() + String(aField.field_name).slice(1);
-         p.textContent = aField.field_value;
-         detailsContainer.appendChild(bold);
-         detailsContainer.appendChild(p);
+       ['Description', 'Distribution', 'Note'].forEach( x => {
+         const box = document.createElement('div');
+         box.classList.add('mt-2');
+         let text = item[x.toLowerCase()] || '';
+         box.innerHTML = `<b>${x}</b><p>${text}</p>`;
+         detailsContainer.appendChild(box);
        });
+       /*
+          const hrCls = 'inline-flex items-center justify-center w-full'.split(' ');
+
+          if (item.synonyms.length) {
+          const b = document.createElement('b');
+          b.textContent = 'Synonyms';
+          detailsContainer.appendChild(b);
+
+          item.synonyms.forEach( x => {
+          const p = document.createElement('p');
+          const s = document.createElement('span');
+          const i = document.createElement('i');
+          i.textContent = x.name;
+          p.appendChild(i);
+          s.textContent = ` ${x.formatted_authors}`;
+          if (x.properties?.indications.length) {
+          s.textContent = ` ${s.textContent} ${x.properties?.indications.join(' ')}`;
+          }
+          p.appendChild(s);
+          detailsContainer.appendChild(p);
+          });
+          }
+        */
+       /*
+          item.properties.additional_fields.forEach( aField => {
+          const p = document.createElement('p');
+          const bold = document.createElement('b');
+          bold.textContent = String(aField.field_name).charAt(0).toUpperCase() + String(aField.field_name).slice(1);
+          p.textContent = aField.field_value;
+          detailsContainer.appendChild(bold);
+          detailsContainer.appendChild(p);
+          });
+        */
        // seperator
+       /*
        const hrDiv = document.createElement('div');
        hrDiv.classList.add(...hrCls);
        hrDiv.innerHTML = '<hr class="w-64 h-px my-8 bg-gray-200 border-0 dark:bg-gray-700"><span class="absolute px-3 font-medium text-gray-900 -translate-x-1/2 bg-white left-1/2 dark:text-white dark:bg-gray-900">custom</span></div>';
        detailsContainer.appendChild(hrDiv);
-
+       */
+       /*
        item.properties.custom_fields.forEach( aField => {
          const p = document.createElement('p');
          const bold = document.createElement('b');
@@ -321,7 +548,6 @@ ${lit.author}
          detailsContainer.appendChild(bold);
          detailsContainer.appendChild(p);
        });
-
        // seperator
        const hrDiv2 = document.createElement('div');
        hrDiv2.classList.add(...hrCls);
@@ -331,7 +557,7 @@ ${lit.author}
        const pre = document.createElement('pre');
        pre.textContent = `${JSON.stringify(item.type_specimens, null, 2)}`;
        detailsContainer.appendChild(pre);
-
+       */
        itemTableBody.appendChild(clone);
      });
      initFlowbite();
@@ -344,20 +570,20 @@ ${lit.author}
      if (!namespaceId) {
        error = "namespace_id not found in URL";
        isLoading = false;
-       render();
+       //render();
        return;
      }
-
+     let results = {};
      try {
-       const response = await fetch(`${API_URL}/api/namespaces/${namespaceId}`);
+       //const response = await fetch(`${API_URL}/api/namespaces/${namespaceId}`);
+       const response = await fetch(`{{ TAICOL_API }}?namespace_id=${namespaceId}&token={{ TAICOL_TOKEN }}`)
        if (!response.ok) {
          throw new Error(`HTTP error! status: ${response.status}`);
        }
-       let data = await response.json();
-       namespacePart = data[0]; // get first
-       console.log('get_namespace', data[0]);
-       namespacePart.items.forEach(x => {
-         speciesInfo.push({
+       results = await response.json();
+       console.log('get_namespace', results);
+       results.group.forEach(x => {
+         groupData.push({
            recid: x.taicol_usage_id,
            selectedIds: [],
            distributions: [],
@@ -371,9 +597,10 @@ ${lit.author}
        });
      } catch (e) {
        error = e.message;
+       console.error(error);
      } finally {
        isLoading = false;
-       render(namespacePart);
+       render(results);
      }
    } // end of init
 
@@ -472,7 +699,7 @@ ${lit.author}
          updateRowStatus(index, 'success', 'Complete', specimenCount);
 
          // Store the specimen data for later use
-         speciesInfo[index].specimenData = specimenData.records;
+         groupData[index].specimenData = specimenData.records;
        } else {
          updateRowStatus(index, 'error', specimenData.message || 'No specimens found');
        }
@@ -509,10 +736,10 @@ ${lit.author}
      } finally {
        button.disabled = false;
        button.textContent = 'Step 1: Get Specimen Data';
-       console.log('after step1', speciesInfo);
+       console.log('after step1', groupData);
 
        // Check if any specimens were found and move to step 2
-       const hasSpecimens = speciesInfo.some(info => info.specimenData && info.specimenData.length > 0);
+       const hasSpecimens = groupData.some(info => info.specimenData && info.specimenData.length > 0);
        if (hasSpecimens) {
          updateStepper(2);
        }
@@ -523,7 +750,7 @@ ${lit.author}
    function openSpecimenModal(index) {
      currentSpecimenIndex = index;
      const item = namespacePart.items[index];
-     const specimens = speciesInfo[index].specimenData || [];
+     const specimens = groupData[index].specimenData || [];
      
      // Update modal title
      document.getElementById('modal-species-name').textContent = item.item_title.scientific_name.canonical;
@@ -727,7 +954,7 @@ ${lit.author}
      if (selectedCheckboxes.length === 0) {
        summaryDiv.innerHTML = '<p>No specimens selected</p>';
      } else {
-       const specimens = speciesInfo[currentSpecimenIndex].specimenData;
+       const specimens = groupData[currentSpecimenIndex].specimenData;
        let summaryHTML = `<p><strong>${selectedCheckboxes.length} specimens selected:</strong></p><ul class="list-disc list-inside mt-2 space-y-1">`;
        
        selectedCheckboxes.forEach(checkbox => {
@@ -755,12 +982,12 @@ ${lit.author}
        return;
      }
      // Store selected specimens
-     if (!speciesInfo[currentSpecimenIndex].selectedSpecimens) {
-       speciesInfo[currentSpecimenIndex].selectedSpecimens = [];
+     if (!groupData[currentSpecimenIndex].selectedSpecimens) {
+       groupData[currentSpecimenIndex].selectedSpecimens = [];
      }
      
-     speciesInfo[currentSpecimenIndex].selectedSpecimens = selectedIndices.map(index => {
-       return speciesInfo[currentSpecimenIndex].specimenData[index];
+     groupData[currentSpecimenIndex].selectedSpecimens = selectedIndices.map(index => {
+       return groupData[currentSpecimenIndex].specimenData[index];
      });
      
      console.log('Selected specimens for', namespacePart.items[currentSpecimenIndex].item_title.scientific_name.canonical, selectedIndices);
@@ -847,7 +1074,7 @@ ${lit.author}
    // Step 3 Functions
    function enableStep3ButtonIfReady() {
      // Check if any species has selected specimens
-     const hasSelections = speciesInfo.some(info => 
+     const hasSelections = groupData.some(info => 
        info.selectedSpecimens && info.selectedSpecimens.length > 0
      );
      
@@ -874,7 +1101,7 @@ ${lit.author}
      // Collect data for species with selected specimens
      for (let i = 0; i < namespacePart.items.length; i++) {
        const item = namespacePart.items[i];
-       const selectedSpecimens = speciesInfo[i].selectedSpecimens;
+       const selectedSpecimens = groupData[i].selectedSpecimens;
        
        if (selectedSpecimens && selectedSpecimens.length > 0) {
          totalSpecimens += selectedSpecimens.length;
@@ -1271,7 +1498,7 @@ ${lit.author}
      
      // Regenerate the preview layout
      const selectedData = [];
-     speciesInfo.forEach((info, index) => {
+     groupData.forEach((info, index) => {
        if (info.selectedSpecimens && info.selectedSpecimens.length > 0) {
          selectedData.push({
            species: namespacePart.items[index].item_title.scientific_name.canonical,

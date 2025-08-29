@@ -14,6 +14,8 @@ class Config(object):
 
     WEB_ENV = os.getenv('WEB_ENV')
     API_URL = os.getenv('API_URL')
+    TAICOL_TOKEN = os.getenv('TAICOL_TOKEN')
+    TAICOL_API = os.getenv('TAICOL_API')
 
 class ProductionConfig(Config):
     SECRET_KEY = os.getenv('SECRET_KEY')

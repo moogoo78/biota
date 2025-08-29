@@ -139,8 +139,14 @@ def preview():
     #return render_template('preview.html', data=data)
 
     if namespace_id := request.args.get('namespace_id'):
-        data = get_namespace_data(namespace_id)
-        return render_template('preview.html', data=data, API_URL=current_app.config['API_URL'], subheader="Editing")
+        #data = get_namespace_data(namespace_id)
+        return render_template(
+            'preview.html',
+            #data=data,
+            API_URL=current_app.config['API_URL'],
+            TAICOL_TOKEN=current_app.config['TAICOL_TOKEN'],
+            TAICOL_API=current_app.config['TAICOL_API'],
+            subheader="Editing")
 
 @bp.route('/preview2/<int:namespace_id>')
 def preview2(namespace_id):

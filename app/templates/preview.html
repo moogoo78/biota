@@ -278,6 +278,15 @@
      "領科"
    ]
  };
+
+ function stripTags(text, tags=['i']) {
+   let s = text;
+   tags.forEach( tag => {
+     s = s.replace(`<${tag}>`, '').replace(`</${tag}>`, '');
+   });
+   return s
+ }
+
  document.addEventListener('DOMContentLoaded', function () {
    new TomSelect('#literatures-select',{
      valueField: 'id',
@@ -337,13 +346,12 @@
      switchPanel(main);
    }
 
-   
    let namespaceId;
-   let namespacePart = {};
+   let namespaceData = {}; // fetched results
    let isLoading = true;
    let error = null;
    let stepKey = 1;
-   let groupData = [];
+   let groupData = []; // for select specimens
    let infoState = [];
    let currentSpecimenIndex = -1;
 
@@ -468,7 +476,7 @@ ${lit.citation}
        mainRow.setAttribute('data-index', index);
        mainRow.setAttribute('data-scientific-name', item.name);
 
-       scientificNameEl.textContent = item.name.replace('<i>', '').replace('</i>', '');
+       scientificNameEl.textContent = stripTags(item.name);
        scientificNameAuthorsEl.innerHTML = `&nbsp;${item.name_authors}` || '';
        commonNameEl.textContent = item.common_names.join(', ');
 
@@ -573,18 +581,18 @@ ${lit.citation}
        //render();
        return;
      }
-     let results = {};
      try {
        //const response = await fetch(`${API_URL}/api/namespaces/${namespaceId}`);
        const response = await fetch(`{{ TAICOL_API }}?namespace_id=${namespaceId}&token={{ TAICOL_TOKEN }}`)
        if (!response.ok) {
          throw new Error(`HTTP error! status: ${response.status}`);
        }
-       results = await response.json();
+       const results = await response.json();
+       namespaceData = results;
        console.log('get_namespace', results);
        results.group.forEach(x => {
          groupData.push({
-           recid: x.taicol_usage_id,
+           //recid: name_id,
            selectedIds: [],
            distributions: [],
            specimens: [],
@@ -600,7 +608,7 @@ ${lit.citation}
        console.error(error);
      } finally {
        isLoading = false;
-       render(results);
+       render(namespaceData);
      }
    } // end of init
 
@@ -712,7 +720,7 @@ ${lit.citation}
 
    // Function to process all scientific names
    async function fetchAllTBIAData () {
-     if (!namespacePart || !namespacePart.items) {
+     if (!namespaceData || !namespaceData.group) {
        alert('No data available to process');
        return;
      }
@@ -723,13 +731,13 @@ ${lit.citation}
 
      try {
        // Process each scientific name one by one with a small delay
-       for (let i = 0; i < namespacePart.items.length; i++) {
-         const item = namespacePart.items[i];
-         const scientificName = item.item_title.scientific_name.canonical;
-         await fetchTBIASpecimenData(scientificName, item.taicol_taxon_name_id, i);
+       for (let i = 0; i < namespaceData.group.length; i++) {
+         const item = namespaceData.group[i];
+         const scientificName = stripTags(item.name);
+         await fetchTBIASpecimenData(scientificName, item.name_id, i);
 
          // Add a small delay between requests to be respectful to the API
-         if (i < namespacePart.items.length - 1) {
+         if (i < namespaceData.group.length - 1) {
            await new Promise(resolve => setTimeout(resolve, 1000));
          }
        }
@@ -749,7 +757,7 @@ ${lit.citation}
    // Function to open specimen selection modal
    function openSpecimenModal(index) {
      currentSpecimenIndex = index;
-     const item = namespacePart.items[index];
+     const item = namespaceData.group[index];
      const specimens = groupData[index].specimenData || [];
      
      // Update modal title
@@ -990,7 +998,7 @@ ${lit.citation}
        return groupData[currentSpecimenIndex].specimenData[index];
      });
      
-     console.log('Selected specimens for', namespacePart.items[currentSpecimenIndex].item_title.scientific_name.canonical, selectedIndices);
+     console.log('Selected specimens for', namespaceData.group[currentSpecimenIndex].item_title.scientific_name.canonical, selectedIndices);
 
      
      // Update row status to show selection made
@@ -1099,8 +1107,8 @@ ${lit.citation}
      let speciesWithImages = 0;
      
      // Collect data for species with selected specimens
-     for (let i = 0; i < namespacePart.items.length; i++) {
-       const item = namespacePart.items[i];
+     for (let i = 0; i < namespaceData.group.length; i++) {
+       const item = namespaceData.group[i];
        const selectedSpecimens = groupData[i].selectedSpecimens;
        
        if (selectedSpecimens && selectedSpecimens.length > 0) {
@@ -1203,8 +1211,8 @@ ${lit.citation}
        },
        namespace: {
          id: namespaceId,
-         title: namespacePart.title || '',
-         author: namespacePart.author || ''
+         title: namespaceData.title || '',
+         author: namespaceData.author || ''
        },
        species: selectedData.map(species => ({
          scientific_name: species.species,
@@ -1235,8 +1243,8 @@ ${lit.citation}
      previewLayout.innerHTML = '';
      
      // Generate title and author with inline editing
-     const title = namespacePart.title || 'Taxonomic Specimen Report';
-     const author = namespacePart.author || 'Unknown Author';
+     const title = namespaceData.title || 'Taxonomic Specimen Report';
+     const author = namespaceData.author || 'Unknown Author';
      
      let html = `
        <div class="mb-6 p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800">
@@ -1283,12 +1291,12 @@ ${lit.citation}
        <div id="document-content">
      `;
 
-     if ( namespacePart.literatures.length > 0) {
+     if ( namespaceData.literatures.length > 0) {
        html += `
            <h2 class="mb-2 text-lg font-semibold text-gray-900 dark:text-white">LITERATURES</h2>
            <ul class="list-disc list-inside space-y-1 text-gray-600 dark:text-gray-400 mb-6">
        `;
-       namespacePart.literatures.forEach(lit => {
+       namespaceData.literatures.forEach(lit => {
          html += `<li>${lit.content || lit.title || lit.author}</li>`;
        });
        html += '</ul>';
@@ -1296,7 +1304,7 @@ ${lit.citation}
 
      // Generate species entries with selected specimens
      selectedData.forEach((species, index) => {
-       const item = namespacePart.items[species.speciesIndex];
+       const item = namespaceData.group[species.speciesIndex];
        const scientificName = species.species;
        const commonNames = species.commonNames.join(', ');
        
@@ -1427,8 +1435,8 @@ ${lit.citation}
      document.getElementById('display-author').textContent = newAuthor;
      
      // Update the namespace data
-     namespacePart.title = newTitle;
-     namespacePart.author = newAuthor;
+     namespaceData.title = newTitle;
+     namespaceData.author = newAuthor;
      
      // Switch back to display mode
      toggleEditMode();
@@ -1475,12 +1483,12 @@ ${lit.citation}
        // Add a back button and final layout
        previewLayout.innerHTML = `
          <div class="mb-4 flex justify-between items-center">
-           <h1 class="text-3xl font-bold text-gray-900 dark:text-white">${namespacePart.title || 'Taxonomic Specimen Report'}</h1>
+           <h1 class="text-3xl font-bold text-gray-900 dark:text-white">${namespaceData.title || 'Taxonomic Specimen Report'}</h1>
            <button onclick="goBackToPreview()" class="bg-gray-500 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-md text-sm">
              ← Back to Edit
            </button>
          </div>
-         <p class="mb-6 text-xl text-gray-700 dark:text-gray-300">Author: ${namespacePart.author || 'Unknown Author'}</p>
+         <p class="mb-6 text-xl text-gray-700 dark:text-gray-300">Author: ${namespaceData.author || 'Unknown Author'}</p>
          ${cleanContent}
        `;
      }
@@ -1501,9 +1509,9 @@ ${lit.citation}
      groupData.forEach((info, index) => {
        if (info.selectedSpecimens && info.selectedSpecimens.length > 0) {
          selectedData.push({
-           species: namespacePart.items[index].item_title.scientific_name.canonical,
+           species: namespaceData.group[index].item_title.scientific_name.canonical,
            speciesIndex: index,
-           commonNames: namespacePart.items[index].commonNames || [],
+           commonNames: namespaceData.group[index].commonNames || [],
            specimens: info.selectedSpecimens
          });
        }

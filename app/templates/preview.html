@@ -8,6 +8,25 @@
 {% include "_inc-preview-sidebar.html" %}
 <!-- Center Content -->
 <main class="flex-1 bg-white dark:bg-gray-900 p-6 overflow-y-auto" id="main-content">
+  <div id="main-content-sync" class="main-content-panel hidden">
+    <button type="button" class="focus:outline-none text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800">Sync</button>
+    <div>Latest: <span id="main-sync-datetime"></span></div>
+  </div>
+    <div id="main-content-meta" class="main-content-panel hidden">
+    <form class="max-w-4xl">
+      <div class="mb-5">
+        <label for="meta-title" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Title</label>
+        <input type="text" id="meta-title" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" required />
+      </div>
+      <div class="mb-5">
+        <label for="meta-authors" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Authors</label>
+        <textarea id="meta-authors" rows="4" class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"></textarea>
+
+      </div>
+      <button type="submit" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Save</button>
+    </form>
+
+  </div>
   <div id="main-content-literatures" class="main-content-panel hidden">
     <h2 class="mb-2 text-lg font-semibold text-gray-900 dark:text-white">LITERATURES</h2>
     <div id="literatures-table-wrapper"></div>
@@ -15,7 +34,7 @@
     <select id="literatures-select" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"></select>
     <button type="button" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800" id="literature-add-button">Add</button></a>
   </div>
-  <div id="main-content-groups" class="main-content-panel hidden">{% include "_inc-preview-main.html" %}</div>
+  <div id="main-content-groups" class="main-content-panel">{% include "_inc-preview-main-group.html" %}</div>
 </main>
 {#
 <!-- Right Sidebar -->
@@ -406,6 +425,8 @@
    let literatureHTML = '';
    function render ( data ) {
 
+     document.getElementById('main-sync-datetime').textContent = data.updated_at;
+
      let literatureTable = '';
      if (data.literatures.length > 0) {
        let html = `
@@ -507,65 +528,6 @@ ${lit.citation}
          box.innerHTML = `<b>${x}</b><p>${text}</p>`;
          detailsContainer.appendChild(box);
        });
-       /*
-          const hrCls = 'inline-flex items-center justify-center w-full'.split(' ');
-
-          if (item.synonyms.length) {
-          const b = document.createElement('b');
-          b.textContent = 'Synonyms';
-          detailsContainer.appendChild(b);
-
-          item.synonyms.forEach( x => {
-          const p = document.createElement('p');
-          const s = document.createElement('span');
-          const i = document.createElement('i');
-          i.textContent = x.name;
-          p.appendChild(i);
-          s.textContent = ` ${x.formatted_authors}`;
-          if (x.properties?.indications.length) {
-          s.textContent = ` ${s.textContent} ${x.properties?.indications.join(' ')}`;
-          }
-          p.appendChild(s);
-          detailsContainer.appendChild(p);
-          });
-          }
-        */
-       /*
-          item.properties.additional_fields.forEach( aField => {
-          const p = document.createElement('p');
-          const bold = document.createElement('b');
-          bold.textContent = String(aField.field_name).charAt(0).toUpperCase() + String(aField.field_name).slice(1);
-          p.textContent = aField.field_value;
-          detailsContainer.appendChild(bold);
-          detailsContainer.appendChild(p);
-          });
-        */
-       // seperator
-       /*
-       const hrDiv = document.createElement('div');
-       hrDiv.classList.add(...hrCls);
-       hrDiv.innerHTML = '<hr class="w-64 h-px my-8 bg-gray-200 border-0 dark:bg-gray-700"><span class="absolute px-3 font-medium text-gray-900 -translate-x-1/2 bg-white left-1/2 dark:text-white dark:bg-gray-900">custom</span></div>';
-       detailsContainer.appendChild(hrDiv);
-       */
-       /*
-       item.properties.custom_fields.forEach( aField => {
-         const p = document.createElement('p');
-         const bold = document.createElement('b');
-         bold.textContent = String(aField.field_name_en).charAt(0).toUpperCase() + String(aField.field_name_en).slice(1) + ' / ' + aField.field_name_zh;
-         p.textContent = aField.field_value;
-         detailsContainer.appendChild(bold);
-         detailsContainer.appendChild(p);
-       });
-       // seperator
-       const hrDiv2 = document.createElement('div');
-       hrDiv2.classList.add(...hrCls);
-       hrDiv2.innerHTML = '<hr class="w-64 h-px my-8 bg-gray-200 border-0 dark:bg-gray-700"><span class="absolute px-3 font-medium text-gray-900 -translate-x-1/2 bg-white left-1/2 dark:text-white dark:bg-gray-900">Type Specimens</span></div>';
-       detailsContainer.appendChild(hrDiv2);
-
-       const pre = document.createElement('pre');
-       pre.textContent = `${JSON.stringify(item.type_specimens, null, 2)}`;
-       detailsContainer.appendChild(pre);
-       */
        itemTableBody.appendChild(clone);
      });
      initFlowbite();
@@ -608,7 +570,7 @@ ${lit.citation}
        console.error(error);
      } finally {
        isLoading = false;
-       render(namespaceData);
+       //render(namespaceData);
      }
    } // end of init
 

@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block script %}
+<script>
+ document.addEventListener('DOMContentLoaded', function () {
+   const collections = document.getElementsByClassName('collection-item');
+   for (c of collections) {
+     c.onclick = (e) => {
+       e.preventDefault();
+       const cid = e.target.dataset.collectionid;
+       fetch('/api/v1/publications', {
+         body: JSON.stringify({collectionid: cid}),
+         cache: "no-cache",
+         credentials: "same-origin",
+         headers: {
+           "user-agent": "Mozilla/4.0 MDN Example",
+           "content-type": "application/json",
+         },
+         method: "POST",
+         mode: "cors", // no-cors, cors, *same-origin
+         redirect: "follow", // manual, *follow, error
+         referrer: "no-referrer", // *client, no-referrer
+       })
+         .then(resp => resp.json())
+         .then(data => {
+           console.log(data);
+           if (data.message === 'ok'){
+             location.reload();
+           }
+         })
+         .catch((error) => console.error(error));
+       };
+     }
+ });
+</script>
+{% endblock %}
+{% block main %}
+<main class="flex-1 bg-white dark:bg-gray-900 p-6 overflow-y-auto">
+  <h2 class="mb-2 text-lg font-semibold text-gray-900 dark:text-white">via TaiCOL namespaces</h2>
+  <ul class="max-w-md space-y-1 text-gray-500 list-disc list-inside dark:text-gray-400">
+    {% for i in collections %}
+    <li><a href="{{ url_for('main.preview') }}?namespace_id={{ i.source_id }}">{{ i.name }}</a> {% if i.publication_id %}<a href="{{ url_for('main.publication_detail', publication_id=i.publication_id) }}">edit</a>{% else %}<button type="button" class="focus:outline-none text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800 collection-item" data-collectionid="{{ i.id }}">Create</button>{% endif %}</li>
+    {% endfor %}
+  </ul>
+  </main>
+{% endblock %}

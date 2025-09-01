@@ -13,6 +13,7 @@ from flask import (
     current_app,
     render_template,
     send_file,
+    redirect,
 )
 
 from flask_login import (
@@ -29,6 +30,7 @@ from app.models import (
     User,
     Collection,
     Notification,
+    Publication,
 )
 #import pymysql
 
@@ -52,10 +54,37 @@ def index():
 def nametool():
     return render_template('main.html')
 
-@bp.route('/namespaces/')
-def namespace_list():
+@login_required
+@bp.route('/publications')
+def publication_list():
     collections = Collection.query.filter(Collection.user_id==current_user.id).all()
-    return render_template('namespace_list.html', collections=collections, subheader='TaiCOL Namespaces')
+    return render_template('publication_list.html', collections=collections, subheader='Publications')
+
+@login_required
+@bp.route('/publications/<int:publication_id>')
+def publication_detail(publication_id):
+    publication = session.get(Publication, publication_id)
+    API_URL=current_app.config['API_URL']
+    return render_template('publication_detail.html', publication=publication, subheader='Publications', API_URL=API_URL)
+
+@login_required
+@bp.route('/publications/<int:publication_id>/delete')
+def delete_publication(publication_id):
+    publication = session.get(Publication, publication_id)
+    for c in publication.collections:
+        for i in c.items:
+            for j in i.synonyms:
+                session.delete(j)
+            session.delete(i)
+        #session.delete(c) keep collection
+        c.publication_id = None
+
+    for i in publication.literatures:
+        session.delete(i)
+
+    session.delete(publication)
+    session.commit()
+    return redirect(url_for('main.publication_list'))
 
 @bp.route('/client')
 def client():

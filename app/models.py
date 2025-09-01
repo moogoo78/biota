@@ -59,7 +59,7 @@ class SourceMixin(object):
     source_id: Mapped[Optional[int]] = mapped_column(Integer)
     source_name: Mapped[Optional[str]] = mapped_column(String(500))
     source_data: Mapped[Dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
-    fetched_at: Mapped[Optional[datetime]] = mapped_column(default=datetime.utcnow)
+    fetched_at: Mapped[Optional[datetime]] = mapped_column(default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
 class WebhookEvent(Base, TimestampMixin):
@@ -86,7 +86,7 @@ class Publication(Base, TimestampMixin):
     title: Mapped[str] = mapped_column(String(500))
     author: Mapped[str] = mapped_column(String(500))
     literatures: Mapped[List['PublicationLiterature']] = relationship(back_populates='publication')
-
+    collections: Mapped[List['Collection']] = relationship(back_populates='publication')
 
 class PublicationLiterature(Base, TimestampMixin, SourceMixin):
     # TaiCOL ref
@@ -105,16 +105,241 @@ class Collection(Base, SourceMixin):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(500))
     user_id: Mapped[int] = mapped_column(ForeignKey('user.id'))
+    publication_id: Mapped[Optional[int]] = mapped_column(ForeignKey('publication.id'))
+
+    publication: Mapped[Publication] = relationship(back_populates='collections')
+    items: Mapped[List['Item']] = relationship(back_populates='collection')
 
 
 class Item(Base, TimestampMixin, SourceMixin):
     # TaiCOL namespace name
     __tablename__ = 'item'
 
+    TAICOL_RANKS = {
+        "1": [
+            "Domain",
+            "域"
+        ],
+        "2": [
+            "Superkingdom",
+            "總界"
+        ],
+        "3": [
+            "Kingdom",
+            "界"
+        ],
+        "4": [
+            "Subkingdom",
+            "亞界"
+        ],
+        "5": [
+            "Infrakingdom",
+            "下界"
+        ],
+        "6": [
+            "Superdivision",
+            "超部|總部"
+        ],
+        "7": [
+            "Division",
+            "部|類"
+        ],
+        "8": [
+            "Subdivision",
+            "亞部|亞類"
+        ],
+        "9": [
+            "Infradivision",
+            "下部|下類"
+        ],
+        "10": [
+            "Parvdivision",
+            "小部|小類"
+        ],
+        "11": [
+            "Superphylum",
+            "超門|總門"
+        ],
+        "12": [
+            "Phylum",
+            "門"
+        ],
+        "13": [
+            "Subphylum",
+            "亞門"
+        ],
+        "14": [
+            "Infraphylum",
+            "下門"
+        ],
+        "15": [
+            "Microphylum",
+            "微門"
+        ],
+        "16": [
+            "Parvphylum",
+            "小門"
+        ],
+        "17": [
+            "Superclass",
+            "超綱|總綱"
+        ],
+        "18": [
+            "Class",
+            "綱"
+        ],
+        "19": [
+            "Subclass",
+            "亞綱"
+        ],
+        "20": [
+            "Infraclass",
+            "下綱"
+        ],
+        "21": [
+            "Superorder",
+            "超目|總目"
+        ],
+        "22": [
+            "Order",
+            "目"
+        ],
+        "23": [
+            "Suborder",
+            "亞目"
+        ],
+        "24": [
+            "Infraorder",
+            "下目"
+        ],
+        "25": [
+            "Superfamily",
+            "超科|總科"
+        ],
+        "26": [
+            "Family",
+            "科"
+        ],
+        "27": [
+            "Subfamily",
+            "亞科"
+        ],
+        "28": [
+            "Tribe",
+            "族"
+        ],
+        "29": [
+            "Subtribe",
+            "亞族"
+        ],
+        "30": [
+            "Genus",
+            "屬"
+        ],
+        "31": [
+            "Subgenus",
+            "亞屬"
+        ],
+        "32": [
+            "Section",
+            "組|節"
+        ],
+        "33": [
+            "Subsection",
+            "亞組|亞節"
+        ],
+        "34": [
+            "Species",
+            "種"
+        ],
+        "35": [
+            "Subspecies",
+            "亞種"
+        ],
+        "36": [
+            "Nothosubspecies",
+            "雜交亞種"
+        ],
+        "37": [
+            "Variety",
+            "變種"
+        ],
+        "38": [
+            "Subvariety",
+            "亞變種"
+        ],
+        "39": [
+            "Nothovariety",
+            "雜交變種"
+        ],
+        "40": [
+            "Form",
+            "型"
+        ],
+        "41": [
+            "Subform",
+            "亞型"
+        ],
+        "42": [
+            "Special Form",
+            "特別品型"
+        ],
+        "43": [
+            "Race",
+            "種族"
+        ],
+        "44": [
+            "Stirp",
+            "血統"
+        ],
+        "45": [
+            "Morph",
+            "形態型"
+        ],
+        "46": [
+            "Aberration",
+            "異常個體"
+        ],
+        "47": [
+            "Hybrid Formula",
+            "雜交組合"
+        ],
+        "48": [
+            "Subrealm",
+            "病毒亞域"
+        ],
+        "49": [
+            "Realm",
+            "病毒域"
+        ],
+        "50": [
+            "Unranked",
+            "未定義階層"
+        ],
+        "51": [
+            "Megaclass",
+            "高綱"
+        ],
+        "52": [
+            "Grandclass",
+            "大綱"
+        ],
+        "53": [
+            "Mirclass",
+            "上綱"
+        ],
+        "54": [
+            "Epifamily",
+            "領科"
+        ]
+    }
+
     id: Mapped[int] = mapped_column(primary_key=True)
     scientific_name: Mapped[str] = mapped_column(String(500))
-    common_names: Mapped[str] = mapped_column(String(500))
-    description: Mapped[str] = mapped_column(Text)
+    common_names: Mapped[Optional[str]] = mapped_column(String(500))
+    description: Mapped[Optional[str]] = mapped_column(Text)
+    distribution: Mapped[Optional[str]] = mapped_column(Text)
+    note: Mapped[Optional[str]] = mapped_column(Text)
 
     user_id: Mapped[int] = mapped_column(ForeignKey('user.id'))
     collection_id: Mapped[int] = mapped_column(ForeignKey('collection.id'))
@@ -123,6 +348,12 @@ class Item(Base, TimestampMixin, SourceMixin):
     specimens: Mapped[List['ItemSpecimen']] = relationship(back_populates='item')
     distributions: Mapped[List['ItemDistribution']] = relationship(back_populates='item')
 
+    collection: Mapped[Collection] = relationship(back_populates='items')
+
+    def get_rank(self):
+        if sd := self.source_data:
+            if rank_id := sd.get('rank_id'):
+                return self.TAICOL_RANKS.get(str(rank_id), ['-', '-'])
 
 class ItemSynonym(Base):
     __tablename__ = 'item_synonym'

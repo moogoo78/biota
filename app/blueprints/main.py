@@ -142,6 +142,7 @@ def patch_publication(publication_id):
 @login_required
 @bp.route('/items/<int:item_id>/patch-specimens')
 def patch_item_specimen(item_id):
+    # default specimen format
     if item_specimen := session.get(Item, item_id):
         if selected := request.args.get('selected'):
             for i in selected.split(','):
@@ -154,6 +155,18 @@ def patch_item_specimen(item_id):
                 isp.text = f'{locality}, {recorded_by} {record_number} ({dataset_name})'
         session.commit()
         return jsonify({'message': 'success'})
+
+@login_required
+@bp.route('/modify-specimen')
+def modify_specimen_text():
+    content = request.args.get('specimen_content', '')
+    if spid := request.args.get('spid', ''):
+        if sp := session.get(ItemSpecimen, spid):
+            sp.text = content
+            session.commit()
+            flash('edit specimen format')
+            return jsonify({'message': 'success'})
+
 @bp.route('/client')
 def client():
     return render_template('client.html')

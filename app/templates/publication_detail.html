@@ -235,11 +235,12 @@
             </div>
             <!-- Modal body -->
             <div class="p-4 md:p-5">
-                <form class="space-y-4" action="#">
+                <form class="space-y-4" action="" id="specimen-edit-form">
                     <div>
                       <label for="specimen-content" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Text</label>
                         <textarea id="specimen-content" name="specimen_content" rows="4" class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"></textarea>
                     </div>
+                    <input type="hidden" name="spid" value="" id="specimen-spid"/>
                     TBIA specimen Raw data:
                     <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 font-mono text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap overflow-auto max-h-96" id="specimen-raw"></div>
                     <button type="submit" id="specimen-edit-submit" class="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Save</button>
@@ -311,18 +312,37 @@
        });
    };
    const previewSpecimenSpans = document.querySelectorAll('.preview-specimen-box');
+   const specimenContent = document.getElementById('specimen-content');
+   const specimenRaw = document.getElementById('specimen-raw');
+   const specimenSpID = document.getElementById('specimen-spid');
    previewSpecimenSpans.forEach( x => {
      x.onclick = (e) => {
-       const specimenContent = document.getElementById('specimen-content');
-       const specimenRaw = document.getElementById('specimen-raw');
        const itemid = e.target.dataset.itemid;
        const spid = e.target.dataset.spid;
        const item = itemData.find((item) => String(item.item_id) === String(itemid));
        const specimen = item.specimens.find((sp) => String(sp._id) === String(spid));
        specimenRaw.innerHTML = `<pre><code>${JSON.stringify(specimen, null, 2)}</code></pre>`;
        specimenContent.textContent = e.target.textContent;
+       specimenSpID.value = spid;
      };
    });
+   const specimenEditSubmit = document.getElementById('specimen-edit-submit');
+   specimenEditSubmit.onclick = (e) => {
+     e.preventDefault();
+     const form = document.getElementById('specimen-edit-form');
+     const formData = new FormData(form);
+     let params = new URLSearchParams();
+     for (const [key, value] of formData) {
+       params.set(key, value);
+     }
+     console.log(params);
+     fetch(`${API_URL}/modify-specimen?${params.toString()}`)
+       .then(resp => resp.json())
+       .then(result => {
+         console.log(result);
+         document.location.href = "{{ url_for('main.publication_detail', publication_id=publication.id ) }}";
+        });
+   };
           /* utils */
           /* via MDN
              function postData(url, data) {

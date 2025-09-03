@@ -14,6 +14,7 @@ from flask import (
     render_template,
     send_file,
     redirect,
+    flash,
 )
 
 from flask_login import (
@@ -23,7 +24,7 @@ from flask_login import (
 )
 
 #from flask.views import MethodView
-from app.helpers import get_namespace_data, generate_docx
+from app.helpers import get_namespace_data, generate_docx, fetch_tbia_specimens
 from app.database import session
 
 from app.models import (
@@ -31,6 +32,9 @@ from app.models import (
     Collection,
     Notification,
     Publication,
+    Item,
+    ItemSpecimen,
+    PublicationLiterature,
 )
 #import pymysql
 
@@ -65,7 +69,23 @@ def publication_list():
 def publication_detail(publication_id):
     publication = session.get(Publication, publication_id)
     API_URL=current_app.config['API_URL']
-    return render_template('publication_detail.html', publication=publication, subheader='Publications', API_URL=API_URL)
+    item_data = []
+    for i in publication.collections[0].items:
+        # 整理給前端
+        specimens = []
+        for x in i.specimens:
+            data = x.source_data
+            data['_id'] = x.id
+            specimens.append(data)
+
+        item_data.append({
+            'item_id': i.id,
+            'name': i.scientific_name,
+            'name_id': i.source_data['name_id'],
+            'rank_id': i.source_data['rank_id'],
+            'specimens': specimens
+        })
+    return render_template('publication_detail.html', publication=publication, subheader='Publications', API_URL=API_URL, item_data_json=json.dumps(item_data))
 
 @login_required
 @bp.route('/publications/<int:publication_id>/delete')
@@ -74,6 +94,8 @@ def delete_publication(publication_id):
     for c in publication.collections:
         for i in c.items:
             for j in i.synonyms:
+                session.delete(j)
+            for j in i.specimens:
                 session.delete(j)
             session.delete(i)
         #session.delete(c) keep collection
@@ -86,6 +108,52 @@ def delete_publication(publication_id):
     session.commit()
     return redirect(url_for('main.publication_list'))
 
+@login_required
+@bp.route('/literatures/patch')
+def patch_literatures():
+    #for k, v in request.form.items():
+    #    print(k, v)
+    #session.commit()
+    for k, v in request.args.items():
+        if 'literature_text_' in k:
+            lit_id = k.replace('literature_text_', '')
+            print(lit_id, v)
+            if lit := session.get(PublicationLiterature, lit_id):
+                lit.name = v
+    session.commit()
+    flash('update literature')
+    return jsonify({'status': 'success'})
+
+
+@login_required
+@bp.route('/publications/<int:publication_id>/patch')
+def patch_publication(publication_id):
+    publication = session.get(Publication, publication_id)
+    if status := request.args.get('status', ''):
+        publication.status = status
+    if x := request.args.get('title', ''):
+        publication.title = x
+
+    session.commit()
+    #return redirect(url_for('main.publication_detail', publication_id=publication_id))
+    flash('patch ok')
+    return jsonify({'status': 'success'})
+
+@login_required
+@bp.route('/items/<int:item_id>/patch-specimens')
+def patch_item_specimen(item_id):
+    if item_specimen := session.get(Item, item_id):
+        if selected := request.args.get('selected'):
+            for i in selected.split(','):
+                isp = session.get(ItemSpecimen, i)
+                sd = isp.source_data
+                record_number = sd.get('recordNumber', '--')
+                recorded_by = sd.get('recordedBy', '--')
+                locality = sd.get('locality', '--')
+                dataset_name = sd.get('datasetName', '--') # institudion ID ?
+                isp.text = f'{locality}, {recorded_by} {record_number} ({dataset_name})'
+        session.commit()
+        return jsonify({'message': 'success'})
 @bp.route('/client')
 def client():
     return render_template('client.html')
@@ -460,7 +528,7 @@ def get_external_data_api(source, taxon_key):
             if x:= v.get('locality'):
                 locality_list.append(x)
 
-            print(named_areas)
+            #print(named_areas)
             media = []
             if m := v.get('media'):
                 for i in m:
@@ -495,88 +563,39 @@ def get_external_data_api(source, taxon_key):
             'records': records,
         })
     elif source == 'tbia':
-        url = f'https://tbiadata.tw/api/v1/occurrence?isCollection=true&taxonID={taxon_key}&limit={limit}'
-        resp = requests.get(url)
-        data = resp.json()
-        if data['status']['code'] == 200:
-            for i,v in enumerate(data['data']):
-                specimen_display = {
-                    'county': '',
-                    'locality': '',
-                    'collector': '',
-                    'record_number': '',
-                }
-                named_areas = {}
-                for term, field in DWC_TERMS.items():
-                    if x := v.get(term):
-                        key = term if field == '' else field
-                        named_areas[key] = x
-                        if key == 'adm2':
-                            if county_en := taiwan_counties_english.get(x):
-                                specimen_display['county'] = county_en.upper()
-                        if key == 'locality':
-                            specimen_display['locality'] = x
-                            #'ILAN: Nanhutashan, Lu 24973.
-                            # NANTOU: Mt.Kiraishiu, Wilson 10074 (Type of B. nantoensis, A!);'
-                media = []
-                if x := v.get('associatedMedia'):
-                    media.append(x)
+        has_item = False
+        item_id = request.args.get('item_id', '')
+        existSpecimenData = []
+        if item_id:
+            item = session.get(Item, item_id)
+            has_item = True
+            for x in item.specimens:
+                existSpecimenData.append(x.source_data)
 
-                locality_list = []
-                if x:= v.get('county'):
-                    locality_list.append(x)
-                if x:= v.get('locality'):
-                    locality_list.append(x)
-
-                date = ''
-                if x := v.get('eventDate'):
-                    y = x[0:4]
-                    m = x[5:7]
-                    d = x[8:10]
-                    date = f'{y}.{m}.{d}'
-
-                #print(v)
-                #print(named_areas)
-                recorded_by = ''
-                if x := v.get('recordedBy', ''):
-                    recorded_by = x
-                    specimen_display['collector'] = recorded_by
-                record_number = ''
-                if x := v.get('recordNumber', ''):
-                    record_number = x
-                    specimen_display['record_number'] = x
-
-                records.append({
-                    'recid': i,
-                    'url': v.get('references', ''),
-                    'institutionCode': '',
-                    'recordedBy': recorded_by,
-                    'basisOfRecord': v.get('basisOfRecord', ''),
-                    'recordNumber': record_number,
-                    'catalogNumber': v.get('catalogNumber', ''),
-                    'date': date,
-                    'remarks': '',
-                    'locality': '|'.join(locality_list),
-                    'datasetTitle': v['datasetName'],
-                    'media': media,
-                    'named_areas': named_areas,
-                    'specimen_display': specimen_display,
-                })
-
-            # TODO: CORS
-            resp = jsonify({
+        data = {}
+        if len(existSpecimenData) > 0:
+            data = {
                 'status': 'success',
-                'total': data['meta']['total'],
-                'records': records,
-            })
-            resp.headers.add('Access-Control-Allow-Origin', '*')
-            resp.headers.add('Access-Control-Allow-Methods', '*')
-            return resp
+                'total': len(existSpecimenData),
+                'records': existSpecimenData
+            }
         else:
-            return jsonify({
-                'status': 'error',
-                'message': data['status']['message'],
-            })
+            # fetch tbia (new)
+            data = fetch_tbia_specimens(taxon_key)
+            if has_item:
+                for r in data['records']:
+                    # save to ItemSpecimen
+                    raw = r['_raw']
+                    item_sp = ItemSpecimen(item_id=item.id, source_data=raw, text='', key=raw['id'], source_name='tbia')
+                    session.add(item_sp)
+                session.commit()
+
+        # TODO: CORS
+        resp = jsonify(data)
+        resp.headers.add('Access-Control-Allow-Origin', '*')
+        resp.headers.add('Access-Control-Allow-Methods', '*')
+        return resp
+
     elif source == 'tai2':
         resp = requests.get(f'https://tai2.ntu.edu.tw/species/{taxon_key}')
         soup = BeautifulSoup(resp.text, 'lxml')

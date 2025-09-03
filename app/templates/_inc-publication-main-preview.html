@@ -1,0 +1,56 @@
+<h1 class="mb-2 text-2xl font-bold text-gray-900 dark:text-white" id="display-title">{{ publication.title }}</h1>
+<p class="mb-4 text-lg text-gray-700 dark:text-gray-300">Author: <span id="display-author">{{ publication.author }}</span></p>
+<h2 class="mb-2 text-lg font-semibold text-gray-900 dark:text-white">LITERATURES</h2>
+<ul class="list-disc list-inside space-y-1 text-gray-600 dark:text-gray-400 mb-6">
+  {% for i in publication.literatures %}
+  <li>{{ i.name }}</li>
+  {% endfor %}
+</ul>
+
+{% for i in publication.collections[0].items %}
+<div class="my-8 pb-6">
+  <h3 class="font-bold text-gray-900 dark:text-white text-lg mb-1">
+    {{ loop.index }}. {{ i.source_data.usage_references_text|safe }}
+  </h3>
+  <p class="text-gray-700 dark:text-gray-300 text-lg mb-4">{{ i.common_names }}</p>
+
+  {% if i.synonyms|length > 0%}
+  <div class="mb-4">
+    <h5 class="font-semibold text-gray-900 dark:text-white mb-2">SYNONYMS</h5>
+    {% for syn in i.synonyms %}
+    <p>{{ syn.name|safe }}</p>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% if i.description %}
+  <div class="mb-4">
+    <h5 class="font-semibold text-gray-900 dark:text-white mb-2">DESCRIPTION</h5>
+    <p class="text-gray-800 dark:text-gray-200 text-sm leading-relaxed">{{ i.description }}</p>
+  </div>
+  {% endif %}
+  {% if i.distribution %}
+  <div class="mb-4">
+    <h5 class="font-semibold text-gray-900 dark:text-white mb-2">DISTRIBUTION</h5>
+    <p class="text-gray-800 dark:text-gray-200 text-sm leading-relaxed">{{ i.distribution }}</p>
+  </div>
+  {% endif %}
+
+  {% with specimens = i.get_grouped_specimens() %}
+  <div class="mb-4">
+    <h5 class="font-semibold text-gray-900 dark:text-white mb-2">SPECIMENS</h5>
+    {% for k, v in specimens.items() %}
+    {% if v|length > 0 %}
+    {{ k }}:{% for x in v %}<span class="preview-specimen-box" data-spid="{{ x[0] }}" data-modal-target="specimen-edit-modal" data-modal-toggle="specimen-edit-modal" data-itemid="{{ i.id }}">{{ x[1] }}</span>{% if not loop.last %}; {% else %}.{% endif %}{% endfor %}
+    {% endif %}
+    {% endfor %}
+  </div>
+  {% endwith %}
+
+  {% if i.note %}
+  <div class="mb-4">
+    <h5 class="font-semibold text-gray-900 dark:text-white mb-2">NOTE</h5>
+    <p class="text-gray-800 dark:text-gray-200 text-sm leading-relaxed">{{ i.note }}</p>
+  </div>
+  {% endif %}
+
+{% endfor %}

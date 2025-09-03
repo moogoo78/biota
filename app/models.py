@@ -56,6 +56,7 @@ class SourceMixin(object):
     #     default=uuid.uuid4
     # )
     #version: Mapped[int] = mapped_column(default=1)
+    key: Mapped[Optional[str]] = mapped_column(String(1000))
     source_id: Mapped[Optional[int]] = mapped_column(Integer)
     source_name: Mapped[Optional[str]] = mapped_column(String(500))
     source_data: Mapped[Dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
@@ -85,6 +86,7 @@ class Publication(Base, TimestampMixin):
     id: Mapped[int] = mapped_column(primary_key=True)
     title: Mapped[str] = mapped_column(String(500))
     author: Mapped[str] = mapped_column(String(500))
+    status: Mapped[str] = mapped_column(String(500), default='init') # init, fetched, fetchedSpecimen
     literatures: Mapped[List['PublicationLiterature']] = relationship(back_populates='publication')
     collections: Mapped[List['Collection']] = relationship(back_populates='publication')
 
@@ -334,6 +336,31 @@ class Item(Base, TimestampMixin, SourceMixin):
         ]
     }
 
+    COUNTY_MAP = {
+        "彰化縣": "Changhua",
+        "嘉義縣": "Chiayi",
+        "新竹縣": "Hsinchu",
+        "花蓮縣": "Hualien",
+        "宜蘭縣": "Yilan",
+        "金門縣": "Kinmen",
+        "連江縣": "Lienchiang",
+        "苗栗縣": "Miaoli",
+        "南投縣": "Nantou",
+        "澎湖縣": "Penghu",
+        "屏東縣": "Pingtung",
+        "臺東縣": "Taitung",
+        "雲林縣": "Yunlin",
+        "嘉義市": "Chiayi",
+        "新竹市": "Hsinchu",
+        "基隆市": "Keelung",
+        "高雄市": "Kaohsiung",
+        "新北市": "New Taipei",
+        "桃園市": "Taoyuan",
+        "臺南市": "Tainan",
+        "臺北市": "Taipei",
+        "臺中市": "Taichung"
+    }
+
     id: Mapped[int] = mapped_column(primary_key=True)
     scientific_name: Mapped[str] = mapped_column(String(500))
     common_names: Mapped[Optional[str]] = mapped_column(String(500))
@@ -355,6 +382,18 @@ class Item(Base, TimestampMixin, SourceMixin):
             if rank_id := sd.get('rank_id'):
                 return self.TAICOL_RANKS.get(str(rank_id), ['-', '-'])
 
+    def get_grouped_specimens(self):
+        grouped = {}
+        for i in self.specimens:
+            county = i.source_data.get('county', '')
+            if county_en := self.COUNTY_MAP.get(county, ''):
+                key = county_en.upper()
+                if key not in grouped:
+                    grouped[key] = []
+                grouped[key].append([i.id, i.text])
+
+        return grouped
+
 class ItemSynonym(Base):
     __tablename__ = 'item_synonym'
 
@@ -368,8 +407,8 @@ class ItemSpecimen(Base, SourceMixin):
     __tablename__ = 'item_specimen'
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    text: Mapped[str] = mapped_column(String(500))
-    named_area_id: Mapped[int] = mapped_column(ForeignKey('named_area.id'))
+    text: Mapped[Optional[str]] = mapped_column(String(500))
+    named_area_id: Mapped[Optional[int]] = mapped_column(ForeignKey('named_area.id'))
     item_id: Mapped[int] = mapped_column(ForeignKey('item.id'))
     item: Mapped[Item] = relationship(back_populates='specimens')
 
@@ -388,9 +427,10 @@ class NamedArea(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(500))
-    tw_post_id: Mapped[str] = mapped_column(String(500))
+    name_zh: Mapped[str] = mapped_column(String(500))
+    tw_post_id: Mapped[Optional[str]] = mapped_column(String(500))
     #area_class_id: Mapped[str] = mapped_column(Integer)
-    area_class: Mapped[str] = mapped_column(String(500)) # county, stateProvince, country
+    area_class: Mapped[Optional[str]] = mapped_column(String(500)) # county, stateProvince, country
 
 
 class User(Base, TimestampMixin, UserMixin):

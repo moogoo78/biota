@@ -2,57 +2,350 @@
 
 {% block style %}
 <link rel="stylesheet" href="{{ url_for('static', filename='vendor/tom-select.default.min.css') }}">
+<style>
+ .preview-specimen-box {
+   transition: all 0.2s ease-in-out;
+   padding: 2px 4px;
+   border-radius: 4px;
+   cursor: pointer;
+ }
+
+ .preview-specimen-box:hover {
+   background-color: #fef9c3; /* A soft yellow from Tailwind's color palette */
+   box-shadow: inset 0 -2px 0 #fef08a; /* A subtle underline effect */
+ }
+</style>
 {% endblock %}
 
 {% block main %}
 {% include "_inc-preview-sidebar.html" %}
 <!-- Center Content -->
 <main class="flex-1 bg-white dark:bg-gray-900 p-6 overflow-y-auto" id="main-content">
-  <div id="main-content-sync" class="main-content-panel hidden">
+  {% with messages = get_flashed_messages() %}
+  {% if messages %}
+  {% for message in messages %}
+  <div id="toast-success" class="flex items-center w-full max-w-xs p-4 mb-4 text-gray-500 bg-white rounded-lg shadow-sm dark:text-gray-400 dark:bg-gray-800" role="alert">
+    <div class="inline-flex items-center justify-center shrink-0 w-8 h-8 text-green-500 bg-green-100 rounded-lg dark:bg-green-800 dark:text-green-200">
+      <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+        <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5Zm3.707 8.207-4 4a1 1 0 0 1-1.414 0l-2-2a1 1 0 0 1 1.414-1.414L9 10.586l3.293-3.293a1 1 0 0 1 1.414 1.414Z"/>
+      </svg>
+      <span class="sr-only">Check icon</span>
+    </div>
+    <div class="ms-3 text-sm font-normal">{{ message }}</div>
+    <button type="button" class="ms-auto -mx-1.5 -my-1.5 bg-white text-gray-400 hover:text-gray-900 rounded-lg focus:ring-2 focus:ring-gray-300 p-1.5 hover:bg-gray-100 inline-flex items-center justify-center h-8 w-8 dark:text-gray-500 dark:hover:text-white dark:bg-gray-800 dark:hover:bg-gray-700" data-dismiss-target="#toast-success" aria-label="Close">
+        <span class="sr-only">Close</span>
+        <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+          <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+        </svg>
+    </button>
+  </div>
+  {% endfor %}
+  {% endif %}
+  {% endwith %}
+  <div id="main-content-sync" class="main-content-panel">
     <button type="button" class="focus:outline-none text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800">Sync</button>
     <div>Latest: <span id="main-sync-datetime"></span></div>
 
       <div class="mt-8">
-        <button type="button" id="delete-button" class="focus:outline-none text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900">delete</button>
+        <button type="button" id="delete-button" class="focus:outline-none text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900">Delete</button>
       </div>
   </div>
     <div id="main-content-meta" class="main-content-panel hidden">
-    <form class="max-w-4xl">
+    <form class="max-w-4xl" id="meta">
       <div class="mb-5">
         <label for="meta-title" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Title</label>
-        <input type="text" id="meta-title" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" required />
+        <input type="text" id="meta-title" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" value="{{ publication.title }}" name="title" required />
       </div>
       <div class="mb-5">
         <label for="meta-authors" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Authors</label>
-        <textarea id="meta-authors" rows="4" class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"></textarea>
+        <textarea id="meta-authors" rows="4" class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" name="author">{{ publication.author }}</textarea>
       </div>
-      <button type="submit" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Save</button>
+      <button type="submit" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800" id="save-meta-btn">Save</button>
     </form>
 
   </div>
   <div id="main-content-literatures" class="main-content-panel hidden">
     <h2 class="mb-2 text-lg font-semibold text-gray-900 dark:text-white">LITERATURES</h2>
-    <div id="literatures-table-wrapper"></div>
+    <form id="literature-form">
+      <div id="literatures-table-wrapper">
+        <div class="relative overflow-x-auto">
+          <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
+            <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+              <tr>
+                <th scope="col" class="px-6 py-3">
+                  TaiCOL ref_id
+                </th>
+                <th scope="col" class="px-6 py-3">
+                  Citations
+                </th>
+                <th scope="col" class="px-6 py-3">
+                  Edit
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for i in publication.literatures %}
+              <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200">
+                <th scope="row" class="px-6 py-4 font-medium text-gray-900 dark:text-white">
+                  {{ i.source_id }}
+                </th>
+                <td class="px-6 py-4" id="literature-{{ i.id }}">{{ i.name }}</td>
+                <td class="px-6 py-4">
+                  <a href="#" class="literature-edit" data-litid="{{ i.id }}">
+                    <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                      <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m14.304 4.844 2.852 2.852M7 7H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-4.5m2.409-9.91a2.017 2.017 0 0 1 0 2.853l-6.844 6.844L8 14l.713-3.565 6.844-6.844a2.015 2.015 0 0 1 2.852 0Z"/>
+                    </svg></a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </form>
+    <button id="literature-save-button" type="button" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 my-4">Submit</button>
 
-    <select id="literatures-select" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"></select>
-    <button type="button" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800" id="literature-add-button">Add</button></a>
+    <div class="my-4">
+      <select id="literatures-select" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"></select>
+      <button type="button" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mt-4 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800" id="literature-add-button">Add</button>
+    </div>
   </div>
-  <div id="main-content-groups" class="main-content-panel">
+  <div id="main-content-groups" class="main-content-panel hidden">
     {% include "_inc-publication-main-group.html" %}
+    </div>
+  <div id="main-content-preview" class="main-content-panel hidden">
+    {% include "_inc-publication-main-preview.html" %}
   </div>
 </main>
+
+<!-- Specimen Selection Modal -->
+<div id="specimen-modal" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+    <div class="relative p-4 w-full max-w-4xl max-h-full">
+        <!-- Modal content -->
+        <div class="relative bg-white rounded-lg shadow-sm dark:bg-gray-700">
+            <!-- Modal header -->
+            <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600 border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                    Select Specimens for <span id="modal-species-name" class="italic"></span>
+                </h3>
+                <button type="button" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white" data-modal-toggle="specimen-modal">
+                    <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                    </svg>
+                    <span class="sr-only">Close modal</span>
+                </button>
+            </div>
+            <!-- Modal body -->
+            <div class="p-4 md:p-5">
+                <!-- Specimen Selection Options -->
+                <div class="mb-4">
+                    <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Selection Method</label>
+                    <div class="flex items-center space-x-4">
+                        <label class="inline-flex items-center">
+                            <input type="radio" class="form-radio text-blue-600" name="selection-method" value="auto" checked>
+                            <span class="ml-2 text-sm text-gray-900 dark:text-white">Auto-select best specimens</span>
+                        </label>
+                        <label class="inline-flex items-center">
+                            <input type="radio" class="form-radio text-blue-600" name="selection-method" value="manual">
+                            <span class="ml-2 text-sm text-gray-900 dark:text-white">Manual selection</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Auto Selection Criteria -->
+                <div id="auto-criteria" class="mb-4">
+                    <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Auto-selection Criteria</label>
+                    <div class="grid grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs text-gray-700 dark:text-gray-300">Target Counties</label>
+                            <select multiple class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 h-24 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" id="target-counties">
+                                <!-- Counties will be populated dynamically -->
+                            </select>
+                            <p class="text-xs text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple</p>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-700 dark:text-gray-300">Min Specimens per County</label>
+                            <input type="number" min="1" max="5" value="2" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" id="min-specimens-per-county">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-700 dark:text-gray-300">Max Total Specimens</label>
+                            <input type="number" min="1" max="20" value="6" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" id="max-specimens">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Specimens Table -->
+                <div class="relative overflow-x-auto max-h-96">
+                    <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                        <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400 sticky top-0">
+                            <tr>
+                                <th scope="col" class="px-3 py-2">Select</th>
+                                <th scope="col" class="px-3 py-2">Image</th>
+                                <th scope="col" class="px-3 py-2">Institution</th>
+                                <th scope="col" class="px-3 py-2">Collector</th>
+                                <th scope="col" class="px-3 py-2">Collection Date</th>
+                                <th scope="col" class="px-3 py-2">Locality</th>
+                                <th scope="col" class="px-3 py-2">Catalog #</th>
+                                <th scope="col" class="px-3 py-2">Link</th>
+                            </tr>
+                        </thead>
+                        <tbody id="specimens-table-body">
+                            <!-- Specimens will be dynamically populated here -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Selected Specimens Summary -->
+                <div class="mt-4 p-3 bg-gray-50 dark:bg-gray-600 rounded-lg">
+                    <h4 class="text-sm font-medium text-gray-900 dark:text-white mb-2">Selected Specimens Summary</h4>
+                    <div id="selected-specimens-summary" class="text-sm text-gray-700 dark:text-gray-300">
+                        <p>No specimens selected</p>
+                    </div>
+                </div>
+            </div>
+            <!-- Modal footer -->
+            <div class="flex items-center p-4 md:p-5 border-t border-gray-200 rounded-b dark:border-gray-600">
+                <button type="button" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800" id="save-specimens-btn">
+                    Save Selected Specimens
+                </button>
+                <button type="button" class="py-2.5 px-5 ms-3 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700" data-modal-toggle="specimen-modal">
+                  Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main modal -->
+<div id="specimen-edit-modal" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+    <div class="relative p-4 w-full max-w-4xl max-h-full">
+        <!-- Modal content -->
+        <div class="relative bg-white rounded-lg shadow-sm dark:bg-gray-700">
+            <!-- Modal header -->
+            <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600 border-gray-200">
+                <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
+                  Edit Specimen Text
+                </h3>
+                <button type="button" class="end-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white" data-modal-hide="specimen-edit-modal">
+                    <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                    </svg>
+                    <span class="sr-only">Close modal</span>
+                </button>
+            </div>
+            <!-- Modal body -->
+            <div class="p-4 md:p-5">
+                <form class="space-y-4" action="#">
+                    <div>
+                      <label for="specimen-content" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Text</label>
+                        <textarea id="specimen-content" name="specimen_content" rows="4" class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"></textarea>
+                    </div>
+                    TBIA specimen Raw data:
+                    <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 font-mono text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap overflow-auto max-h-96" id="specimen-raw"></div>
+                    <button type="submit" id="specimen-edit-submit" class="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Save</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block script %}
 <script src="{{ url_for('static', filename='vendor/tom-select.complete.min.js') }}"></script>
 <script>
+ const COUNTY_MAP = {
+   "彰化縣": "Changhua",
+   "嘉義縣": "Chiayi",
+   "新竹縣": "Hsinchu",
+   "花蓮縣": "Hualien",
+   "宜蘭縣": "Yilan",
+   "金門縣": "Kinmen",
+   "連江縣": "Lienchiang",
+   "苗栗縣": "Miaoli",
+   "南投縣": "Nantou",
+   "澎湖縣": "Penghu",
+   "屏東縣": "Pingtung",
+   "臺東縣": "Taitung",
+   "雲林縣": "Yunlin",
+   "嘉義市": "Chiayi",
+   "新竹市": "Hsinchu",
+   "基隆市": "Keelung",
+   "高雄市": "Kaohsiung",
+   "新北市": "New Taipei",
+   "桃園市": "Taoyuan",
+   "臺南市": "Tainan",
+   "臺北市": "Taipei",
+   "臺中市": "Taichung"
+ };
+
+ const COUNTY_ORDER = ['TAIPEI', 'KEELUNG', 'LIENCHIANG', 'NEW TAIPEI', 'YILAN', 'HSINCHU', 'TAOYUAN', 'MIAOLI', 'TAICHUNG', 'CHANGHUA', 'NANTOU', 'CHIAYI', 'YUNLIN', 'TAINAN', 'KAOHSIUNG', 'PENGHU', 'KINMEN', 'PINGTUNG', 'TAITUNG', 'HUALIEN'];
+
  document.addEventListener('DOMContentLoaded', function () {
    const API_URL = '{{ API_URL }}';
-   const itemData = [
-     {%- for i in publication.collections[0].items -%}
-     { "name": "{{ i.scientific_name}}", "name_id": {{ i.source_data.name_id }}, "rank_id": {{ i.source_data.rank_id }} }{% if not loop.last %},{% endif %}
-     {%- endfor -%}
-   ];
+   const itemData = {{ item_data_json|safe }};
+
+   const literatureEdits = document.querySelectorAll('.literature-edit');
+   literatureEdits.forEach( x => {
+     x.onclick = (e) => {
+       e.preventDefault();
+       let litId = e.currentTarget.dataset.litid;
+       let targetText = document.getElementById(`literature-${litId}`);
+       targetText.innerHTML = `<textarea name="literature_text_${litId}" rows="4" class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">${targetText.textContent}</textarea>`;
+     }
+   });
+   const literatureSaveButton = document.getElementById('literature-save-button');
+   literatureSaveButton.onclick = (e) => {
+     e.preventDefault();
+     const form = document.getElementById('literature-form');
+     const formData = new FormData(form);
+     let params = new URLSearchParams();
+     for (const [key, value] of formData) {
+       params.set(key, value);
+     }
+     fetch(`${API_URL}/literatures/patch?${params.toString()}`)
+       .then(resp => resp.json())
+       .then(result => {
+         console.log(result);
+         document.location.href = "{{ url_for('main.publication_detail', publication_id=publication.id ) }}";
+       });
+   };
+   const previewSpecimenSpans = document.querySelectorAll('.preview-specimen-box');
+   previewSpecimenSpans.forEach( x => {
+     x.onclick = (e) => {
+       const specimenContent = document.getElementById('specimen-content');
+       const specimenRaw = document.getElementById('specimen-raw');
+       const itemid = e.target.dataset.itemid;
+       const spid = e.target.dataset.spid;
+       const item = itemData.find((item) => String(item.item_id) === String(itemid));
+       const specimen = item.specimens.find((sp) => String(sp._id) === String(spid));
+       specimenRaw.innerHTML = `<pre><code>${JSON.stringify(specimen, null, 2)}</code></pre>`;
+       specimenContent.textContent = e.target.textContent;
+     };
+   });
+          /* utils */
+          /* via MDN
+             function postData(url, data) {
+             return fetch(url, {
+             body: JSON.stringify(data), // must match 'Content-Type' header
+             cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
+             credentials: "same-origin", // include, same-origin, *omit
+             headers: {
+             "user-agent": "Mozilla/4.0 MDN Example",
+             "content-type": "application/json",
+             },
+             method: "POST", // *GET, POST, PUT, DELETE, etc.
+             mode: "cors", // no-cors, cors, *same-origin
+             redirect: "follow", // manual, *follow, error
+             referrer: "no-referrer", // *client, no-referrer
+             }).then((response) => response.json()); // 輸出成 json
+             }*/
+
+   itemData.forEach( (item, index)  => {
+     if (item.specimens.length > 0) {
+       updateRowStatus(index, 'success', 'Complete', item.specimens.length);
+     }
+   });
 
    /* sidebar and main panel */
    const sidebarNav = document.getElementById('sidebar-nav');
@@ -63,8 +356,10 @@
      sidebarItems.forEach(item => {
        let icon = item.querySelector('svg');
        let label = item.querySelector('span');
+       //let link = item.querySelector('a');
        icon.classList.remove('text-gray-900', 'text-gray-500');
        label.classList.remove('text-gray-900', 'text-gray-500');
+       //link.classList.remove('text-gray-900', 'text-gray-500');
      });
      mainContentPanels.forEach(panel => {
        panel.classList.add('hidden');
@@ -73,8 +368,10 @@
      const targetPanel = document.getElementById(`main-content-${mainPanel}`);
      let icon = targetSidebarItem.querySelector('svg');
      let label = targetSidebarItem.querySelector('span');
+     //let link = targetSidebarItem.querySelector('a');
      icon.classList.add('text-gray-900');
      label.classList.add('text-gray-900');
+     //link.classList.add('text-gray-900');
      targetPanel.classList.remove('hidden');
    }
    sidebarNav.onclick = (e) => {
@@ -85,10 +382,27 @@
      switchPanel(main);
    }
 
+   const saveMetaButton = document.getElementById('save-meta-btn');
+   saveMetaButton.onclick = (e) => {
+     e.preventDefault();
+     const form = document.getElementById('meta');
+     const formData = new FormData(form);
+     let params = new URLSearchParams();
+
+     for (const [key, value] of formData) {
+       params.set(key, value);
+     }
+     fetch(`${API_URL}/publications/{{ publication.id }}/patch?${params.toString()}`)
+       .then(resp => resp.json())
+       .then(result => {
+         console.log(result);
+         document.location.href = "{{ url_for('main.publication_detail', publication_id=publication.id ) }}";
+       })
+   };
+
    /* table row detail */
    document.getElementById('item-table-body').addEventListener('click', function(e) {
      const row = e.target.closest('.expandable-row');
-     console.log(row);
      if (row) {
        // stop calling modal
        if (e.target.closest('.item-action')) {
@@ -199,7 +513,7 @@
        updateRowStatus(index, 'loading', 'Fetching specimens...');
 
        // Fetch specimen data using the taxon key
-       const specimenUrl = `${API_URL}/api/external/data/tbia/${taxonKey}`;
+       const specimenUrl = `${API_URL}/api/external/data/tbia/${taxonKey}?item_id=${itemData[index].item_id}`;
        const specimenResponse = await fetch(specimenUrl);
 
        if (!specimenResponse.ok) {
@@ -213,7 +527,7 @@
          updateRowStatus(index, 'success', 'Complete', specimenCount);
 
          // Store the specimen data for later use
-         itemData[index].specimenData = specimenData.records;
+         itemData[index].specimens = specimenData.records;
        } else {
          updateRowStatus(index, 'error', specimenData.message || 'No specimens found');
        }
@@ -238,25 +552,318 @@
        // Process each scientific name one by one with a small delay
        for (let i = 0; i < itemData.length; i++) {
          const item = itemData[i];
-         await fetchTBIASpecimenData(item.name, item.name_id, i);
+         if (item.rank_id === 34) { // Only process 'species' rank (shlee)
+           await fetchTBIASpecimenData(item.name, item.name_id, i);
 
-         // Add a small delay between requests to be respectful to the API
-         if (i < itemData.length - 1) {
-           await new Promise(resolve => setTimeout(resolve, 1000));
+           // Add a small delay between requests to be respectful to the API
+           if (i < itemData.length - 1) {
+             await new Promise(resolve => setTimeout(resolve, 1000));
+           }
          }
        }
      } finally {
        getSpecimenBtn.disabled = false;
-       //getSpecimenBtn.textContent = 'Step 1: Get Specimen Data';
+       getSpecimenBtn.textContent = 'Get Specimen Data';
        console.log('get TBIA specimen data:', itemData);
 
-       // Check if any specimens were found and move to step 2
-       const hasSpecimens = itemData.some(info => info.specimenData && info.specimenData.length > 0);
-       if (hasSpecimens) {
-         //updateStepper(2);
-       }
+       // Update publication status
+       const data = await fetch(`${API_URL}/publications/{{ publication.id }}/patch?status=fetched`)
+       const result = await data.json();
+       console.log(result);
+       // refresh, let backend data display
+       document.location.href = "{{ url_for('main.publication_detail', publication_id=publication.id ) }}";
      }
    }
+
+
+   // Function to open specimen selection modal
+   function openSpecimenModal(index) {
+     currentSpecimenIndex = index;
+     const item = itemData[index];
+     const specimens = itemData[index].specimens || [];
+     
+     // Update modal title
+     document.getElementById('modal-species-name').textContent = item.name;
+     
+     // Populate counties dropdown based on available specimens
+     populateCountiesDropdown(specimens);
+     
+     // Populate specimens table
+     const tableBody = document.getElementById('specimens-table-body');
+     tableBody.innerHTML = '';
+     
+     specimens.forEach((specimen, specimenIndex) => {
+       const row = document.createElement('tr');
+       row.className = 'bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600';
+       
+       const locality = specimen.locality ? specimen.locality.replace('|', ', ') : '';
+       const date = specimen.date || '';
+       const collector = specimen.recordedBy || '';
+       const catalogNumber = specimen.catalogNumber || '';
+       const institutionCode = specimen.institutionCode || specimen.datasetTitle || '';
+       
+       // Get county information
+       const county = getCountyFromSpecimen(specimen);
+       const countyDisplay = county || 'Unknown';
+       
+       // Handle media/images
+       const media = specimen.media || [];
+       const hasImage = media.length > 0;
+       const firstImage = hasImage ? media[0] : null;
+       
+       // Handle external URL
+       const externalUrl = specimen.url || '';
+       const hasUrl = externalUrl && externalUrl.trim() !== '';
+       
+       row.innerHTML = `
+           <td class="px-3 py-2">
+           <input type="checkbox" class="specimen-checkbox w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:focus:ring-offset-gray-800 dark:bg-gray-700 dark:border-gray-600" value="${specimenIndex}" data-county="${county}">
+           </td>
+           <td class="px-3 py-2 text-center">
+           ${hasImage ? `
+       <div class="relative group">
+       <img src="${firstImage}" alt="Specimen" class="w-12 h-12 object-cover rounded-lg border border-gray-200 cursor-pointer hover:shadow-md transition-shadow" onclick="showImageModal('${firstImage}', '${specimen.recordedBy || 'Unknown'}', '${catalogNumber}')">
+       ${media.length > 1 ? `<span class="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">${media.length}</span>` : ''}
+       </div>
+       ` : `
+       <div class="w-12 h-12 bg-gray-100 rounded-lg border border-gray-200 flex items-center justify-center">
+       <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+       </svg>
+       </div>
+       `}
+           </td>
+           <td class="px-3 py-2 text-xs">${institutionCode}</td>
+           <td class="px-3 py-2 text-xs">${collector}</td>
+           <td class="px-3 py-2 text-xs">${date}</td>
+           <td class="px-3 py-2 text-xs max-w-xs truncate" title="${locality}">
+           <span class="font-medium text-blue-600">${countyDisplay}</span><br>
+           ${locality}
+           </td>
+           <td class="px-3 py-2 text-xs">${catalogNumber}</td>
+           <td class="px-3 py-2 text-center">
+             ${hasUrl ? `
+       <a href="${externalUrl}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center text-blue-600 hover:text-blue-800 hover:underline">
+       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+       </svg>
+       </a>
+       ` : `
+       <span class="text-gray-400">-</span>
+       `}
+           </td>
+       `;
+       
+       tableBody.appendChild(row);
+     });
+     
+     // Reset selection method to auto
+     document.querySelector('input[name="selection-method"][value="auto"]').checked = true;
+     updateSelectionMethod();
+     
+     // Clear previous selections
+     updateSelectedSpecimensSummary();
+   }
+
+   // Function to update selection method visibility
+   function updateSelectionMethod() {
+     const isAuto = document.querySelector('input[name="selection-method"]:checked').value === 'auto';
+     const autoCriteria = document.getElementById('auto-criteria');
+     
+     if (isAuto) {
+       autoCriteria.style.display = 'block';
+       // Auto-select specimens based on criteria
+       autoSelectSpecimens();
+     } else {
+       autoCriteria.style.display = 'none';
+     }
+   }
+
+   // Function to extract county from specimen data
+   function getCountyFromSpecimen(specimen) {
+     // Try different possible county sources
+     if (specimen.named_areas && specimen.named_areas.adm2) {
+       const chineseCounty = specimen.named_areas.adm2;
+       return COUNTY_MAP[chineseCounty] ? COUNTY_MAP[chineseCounty].toUpperCase() : null;
+     }
+     
+     // Try locality parsing
+     if (specimen.locality) {
+       const locality = specimen.locality.toLowerCase();
+       for (const [chinese, english] of Object.entries(COUNTY_MAP)) {
+         if (locality.includes(chinese) || locality.includes(english.toLowerCase())) {
+           return english.toUpperCase();
+         }
+       }
+     }
+     
+     return null;
+   }
+
+   // Function to populate counties dropdown
+   function populateCountiesDropdown(specimens) {
+     const targetCounties = document.getElementById('target-counties');
+     targetCounties.innerHTML = '';
+     
+     // Get unique counties from specimens
+     const availableCounties = new Set();
+     specimens.forEach(specimen => {
+       const county = getCountyFromSpecimen(specimen);
+       if (county) {
+         availableCounties.add(county);
+       }
+     });
+     
+     // Sort counties according to COUNTY_ORDER
+     const sortedCounties = COUNTY_ORDER.filter(county => availableCounties.has(county));
+     
+     // Add options to dropdown
+     sortedCounties.forEach(county => {
+       const option = document.createElement('option');
+       option.value = county;
+       option.textContent = county;
+       option.selected = true; // Select all by default
+       targetCounties.appendChild(option);
+     });
+     
+     // Add "Unknown" option if there are specimens without county info
+     const unknownCount = specimens.filter(s => !getCountyFromSpecimen(s)).length;
+     if (unknownCount > 0) {
+       const option = document.createElement('option');
+       option.value = 'UNKNOWN';
+       option.textContent = `UNKNOWN (${unknownCount} specimens)`;
+       targetCounties.appendChild(option);
+     }
+   }
+
+   // Function to auto-select specimens based on county criteria
+   function autoSelectSpecimens() {
+     const maxSpecimens = parseInt(document.getElementById('max-specimens').value);
+     const minPerCounty = parseInt(document.getElementById('min-specimens-per-county').value);
+     const targetCounties = Array.from(document.getElementById('target-counties').selectedOptions)
+                                 .map(option => option.value);
+     const checkboxes = document.querySelectorAll('.specimen-checkbox');
+     
+     // Clear all selections first
+     checkboxes.forEach(cb => cb.checked = false);
+     
+     // Group specimens by county
+     const countyGroups = {};
+     checkboxes.forEach(checkbox => {
+       const county = checkbox.dataset.county || 'UNKNOWN';
+       if (!countyGroups[county]) {
+         countyGroups[county] = [];
+       }
+       countyGroups[county].push(checkbox);
+     });
+     
+     let totalSelected = 0;
+     
+     // Select specimens for each target county
+     for (const county of targetCounties) {
+       if (totalSelected >= maxSpecimens) break;
+       
+       const specimens = countyGroups[county] || [];
+       const toSelect = Math.min(minPerCounty, specimens.length, maxSpecimens - totalSelected);
+       
+       // Select the first N specimens from this county
+       for (let i = 0; i < toSelect; i++) {
+         specimens[i].checked = true;
+         totalSelected++;
+       }
+     }
+     
+     updateSelectedSpecimensSummary();
+   }
+
+   // Function to update selected specimens summary
+   function updateSelectedSpecimensSummary() {
+     const selectedCheckboxes = document.querySelectorAll('.specimen-checkbox:checked');
+     const summaryDiv = document.getElementById('selected-specimens-summary');
+     
+     if (selectedCheckboxes.length === 0) {
+       summaryDiv.innerHTML = '<p>No specimens selected</p>';
+     } else {
+       const specimens = itemData[currentSpecimenIndex].specimens;
+       let summaryHTML = `<p><strong>${selectedCheckboxes.length} specimens selected:</strong></p><ul class="list-disc list-inside mt-2 space-y-1">`;
+       
+       selectedCheckboxes.forEach(checkbox => {
+         const index = parseInt(checkbox.value);
+         const specimen = specimens[index];
+         const collector = specimen.recordedBy || 'Unknown collector';
+         const date = specimen.date || 'No date';
+         const locality = specimen.locality ? specimen.locality.replace('|', ', ').substring(0, 50) + '...' : 'Unknown locality';
+         
+         summaryHTML += `<li class="text-xs">${collector}, ${date} - ${locality}</li>`;
+       });
+       
+       summaryHTML += '</ul>';
+       summaryDiv.innerHTML = summaryHTML;
+     }
+   }
+
+   // Function to save selected specimens
+   function saveSelectedSpecimens() {
+     const selectedCheckboxes = document.querySelectorAll('.specimen-checkbox:checked');
+     const selectedIndices = Array.from(selectedCheckboxes).map(cb => parseInt(cb.value));
+     
+     if (selectedIndices.length === 0) {
+       alert('Please select at least one specimen');
+       return;
+     }
+     // Store selected specimens
+     if (!itemData[currentSpecimenIndex].selectedSpecimens) {
+       itemData[currentSpecimenIndex].selectedSpecimens = [];
+     }
+     
+     itemData[currentSpecimenIndex].selectedSpecimens = selectedIndices.map(index => {
+       return itemData[currentSpecimenIndex].specimens[index];
+     });
+
+     console.log('Selected specimens for', itemData[currentSpecimenIndex].name, selectedIndices);
+
+     let selectedIds = selectedIndices.map( x => {
+       return itemData[currentSpecimenIndex].specimens[x]['_id'];
+     });
+     // Patch ItemSpecimen
+     fetch(`${API_URL}/items/${itemData[currentSpecimenIndex]['item_id']}/patch-specimens?selected=${selectedIds.join(',')}`)
+       .then(data => data.json())
+       .then(result => {
+         console.log(result);
+       });
+
+     // Update row status to show selection made
+     const selectedCount = selectedIndices.length;
+     updateRowStatus(currentSpecimenIndex, 'success', `${selectedCount} selected`, selectedCount);
+
+     // Close modal
+     document.querySelector('[data-modal-toggle="specimen-modal"]').click(); // moogoo: this will ause currentSpecimenIndex reset to 0 !!   
+   }
+
+   // Event listeners
+   document.addEventListener('change', function(e) {
+     if (e.target.name === 'selection-method') {
+       updateSelectionMethod();
+     } else if (e.target.classList.contains('specimen-checkbox')) {
+       updateSelectedSpecimensSummary();
+     } else if (e.target.id === 'target-counties') {
+       const isAuto = document.querySelector('input[name="selection-method"]:checked').value === 'auto';
+       if (isAuto) {
+         autoSelectSpecimens();
+       }
+     }
+   });
+
+   document.addEventListener('input', function(e) {
+     if (e.target.id === 'max-specimens' || e.target.id === 'min-specimens-per-county') {
+       const isAuto = document.querySelector('input[name="selection-method"]:checked').value === 'auto';
+       if (isAuto) {
+         autoSelectSpecimens();
+       }
+     }
+   });
+
+   document.getElementById('save-specimens-btn').addEventListener('click', saveSelectedSpecimens);
  });
 </script>
 {% endblock %}

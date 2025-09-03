@@ -41,7 +41,8 @@ def activate_namespace():
             if email := data['data'].get('email'):
                 if user := User.query.filter(User.email==email).scalar():
 
-                    resp = requests.get(f'https://staging.taicol.tw/api/user/namespace?email={email}') # TODO
+                    taicol_api = current_app.config['TAICOL_API']
+                    resp = requests.get(f'{taicol_api}/user/namespace?email={email}')
                     if resp.ok:
                         resp_json = resp.json()
                         available_namespaces = resp_json.get('namespaces', [])
@@ -84,7 +85,7 @@ def post_publication():
                 session.commit()
 
                 # update collection
-                url = f"{current_app.config['TAICOL_API']}?namespace_id={collection.source_id}&token={current_app.config['TAICOL_TOKEN']}"
+                url = f"{current_app.config['TAICOL_API']}/biota?namespace_id={collection.source_id}&token={current_app.config['TAICOL_TOKEN']}"
                 resp = requests.get(url)
                 data = resp.json()
 
@@ -103,7 +104,7 @@ def post_publication():
                     session.commit()
 
                     for syn in i['synonyms']:
-                        item_syn = ItemSynonym(item_id=item.id, name=i['usage_references_text'], ref=f"name_id:{i['name_id']}")
+                        item_syn = ItemSynonym(item_id=item.id, name=syn['usage_references_text'], ref=f"name_id:{i['name_id']}")
                         session.add(item_syn)
 
                 session.commit()
@@ -117,13 +118,20 @@ def post_publication():
         'message': 'error',
     })
 
-# class PublicationItemAPI(MethodView):
-#     def __init__(self, model):
-#         self.model = model
-
-#     def _get_item(self, item_id):
-#         if item := session.get(self.model, item_id):
-#             return item
-#         return abort(404)
-
-#     def delete(self, item_id)
+@bp.route('/publications/<int:publication_id>', methods=['PATCH'])
+def put_publication(publication_id):
+    if request.method == 'PUT':
+        data = request.json
+        print(data)
+        # TODO
+# @bp.route('/items/<int:item_id>/specimens', methods=['POST'])
+# def post_item_specimens(item_id):
+#     if request.method == 'POST':
+#         data = request.json
+#         if item := session.get(Item, item_id):
+#             sp = ItemSpecimen(item_id=item_id, source_data=data['source_data'], source_id=, text=)
+#         print(data)
+#         #session.add(sp)
+#         return jsonify({
+#             'message': 'ok',
+#         })

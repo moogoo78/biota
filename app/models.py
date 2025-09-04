@@ -404,6 +404,21 @@ class Item(Base, TimestampMixin, SourceMixin):
 
         return grouped
 
+    def get_distribution_from_specimens(self):
+        dist = []
+        for i in self.specimens:
+            d = []
+            if x:= i.source_data.get('stateProvince'):
+                d.append(x)
+            if x:= i.source_data.get('county'):
+                d.append(x)
+            if x:= i.source_data.get('municipality'):
+                d.append(x)
+
+            dist.append('|'.join(d))
+
+        return list(set(dist))
+
 class ItemSynonym(Base):
     __tablename__ = 'item_synonym'
 

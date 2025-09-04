@@ -343,23 +343,23 @@
          document.location.href = "{{ url_for('main.publication_detail', publication_id=publication.id ) }}";
         });
    };
-          /* utils */
-          /* via MDN
-             function postData(url, data) {
-             return fetch(url, {
-             body: JSON.stringify(data), // must match 'Content-Type' header
-             cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
-             credentials: "same-origin", // include, same-origin, *omit
-             headers: {
-             "user-agent": "Mozilla/4.0 MDN Example",
-             "content-type": "application/json",
-             },
-             method: "POST", // *GET, POST, PUT, DELETE, etc.
-             mode: "cors", // no-cors, cors, *same-origin
-             redirect: "follow", // manual, *follow, error
-             referrer: "no-referrer", // *client, no-referrer
-             }).then((response) => response.json()); // 輸出成 json
-             }*/
+   /* utils */
+   /* via MDN
+      function postData(url, data) {
+      return fetch(url, {
+      body: JSON.stringify(data), // must match 'Content-Type' header
+      cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
+      credentials: "same-origin", // include, same-origin, *omit
+      headers: {
+      "user-agent": "Mozilla/4.0 MDN Example",
+      "content-type": "application/json",
+      },
+      method: "POST", // *GET, POST, PUT, DELETE, etc.
+      mode: "cors", // no-cors, cors, *same-origin
+      redirect: "follow", // manual, *follow, error
+      referrer: "no-referrer", // *client, no-referrer
+      }).then((response) => response.json()); // 輸出成 json
+      }*/
 
    itemData.forEach( (item, index)  => {
      if (item.specimens.length > 0) {
@@ -615,7 +615,7 @@
      specimens.forEach((specimen, specimenIndex) => {
        const row = document.createElement('tr');
        row.className = 'bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600';
-       
+
        const locality = specimen.locality ? specimen.locality.replace('|', ', ') : '';
        const date = specimen.date || '';
        const collector = specimen.recordedBy || '';
@@ -627,9 +627,9 @@
        const countyDisplay = county || 'Unknown';
        
        // Handle media/images
-       const media = specimen.media || [];
+       const media = [specimen.associatedMedia, ] || [];
        const hasImage = media.length > 0;
-       const firstImage = hasImage ? media[0] : null;
+       const firstImage = hasImage ? media : null;
        
        // Handle external URL
        const externalUrl = specimen.url || '';

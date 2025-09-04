@@ -7,6 +7,8 @@
   {% endfor %}
 </ul>
 
+<a href="https://nametool.taicol.tw/zh-tw/namespaces/{{ publication.collections[0].source_id }}/usages/" target="_blank"><button type="button" class="text-yellow-400 hover:text-white border border-yellow-400 hover:bg-yellow-500 focus:ring-4 focus:outline-none focus:ring-yellow-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2 dark:border-yellow-300 dark:text-yellow-300 dark:hover:text-white dark:hover:bg-yellow-400 dark:focus:ring-yellow-900">去 TaiCOL nametootl 修改內容</button></a>
+
 {% for i in publication.collections[0].items %}
 <div class="my-8 pb-6">
   <h3 class="font-bold text-gray-900 dark:text-white text-lg mb-1">
@@ -32,6 +34,10 @@
   <div class="mb-4">
     <h5 class="font-semibold text-gray-900 dark:text-white mb-2">DISTRIBUTION</h5>
     <p class="text-gray-800 dark:text-gray-200 text-sm leading-relaxed">{{ i.distribution }}</p>
+    <p class="text-teal-600 text-sm">Summary from TBIA specimens:</p>
+    {% for x in i.get_distribution_from_specimens() %}
+    <p class="text-teal-600 text-sm leading-relaxed">{{ x }}</p>
+    {% endfor %}
   </div>
   {% endif %}
 

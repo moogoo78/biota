@@ -80,6 +80,9 @@ class Notification(Base, TimestampMixin):
     event_id: Mapped[int] = mapped_column(ForeignKey('webhook_event.id'))
     read_at: Mapped[Optional[datetime]] = mapped_column(DateTime)
 
+    event: Mapped['WebhookEvent'] = relationship()
+
+
 class Publication(Base, TimestampMixin):
     __tablename__ = 'publication'
 
@@ -440,3 +443,8 @@ class User(Base, TimestampMixin, UserMixin):
     username: Mapped[str] = mapped_column(String(500))
     email: Mapped[str] = mapped_column(String(500))
     passwd: Mapped[str] = mapped_column(String(500))
+
+    notifications: Mapped[List[Notification]] = relationship()
+
+    def get_unread_notifications(self):
+        return Notification.query.filter(Notification.user_id==self.id, Notification.read_at==None).all()

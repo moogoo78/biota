@@ -1,5 +1,6 @@
 import json
 import re
+from datetime import datetime
 from io import BytesIO
 
 from flask import (
@@ -738,3 +739,14 @@ def get_fake_literatures_api():
         result['data'] = [{'id': x['id'], 'title': x['title']} for x in rows]
 
     return jsonify(result)
+
+@bp.route('/notifications')
+def notification_list():
+    return render_template('notification_list.html', notifications=current_user.notifications)
+
+@bp.route('/notifications/<int:nid>/read')
+def read_notification(nid):
+    if n := session.get(Notification, nid):
+        n.read_at = datetime.utcnow()
+        session.commit()
+        return redirect(url_for('main.notification_list'))

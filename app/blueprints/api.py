@@ -72,58 +72,7 @@ def activate_namespace():
 
     return jsonify({'message': 'ok'})
 
-@bp.route('/publications', methods=['POST'])
-def post_publication():
-    if request.method == 'POST':
-        data = request.json
-        if cid := data.get('collectionid'):
-            if collection := session.get(Collection, int(cid)):
-                pub = Publication(title=collection.name, author=current_user.username)
-                session.add(pub)
-                session.commit()
-                collection.publication_id = pub.id
-                session.commit()
-
-                # update collection
-                url = f"{current_app.config['TAICOL_API']}/biota?namespace_id={collection.source_id}&token={current_app.config['TAICOL_TOKEN']}"
-                resp = requests.get(url)
-                data = resp.json()
-
-                collection.source_name = data['title']
-                collection.source_data = data
-                for i in data['literatures']:
-                    pl = PublicationLiterature(publication_id=pub.id, source_id=i['reference_id'], name=i['citation'])
-                    session.add(pl)
-
-                session.commit()
-
-                for i in data['group']:
-                    name = i['name'].replace('<i>', '').replace('</i>', '')
-                    item = Item(collection_id=cid, description=i['description'], distribution=i['distribution'], note=i['note'], user_id=current_user.id, scientific_name=name, source_data=i, common_names='|'.join(i['common_names']))
-                    session.add(item)
-                    session.commit()
-
-                    for syn in i['synonyms']:
-                        item_syn = ItemSynonym(item_id=item.id, name=syn['usage_references_text'], ref=f"name_id:{i['name_id']}")
-                        session.add(item_syn)
-
-                session.commit()
-
-                return jsonify({
-                    'message': 'ok',
-                    'data': data,
-                })
-
-    return jsonify({
-        'message': 'error',
-    })
-
-@bp.route('/publications/<int:publication_id>', methods=['PATCH'])
-def put_publication(publication_id):
-    if request.method == 'PUT':
-        data = request.json
-        print(data)
-        # TODO
+# TODO
 # @bp.route('/items/<int:item_id>/specimens', methods=['POST'])
 # def post_item_specimens(item_id):
 #     if request.method == 'POST':

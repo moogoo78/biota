@@ -388,11 +388,18 @@ class Item(Base, TimestampMixin, SourceMixin):
     def get_grouped_specimens(self):
         grouped = {}
         for i in self.specimens:
-            county = i.source_data.get('county', '')
-            if county_en := self.COUNTY_MAP.get(county, ''):
-                key = county_en.upper()
+            if i.text:
+                key = ''
+                if county := i.source_data.get('county'):
+                    key = county
+                    if county_en := self.COUNTY_MAP.get(key, ''):
+                        key = county_en.upper()
+                else:
+                    key = 'unsure'
+
                 if key not in grouped:
                     grouped[key] = []
+
                 grouped[key].append([i.id, i.text])
 
         return grouped

@@ -66,6 +66,42 @@ def publication_list():
     return render_template('publication_list.html', collections=collections, subheader='Publications')
 
 @login_required
+@bp.route('/publications/create/<int:collection_id>')
+def create_publication(collection_id):
+    if collection := session.get(Collection, int(collection_id)):
+        pub = Publication(title=collection.name, author=current_user.username)
+        session.add(pub)
+        session.commit()
+        collection.publication_id = pub.id
+        session.commit()
+
+        # update collection, call TAICOL API
+        url = f"{current_app.config['TAICOL_API']}/biota?namespace_id={collection.source_id}&token={current_app.config['TAICOL_TOKEN']}"
+        resp = requests.get(url)
+        data = resp.json()
+
+        collection.source_name = data['title']
+        collection.source_data = data
+
+        for i in data['literatures']:
+            pl = PublicationLiterature(publication_id=pub.id, source_id=i['reference_id'], name=i['citation'])
+            session.add(pl)
+
+        for i in data['group']:
+            name = i['name'].replace('<i>', '').replace('</i>', '')
+            item = Item(collection_id=collection_id, description=i['description'], distribution=i['distribution'], note=i['note'], user_id=current_user.id, scientific_name=name, source_data=i, common_names='|'.join(i['common_names']))
+            session.add(item)
+
+        for syn in i['synonyms']:
+            item_syn = ItemSynonym(item_id=item.id, name=syn['usage_references_text'], ref=f"name_id:{i['name_id']}")
+            session.add(item_syn)
+
+
+        session.commit()
+
+    return redirect(url_for('main.publication_detail', publication_id=pub.id))
+
+@login_required
 @bp.route('/publications/<int:publication_id>')
 def publication_detail(publication_id):
     publication = session.get(Publication, publication_id)
@@ -75,9 +111,10 @@ def publication_detail(publication_id):
         # 整理給前端
         specimens = []
         for x in i.specimens:
-            data = x.source_data
-            data['_id'] = x.id
-            specimens.append(data)
+            if x.text: # only save selected
+                data = x.source_data
+                data['_id'] = x.id
+                specimens.append(data)
 
         item_data.append({
             'item_id': i.id,
@@ -137,7 +174,7 @@ def patch_publication(publication_id):
 
     session.commit()
     #return redirect(url_for('main.publication_detail', publication_id=publication_id))
-    flash('patch ok')
+    #flash('patch ok')
     return jsonify({'status': 'success'})
 
 @login_required
@@ -147,13 +184,13 @@ def patch_item_specimen(item_id):
     if item_specimen := session.get(Item, item_id):
         if selected := request.args.get('selected'):
             for i in selected.split(','):
-                isp = session.get(ItemSpecimen, i)
-                sd = isp.source_data
-                record_number = sd.get('recordNumber', '--')
-                recorded_by = sd.get('recordedBy', '--')
-                locality = sd.get('locality', '--')
-                dataset_name = sd.get('datasetName', '--') # institudion ID ?
-                isp.text = f'{locality}, {recorded_by} {record_number} ({dataset_name})'
+                if isp := session.get(ItemSpecimen, i):
+                    sd = isp.source_data
+                    record_number = sd.get('recordNumber', '--')
+                    recorded_by = sd.get('recordedBy', '--')
+                    locality = sd.get('locality', '--')
+                    dataset_name = sd.get('datasetName', '--') # institudion ID ?
+                    isp.text = f'{locality}, {recorded_by} {record_number} ({dataset_name})'
         session.commit()
         return jsonify({'message': 'success'})
 

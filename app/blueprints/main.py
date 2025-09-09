@@ -3,6 +3,7 @@ import re
 from datetime import datetime
 from io import BytesIO
 from functools import wraps
+import secrets
 #from urllib.parse import quote
 
 from flask import (
@@ -19,6 +20,9 @@ from flask import (
     redirect,
     flash,
 )
+from werkzeug.security import (
+    generate_password_hash,
+ )
 
 from flask_login import (
 #    login_required,
@@ -27,7 +31,7 @@ from flask_login import (
 )
 
 #from flask.views import MethodView
-from app.helpers import get_namespace_data, generate_docx, fetch_tbia_specimens
+from app.helpers import get_namespace_data, generate_docx, fetch_tbia_specimens, send_email
 from app.database import session
 
 from app.models import (
@@ -75,7 +79,63 @@ def signup():
     if request.method == 'GET':
         return render_template('signup.html')
     else:
-        return ''
+        email = request.form.get('email')
+        passwd1 = request.form.get('password')
+        passwd2 = request.form.get('confirm-password')
+        if email and passwd1 and passwd2 and passwd1 == passwd2:
+            token = secrets.token_urlsafe(32)
+            passwd = generate_password_hash(passwd1)
+            activation_url = f"{current_app.config['API_URL']}/activate/{token}"
+            user = User(email=email, passwd=passwd, username=email, activation_token=token)
+            session.add(user)
+            session.commit()
+            body = f"""
+    Welcome! Please Activate Your Account
+
+    Hello!
+
+    Thank you for registering with us. To complete your registration and activate your account, please visit:
+
+    {activation_url}
+
+    Important: This activation link will expire in 24 hours for security reasons.
+
+    If you didn't create this account, please ignore this email.
+
+    This is an automated message, please do not reply to this email.
+    """
+            resp = send_email(email, '[Biota Taiwanica] Please Activate Your Account', body)
+            #return redirect(url_for('login'))
+            return 'receive email and activate this account'
+        else:
+            flash('signup error')
+            return redirect(url_for('main.signup'))
+
+@bp.route('/activate/<token>')
+def activate_token(token):
+    message = ''
+    status = ''
+    if user := User.query.filter(User.activation_token==token).scalar():
+        if user.is_activated:
+            message = f"Account successfully activated! You can now <a href="{url_for('login')}">login</a>."
+            status = "success"
+        else:
+            # Check if token is expired (24 hours)
+            created_at = datetime.strptime(user.created_at, '%Y-%m-%d %H:%M:%S')
+            if datetime.now() - created_at > timedelta(hours=24):
+                message = "Activation link has expired. Please request a new one."
+                status = "error"
+            else:
+                user.is_activate = True
+                user.activated_at = datetime.now()
+                session.commit()
+                message = f"Account successfully activated! You can now <a href="{url_for('login')}">login</a>."
+                status = "success"
+    else:
+        message = "Invalid activation link."
+        status = "error"
+
+    return f'{status}: {message}'
 
 @bp.route('/nametool')
 def nametool():

@@ -17,6 +17,11 @@ class Config(object):
     TAICOL_TOKEN = os.getenv('TAICOL_TOKEN')
     TAICOL_API = os.getenv('TAICOL_API')
 
+    AWS_SES_SOURCE = os.getenv('AWS_SES_SOURCE')
+    AWS_SES_REGION_NAME = os.getenv('AWS_SES_REGION_NAME')
+    AWS_SES_ACCESS_KEY = os.getenv('AWS_SES_ACCESS_KEY')
+    AWS_SES_SECRET_ACCESS_KEY = os.getenv('AWS_SES_SECRET_ACCESS_KEY')
+
 class ProductionConfig(Config):
     SECRET_KEY = os.getenv('SECRET_KEY')
 

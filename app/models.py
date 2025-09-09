@@ -465,6 +465,9 @@ class User(Base, TimestampMixin, UserMixin):
     username: Mapped[str] = mapped_column(String(500))
     email: Mapped[str] = mapped_column(String(500))
     passwd: Mapped[str] = mapped_column(String(500))
+    activation_token: Mapped[str] = mapped_column(String(500))
+    is_activated: Mapped[bool] = mapped_column(Boolean, default=False)
+    activated_at: Mapped[Optional[datetime]] = mapped_column(DateTime)
 
     notifications: Mapped[List[Notification]] = relationship()
 

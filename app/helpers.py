@@ -1,7 +1,7 @@
 import json
 from datetime import datetime
 
-from flask import g
+from flask import g, current_app
 from docx import Document
 from docx.shared import Pt, Mm, Cm, Inches
 from docx.oxml import OxmlElement, parse_xml
@@ -13,6 +13,9 @@ import yaml
 
 from bs4 import BeautifulSoup
 import requests
+
+import boto3
+from botocore.exceptions import ClientError
 
 #import pymysql
 #pymysql.install_as_MySQLdb()
@@ -564,3 +567,42 @@ def fetch_tbia_specimens(taxon_key):
         'total': data['meta']['total'],
         'records': records
     }
+
+def send_email(to, subject, body):
+    ses_client = boto3.client(
+        'ses',
+        region_name=current_app.config['AWS_SES_REGION_NAME'],
+        aws_access_key_id=current_app.config['AWS_SES_ACCESS_KEY'],
+        aws_secret_access_key=current_app.config['AWS_SES_SECRET_ACCESS_KEY']
+    )
+
+    try:
+        response = ses_client.send_email(
+            Source=current_app.config['AWS_SES_SOURCE'],
+            Destination={
+                'ToAddresses': [
+                    to,
+                ],
+            },
+            Message={
+                'Subject': {
+                    'Data': subject,
+                    'Charset': 'UTF-8'
+                },
+                'Body': {
+                    'Text': {
+                        'Data': body,
+                        'Charset': 'UTF-8'
+                    }
+                }
+            }
+        )
+
+        current_app.logger.info(f"Email sent successfully! Message ID: {response['MessageId']}")
+        return response
+
+    except ClientError as e:
+        error_code = e.response['Error']['Code']
+        error_message = e.response['Error']['Message']
+        current_app.logger.error(f"Error sending email: {error_code} - {error_message}")
+        return None

@@ -77,7 +77,7 @@ class Notification(Base, TimestampMixin):
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey('user.id'))
     content: Mapped[Optional[str]] = mapped_column(Text)
-    event_id: Mapped[int] = mapped_column(ForeignKey('webhook_event.id'))
+    event_id: Mapped[Optional[int]] = mapped_column(ForeignKey('webhook_event.id'))
     read_at: Mapped[Optional[datetime]] = mapped_column(DateTime)
 
     event: Mapped['WebhookEvent'] = relationship()

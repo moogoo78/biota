@@ -55,18 +55,49 @@ bp = Blueprint('main', __name__)
 def index():
     return render_template('index.html', subheader='Index')
 
+@bp.route('/signup', methods=['GET', 'POST'])
+def signup():
+    if request.method == 'GET':
+        return render_template('signup.html')
+    else:
+        return ''
+
 @bp.route('/nametool')
 def nametool():
     return render_template('main.html')
 
-@login_required
 @bp.route('/publications')
-def publication_list():
-    collections = Collection.query.filter(Collection.user_id==current_user.id).all()
-    return render_template('publication_list.html', collections=collections, subheader='Publications')
-
 @login_required
+def publication_list():
+    if namespace_id := request.args.get('namespace_id'):
+        # create a publication invoked by TaiCOL nametool
+        taicol_api = current_app.config['TAICOL_API']
+        email = current_user.email
+        resp = requests.get(f'{taicol_api}/user/namespace?email={email}')
+        if resp.ok:
+            resp_json = resp.json()
+            available_namespaces = resp_json.get('namespaces', [])
+            if int(namespace_id) in available_namespaces:
+                collection_id = None
+                if c := Collection.query.filter(Collection.source_id==namespace_id, Collection.user_id==current_user.id).scalar():
+                    collection_id = c.id
+                    current_app.logger.info(f'collection [{c.id}] already exist')
+                else:
+                    c = Collection(name='', source_id=namespace_id, user_id=current_user.id)
+                    session.add(c)
+
+                    n = Notification(user_id=current_user.id, content=f'namespace [{namespace_id}] published')
+                    session.add(n)
+                    session.commit()
+                    collection_id = c.id
+                return redirect(url_for('main.create_publication', collection_id=collection_id))
+        return abort(401)
+    else:
+        collections = Collection.query.filter(Collection.user_id==current_user.id).all()
+        return render_template('publication_list.html', collections=collections, subheader='Publications')
+
 @bp.route('/publications/create/<int:collection_id>')
+@login_required
 def create_publication(collection_id):
     if collection := session.get(Collection, int(collection_id)):
         pub = Publication(title=collection.name, author=current_user.username)
@@ -80,6 +111,7 @@ def create_publication(collection_id):
         resp = requests.get(url)
         data = resp.json()
 
+        pub.title = data['title']
         collection.source_name = data['title']
         collection.source_data = data
 
@@ -98,11 +130,11 @@ def create_publication(collection_id):
 
 
         session.commit()
-
+        flash(f'publication created, via: namespace_id {collection.source_id}')
     return redirect(url_for('main.publication_detail', publication_id=pub.id))
 
-@login_required
 @bp.route('/publications/<int:publication_id>')
+@login_required
 def publication_detail(publication_id):
     publication = session.get(Publication, publication_id)
     API_URL=current_app.config['API_URL']
@@ -125,8 +157,8 @@ def publication_detail(publication_id):
         })
     return render_template('publication_detail.html', publication=publication, subheader='Publications', API_URL=API_URL, item_data_json=json.dumps(item_data))
 
-@login_required
 @bp.route('/publications/<int:publication_id>/delete')
+@login_required
 def delete_publication(publication_id):
     publication = session.get(Publication, publication_id)
     for c in publication.collections:
@@ -146,8 +178,9 @@ def delete_publication(publication_id):
     session.commit()
     return redirect(url_for('main.publication_list'))
 
-@login_required
+
 @bp.route('/literatures/patch')
+@login_required
 def patch_literatures():
     #for k, v in request.form.items():
     #    print(k, v)
@@ -163,8 +196,8 @@ def patch_literatures():
     return jsonify({'status': 'success'})
 
 
-@login_required
 @bp.route('/publications/<int:publication_id>/patch')
+@login_required
 def patch_publication(publication_id):
     publication = session.get(Publication, publication_id)
     if status := request.args.get('status', ''):
@@ -177,8 +210,9 @@ def patch_publication(publication_id):
     #flash('patch ok')
     return jsonify({'status': 'success'})
 
-@login_required
+
 @bp.route('/items/<int:item_id>/patch-specimens')
+@login_required
 def patch_item_specimen(item_id):
     # default specimen format
     if item_specimen := session.get(Item, item_id):

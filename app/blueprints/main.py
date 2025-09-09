@@ -2,6 +2,8 @@ import json
 import re
 from datetime import datetime
 from io import BytesIO
+from functools import wraps
+#from urllib.parse import quote
 
 from flask import (
     Blueprint,
@@ -19,7 +21,7 @@ from flask import (
 )
 
 from flask_login import (
-    login_required,
+#    login_required,
     logout_user,
     current_user,
 )
@@ -47,6 +49,18 @@ from bs4 import BeautifulSoup
 
 #mysql_conn = MySQLdb.connect(host="mysql", user="root", passwd="example", db="taicol")
 #mysql_cursor = mysql_conn.cursor()
+
+# for default login_required not include query string
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated:
+            # Preserve full URL including query string
+            #next_url = quote(request.url)
+            next_url = request.url
+            return redirect(url_for('login', next=next_url))
+        return f(*args, **kwargs)
+    return decorated_function
 
 bp = Blueprint('main', __name__)
 

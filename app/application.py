@@ -96,6 +96,8 @@ def login():
         if u := User.query.filter(User.email==email).first():
             if check_password_hash(u.passwd, passwd):
                 login_user(u)
+                if next_url := request.args.get('next'):
+                    return redirect(next_url)
                 return redirect(url_for('index'))
 
     return abort(404)

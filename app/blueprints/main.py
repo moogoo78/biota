@@ -37,6 +37,7 @@ from app.models import (
     Publication,
     Item,
     ItemSpecimen,
+    ItemSynonym,
     PublicationLiterature,
 )
 #import pymysql

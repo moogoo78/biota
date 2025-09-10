@@ -17,9 +17,6 @@ from flask import (
     abort,
     Response,
 )
-from werkzeug.security import (
-    check_password_hash,
-)
 from flask_login import (
     LoginManager,
     login_user,
@@ -44,10 +41,12 @@ logger.addHandler(console_handler)
 
 
 def apply_blueprints(app):
-    from app.blueprints.main import bp as main_bp;
-    from app.blueprints.api import bp as api_bp;
+    from app.blueprints.main import bp as main_bp
+    from app.blueprints.api import bp as api_bp
+    from app.blueprints.auth import bp as auth_bp
     app.register_blueprint(main_bp, url_prefix='/')
     app.register_blueprint(api_bp, url_prefix='/api/v1')
+    app.register_blueprint(auth_bp, url_prefix='/auth')
 
 def apply_extensions(app):
     # login
@@ -60,8 +59,7 @@ def apply_extensions(app):
 
     @login_manager.unauthorized_handler
     def unauthorized():
-        # do stuff
-        return redirect(url_for('login') + '?next=' + request.path)
+        return redirect(url_for('auth.login') + '?next=' + request.url)
 
 def create_app():
     app = Flask(__name__)
@@ -86,30 +84,6 @@ apply_blueprints(flask_app)
 def index():
     return render_template('index.html')
 
-@flask_app.route('/login', methods=['GET', 'POST'])
-def login():
-    if request.method == 'GET':
-        return render_template('login.html')
-    elif request.method == 'POST':
-        email = request.form.get('email', '')
-        passwd = request.form.get('password', '')
-        if u := User.query.filter(User.email==email).first():
-            if check_password_hash(u.passwd, passwd):
-                login_user(u)
-                if next_url := request.args.get('next'):
-                    return redirect(next_url)
-                return redirect(url_for('index'))
-
-    return abort(404)
-
-@flask_app.route('/logout')
-def logout():
-    logout_user()
-
-    response = jsonify({"msg": "logout successful"})
-    #unset_jwt_cookies(response)
-    #return response
-    return redirect(url_for('login'))
 
 @flask_app.route('/robots.txt')
 def robots_txt():

@@ -468,6 +468,7 @@ class User(Base, TimestampMixin, UserMixin):
     activation_token: Mapped[str] = mapped_column(String(500))
     is_activated: Mapped[bool] = mapped_column(Boolean, default=False)
     activated_at: Mapped[Optional[datetime]] = mapped_column(DateTime)
+    next_url: Mapped[Optional[str]] = mapped_column(String(500))
 
     notifications: Mapped[List[Notification]] = relationship()
 

@@ -2,9 +2,7 @@ import json
 import re
 from datetime import datetime
 from io import BytesIO
-from functools import wraps
-import secrets
-#from urllib.parse import quote
+
 
 from flask import (
     Blueprint,
@@ -20,12 +18,9 @@ from flask import (
     redirect,
     flash,
 )
-from werkzeug.security import (
-    generate_password_hash,
- )
 
 from flask_login import (
-#    login_required,
+    login_required,
     logout_user,
     current_user,
 )
@@ -55,18 +50,6 @@ from bs4 import BeautifulSoup
 #mysql_conn = MySQLdb.connect(host="mysql", user="root", passwd="example", db="taicol")
 #mysql_cursor = mysql_conn.cursor()
 
-# for default login_required not include query string
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if not current_user.is_authenticated:
-            # Preserve full URL including query string
-            #next_url = quote(request.url)
-            next_url = request.url
-            return redirect(url_for('login', next=next_url))
-        return f(*args, **kwargs)
-    return decorated_function
-
 bp = Blueprint('main', __name__)
 
 @bp.route('/')
@@ -74,68 +57,7 @@ bp = Blueprint('main', __name__)
 def index():
     return render_template('index.html', subheader='Index')
 
-@bp.route('/signup', methods=['GET', 'POST'])
-def signup():
-    if request.method == 'GET':
-        return render_template('signup.html')
-    else:
-        email = request.form.get('email')
-        passwd1 = request.form.get('password')
-        passwd2 = request.form.get('confirm-password')
-        if email and passwd1 and passwd2 and passwd1 == passwd2:
-            token = secrets.token_urlsafe(32)
-            passwd = generate_password_hash(passwd1)
-            activation_url = f"{current_app.config['API_URL']}/activate/{token}"
-            user = User(email=email, passwd=passwd, username=email, activation_token=token)
-            session.add(user)
-            session.commit()
-            body = f"""
-    Welcome! Please Activate Your Account
 
-    Hello!
-
-    Thank you for registering with us. To complete your registration and activate your account, please visit:
-
-    {activation_url}
-
-    Important: This activation link will expire in 24 hours for security reasons.
-
-    If you didn't create this account, please ignore this email.
-
-    This is an automated message, please do not reply to this email.
-    """
-            resp = send_email(email, '[Biota Taiwanica] Please Activate Your Account', body)
-            #return redirect(url_for('login'))
-            return 'receive email and activate this account'
-        else:
-            flash('signup error')
-            return redirect(url_for('main.signup'))
-
-@bp.route('/activate/<token>')
-def activate_token(token):
-    message = ''
-    status = ''
-    if user := User.query.filter(User.activation_token==token).scalar():
-        if user.is_activated:
-            message = f"Account successfully activated! You can now <a href="{url_for('login')}">login</a>."
-            status = "success"
-        else:
-            # Check if token is expired (24 hours)
-            created_at = datetime.strptime(user.created_at, '%Y-%m-%d %H:%M:%S')
-            if datetime.now() - created_at > timedelta(hours=24):
-                message = "Activation link has expired. Please request a new one."
-                status = "error"
-            else:
-                user.is_activate = True
-                user.activated_at = datetime.now()
-                session.commit()
-                message = f"Account successfully activated! You can now <a href="{url_for('login')}">login</a>."
-                status = "success"
-    else:
-        message = "Invalid activation link."
-        status = "error"
-
-    return f'{status}: {message}'
 
 @bp.route('/nametool')
 def nametool():
@@ -187,7 +109,8 @@ def create_publication(collection_id):
         data = resp.json()
 
         pub.title = data['title']
-        collection.source_name = data['title']
+        collection.name = data['title']
+        collection.source_name = 'namespace'
         collection.source_data = data
 
         for i in data['literatures']:
@@ -218,10 +141,10 @@ def publication_detail(publication_id):
         # 整理給前端
         specimens = []
         for x in i.specimens:
-            if x.text: # only save selected
-                data = x.source_data
-                data['_id'] = x.id
-                specimens.append(data)
+            data = x.source_data
+            data['_id'] = x.id
+            data['_text'] = x.text
+            specimens.append(data)
 
         item_data.append({
             'item_id': i.id,

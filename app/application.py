@@ -101,17 +101,16 @@ def debug_url_maps():
         rules.append([str(rule), str(rule.methods), rule.endpoint])
     return jsonify(rules)
 
-# @flask_app.teardown_appcontext
-# def shutdown_session(exception=None):
-#     # SQLAlchemy won`t close connection, will occupy pool
-#     session.remove()
-
 @flask_app.teardown_appcontext
-def close_db_connection(exception):
-    """Closes the database again at the end of the request."""
-    db = g.pop('db', None)
-    if db is not None:
-        db.close()
+def shutdown_session(exception=None):
+    session.remove()
+
+#@flask_app.teardown_appcontext
+#def close_db_connection(exception):
+#    """Closes the database again at the end of the request."""
+#    db = g.pop('db', None)
+#    if db is not None:
+#        db.close()
 
 with flask_app.app_context():
     # needed to make CLI commands work

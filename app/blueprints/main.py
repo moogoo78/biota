@@ -193,6 +193,23 @@ def patch_literatures():
     flash('update literature')
     return jsonify({'status': 'success'})
 
+@bp.route('/publications/<int:publication_id>/literatures/create')
+@login_required
+def create_publication_literature(publication_id):
+    if payload_str:= request.args.get('payload'):
+        payload = json.loads(payload_str)
+        source_id = payload.get('reference_id', '')
+        name = payload.get('citation', '')
+        pl = PublicationLiterature(publication_id=publication_id, source_id=source_id, name=name)
+        session.add(pl)
+        session.commit()
+        flash('add literature')
+        return jsonify({
+            'status': 'success'
+        })
+    return jsonify({
+        'status': 'error'
+    })
 
 @bp.route('/publications/<int:publication_id>/patch')
 @login_required

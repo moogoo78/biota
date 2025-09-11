@@ -285,6 +285,42 @@
  document.addEventListener('DOMContentLoaded', function () {
    const API_URL = '{{ API_URL }}';
    const itemData = {{ item_data_json|safe }};
+   const TAICOL_REF_API = 'https://nametool.taicol.tw/api/citations';
+
+   const literatureSelect = new TomSelect('#literatures-select',{
+     valueField: 'reference_id',
+     labelField: 'citation',
+     searchField: ['citation'],
+     plugins:['virtual_scroll'],
+     maxOptions: 200,
+
+     // fetch remote data
+     firstUrl: function(query){
+       return `${TAICOL_REF_API}?keyword=` + encodeURIComponent(query);
+     },
+     load: function(query, callback) {
+       const url = this.getUrl(query);
+       fetch(url)
+	 .then(response => response.json())
+	 .then(json => {
+	   //if( json.data.after ){
+           if( parseInt(json.last_page) > parseInt(json.current_page) ){
+	     const next_url = `${TAICOL_REF_API}?keyword=` + encodeURIComponent(query)+`&page=${parseInt(json.current_page) + 1}`;
+	     this.setNextUrl(query, next_url);
+	   }
+	   //let data = json.data.children.map(row => row.data);
+           console.log('citations results:', json);
+	   callback(json.data);
+	 }).catch((e)=>{
+	   callback();
+	 });
+     },
+     render: {
+       loading_more: function(data, escape) {
+	 return `<div class="loading-more-results py-2 d-flex align-items-center"><div class="spinner"></div> Loading more results </div>`;
+       }
+     },
+   });
 
    const literatureEdits = document.querySelectorAll('.literature-edit');
    literatureEdits.forEach( x => {
@@ -305,6 +341,22 @@
        params.set(key, value);
      }
      fetch(`${API_URL}/literatures/patch?${params.toString()}`)
+       .then(resp => resp.json())
+       .then(result => {
+         console.log(result);
+         document.location.href = "{{ url_for('main.publication_detail', publication_id=publication.id ) }}";
+       });
+   };
+   const literatureAddButton = document.getElementById('literature-add-button');
+   literatureAddButton.onclick = (e) => {
+     e.preventDefault();
+     const referenceId = literatureSelect.getValue();
+     const citation = literatureSelect.getItem(referenceId).textContent;
+     let payload = {
+       reference_id: referenceId,
+       citation: citation,
+     };
+     fetch(`${API_URL}/publications/{{ publication.id }}/literatures/create?payload=${JSON.stringify(payload)}`)
        .then(resp => resp.json())
        .then(result => {
          console.log(result);

@@ -237,11 +237,30 @@
             <div class="p-4 md:p-5">
                 <form class="space-y-4" action="" id="specimen-edit-form">
                     <div>
-                      <label for="specimen-content" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Text</label>
-                        <textarea id="specimen-content" name="specimen_content" rows="4" class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"></textarea>
+                      <label for="specimen-content" class="block mb-2 text-lg font-medium text-gray-900 dark:text-white">Text</label>
+                        <textarea id="specimen-content" name="specimen_content" rows="2" class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"></textarea>
                     </div>
                     <input type="hidden" name="spid" value="" id="specimen-spid"/>
-                    TBIA specimen Raw data:
+
+                    <div class="bg-purple-50 p-4">
+                    <dl class="max-w-md text-gray-900 divide-y divide-gray-200 dark:text-white dark:divide-gray-700" id="specimen-dl">
+                      {#
+                      <div class="flex flex-col pb-3">
+        <dt class="mb-1 text-gray-500 md:text-lg dark:text-gray-400">Email address</dt>
+        <dd class="text-lg font-semibold">yourname@flowbite.com</dd>
+    </div>
+    <div class="flex flex-col py-3">
+        <dt class="mb-1 text-gray-500 md:text-lg dark:text-gray-400">Home address</dt>
+        <dd class="text-lg font-semibold">92 Miles Drive, Newark, NJ 07103, California, USA</dd>
+    </div>
+    <div class="flex flex-col pt-3">
+        <dt class="mb-1 text-gray-500 md:text-lg dark:text-gray-400">Phone number</dt>
+        <dd class="text-lg font-semibold">+00 123 456 789 / +12 345 678</dd>
+    </div>
+                      #}
+                    </dl>
+                    </div>
+                    <h2 class="mb-2 text-lg font-semibold text-gray-900 dark:text-white">TBIA specimen Raw data:</h2>
                     <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 font-mono text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap overflow-auto max-h-96" id="specimen-raw"></div>
                     <button type="submit" id="specimen-edit-submit" class="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Save</button>
                 </form>
@@ -367,12 +386,45 @@
    const specimenContent = document.getElementById('specimen-content');
    const specimenRaw = document.getElementById('specimen-raw');
    const specimenSpID = document.getElementById('specimen-spid');
+   const specimenDataList = document.getElementById('specimen-dl');
    previewSpecimenSpans.forEach( x => {
      x.onclick = (e) => {
        const itemid = e.target.dataset.itemid;
        const spid = e.target.dataset.spid;
        const item = itemData.find((item) => String(item.item_id) === String(itemid));
        const specimen = item.specimens.find((sp) => String(sp._id) === String(spid));
+       console.log(specimen);
+       let highlightList = [];
+       if (specimen.recordNumber) {
+         highlightList.push(['採集者', specimen.recordedBy]);
+       }
+       if (specimen.recordNumber) {
+         highlightList.push(['採集號', specimen.recordNumber]);
+       }
+       if (specimen.catalogNumber) {
+         highlightList.push(['館號', specimen.catalogNumber]);
+       }
+       if (specimen.datasetName) {
+         highlightList.push(['資料集名稱(TODO)', specimen.datasetName]);
+       }
+       if (specimen.locality) {
+         highlightList.push(['採集地點', specimen.locality]);
+       }
+       specimenDataList.innerHTML = '';
+       highlightList.forEach( (x, idx) => {
+         let cls = 'py-3';
+         if (idx === 0) {
+           cls = 'pb-3';
+         } else if (idx === highlightList.length - 1) {
+           cls = 'pt-3';
+         }
+         specimenDataList.innerHTML += `<div class="flex flex-col ${cls}">
+                        <dt class="mb-1 text-gray-500 md:text-sm dark:text-gray-400">${x[0]}</dt>
+                        <dd class="text-sm font-semibold">${x[1]}</dd>
+                      </div>`;
+       });
+  
+
        specimenRaw.innerHTML = `<pre><code>${JSON.stringify(specimen, null, 2)}</code></pre>`;
        specimenContent.textContent = e.target.textContent;
        specimenSpID.value = spid;
@@ -387,7 +439,7 @@
      for (const [key, value] of formData) {
        params.set(key, value);
      }
-     console.log(params);
+
      fetch(`${API_URL}/modify-specimen?${params.toString()}`)
        .then(resp => resp.json())
        .then(result => {

@@ -126,7 +126,6 @@ def create_publication(collection_id):
                 item_syn = ItemSynonym(item_id=item.id, name=syn['usage_references_text'], ref=f"name_id:{i['name_id']}")
                 session.add(item_syn)
 
-
         session.commit()
         flash(f'publication created, via: namespace_id {collection.source_id}')
     return redirect(url_for('main.publication_detail', publication_id=pub.id))

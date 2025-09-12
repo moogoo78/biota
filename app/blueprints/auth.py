@@ -41,7 +41,7 @@ def login():
         email = request.form.get('email', '')
         passwd = request.form.get('password', '')
 
-        if u := User.query.filter(User.email==email).first():
+        if u := User.query.filter(User.email==email, User.isactivated==True).first():
             if check_password_hash(u.passwd, passwd):
                 login_user(u)
                 if next_url := request.args.get('next'):

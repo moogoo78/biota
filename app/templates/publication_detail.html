@@ -399,7 +399,7 @@
        const spid = e.target.dataset.spid;
        const item = itemData.find((item) => String(item.item_id) === String(itemid));
        const specimen = item.specimens.find((sp) => String(sp._id) === String(spid));
-       console.log(specimen);
+       //console.log(specimen);
        let highlightList = [];
        if (specimen.recordNumber) {
          highlightList.push(['採集者', specimen.recordedBy]);

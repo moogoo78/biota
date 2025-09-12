@@ -121,6 +121,7 @@ def create_publication(collection_id):
             name = i['name'].replace('<i>', '').replace('</i>', '')
             item = Item(collection_id=collection_id, description=i['description'], distribution=i['distribution'], note=i['note'], user_id=current_user.id, scientific_name=name, source_data=i, common_names='|'.join(i['common_names']))
             session.add(item)
+            session.commit()
 
             for syn in i['synonyms']:
                 item_syn = ItemSynonym(item_id=item.id, name=syn['usage_references_text'], ref=f"name_id:{i['name_id']}")

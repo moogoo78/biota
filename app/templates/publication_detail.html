@@ -123,7 +123,9 @@
   <div id="main-content-specimens" class="main-content-panel hidden">
     {% include "_inc-publication-main-specimens.html" %}
   </div>
-
+  <div id="main-content-images" class="main-content-panel hidden">
+    {% include "_inc-publication-main-images.html" %}
+  </div>
   <div id="main-content-preview" class="main-content-panel hidden">
     {% include "_inc-publication-main-preview.html" %}
   </div>
@@ -492,7 +494,53 @@
        updateRowStatus(index, 'success', 'Complete', item.specimens.length);
      }
    });
-
+   const imageButtons = document.querySelectorAll('.fetch-group-image-button');
+   imageButtons.forEach( x => {
+     x.onclick = (e) => {
+       e.preventDefault();
+       const index = e.target.dataset.index;
+       const name = itemData[index].name;
+       const url = `https://api.inaturalist.org/v1/observations?taxon_name=${name}&photos=true&quality_grade=research&per_page=20`;
+       console.log('fetch iNat:', url);
+       fetch(url)
+         .then(resp => resp.json())
+         .then(data => {
+           let photos = [];
+           let resultsWrapper = document.getElementById(`group-gallery-${index}`);
+           resultsWrapper.innerHTML = '';
+           data.results.forEach( x => {
+             photos = photos.concat(x.observation_photos);
+           });
+           console.log(photos.length, 'results');
+           photos.forEach( x => {
+             const box = document.createElement('div');
+             const img = document.createElement('img');
+             const input = document.createElement('input');
+             const body = document.createElement('div');
+             const flex = document.createElement('div');
+             const label = document.createElement('label');
+             box.classList.add('bg-white', 'border', 'border-gray-200', 'rounded-lg', 'shadow-sm', 'overflow-hidden');
+             body.classList.add('p-4');
+             img.classList.add('h-auto', 'max-w-full', 'rounded-lg');
+             img.classList.add('w-full', 'h-48', 'object-cover');
+             img.src = x.photo.url.replace('square', 'large');
+             flex.classList.add('flex', 'items-center');
+             input.dataset.identifier = x.id;
+             input.type = 'checkbox';
+             input.classList.add('w-4', 'h-4', 'border', 'border-gray-300', 'rounded-sm', 'text-blue-600', 'bg-gray-100', 'border-gray-300', 'rounded', 'focus:ring-3', 'focus:ring-blue-500');
+             label.classList.add('ms-2', 'text-xs', 'text-gray-600');
+             label.textContent = x.photo.attribution;
+             flex.appendChild(input);
+             flex.appendChild(label);
+             body.appendChild(flex);
+             console.log(x.photo);
+             box.appendChild(img);
+             box.appendChild(body);
+             resultsWrapper.appendChild(box);
+           });
+         })
+     };
+   });
    /* sidebar and main panel */
    const sidebarNav = document.getElementById('sidebar-nav');
    const mainContent = document.getElementById('main-content');

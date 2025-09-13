@@ -37,6 +37,7 @@ from app.models import (
     Item,
     ItemSpecimen,
     ItemSynonym,
+    ItemImage,
     PublicationLiterature,
 )
 #import pymysql
@@ -225,6 +226,27 @@ def patch_publication(publication_id):
     #flash('patch ok')
     return jsonify({'status': 'success'})
 
+@bp.route('/items/<int:item_id>/save-images')
+@login_required
+def create_item_image(item_id):
+    if item := session.get(Item, item_id):
+        if payload := request.args.get('payload'):
+            data = json.loads(payload)
+            for k, v in data.items():
+                source_id = k[4:] # chk-xxxx
+                vlist = v.split('|')
+                im = ItemImage(item_id=item_id, source_id=source_id, text=vlist[0], attribution=vlist[1])
+                session.add(im)
+            session.commit()
+            flash('save images')
+            return jsonify({
+                'status': 'success',
+            })
+
+    return jsonify({
+        'status': 'error',
+        'massage': 'no item or payload'
+    })
 
 @bp.route('/items/<int:item_id>/patch-specimens')
 @login_required

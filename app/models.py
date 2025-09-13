@@ -376,6 +376,7 @@ class Item(Base, TimestampMixin, SourceMixin):
 
     synonyms: Mapped[List['ItemSynonym']] = relationship(back_populates='item')
     specimens: Mapped[List['ItemSpecimen']] = relationship(back_populates='item')
+    images: Mapped[List['ItemImage']] = relationship(back_populates='item')
     distributions: Mapped[List['ItemDistribution']] = relationship(back_populates='item')
 
     collection: Mapped[Collection] = relationship(back_populates='items')
@@ -436,6 +437,16 @@ class ItemSpecimen(Base, SourceMixin):
     named_area_id: Mapped[Optional[int]] = mapped_column(ForeignKey('named_area.id'))
     item_id: Mapped[int] = mapped_column(ForeignKey('item.id'))
     item: Mapped[Item] = relationship(back_populates='specimens')
+
+class ItemImage(Base, SourceMixin):
+    __tablename__ = 'item_image'
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    text: Mapped[Optional[str]] = mapped_column(String(500))
+    attribution: Mapped[Optional[str]] = mapped_column(String(500))
+    item_id: Mapped[int] = mapped_column(ForeignKey('item.id'))
+
+    item: Mapped[Item] = relationship(back_populates='images')
 
 class ItemDistribution(Base):
     __tablename__ = 'item_distribution'

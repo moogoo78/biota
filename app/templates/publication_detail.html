@@ -148,7 +148,7 @@
 
 <!-- Specimen Selection Modal -->
 <div id="specimen-modal" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
-    <div class="relative p-4 w-full max-w-4xl max-h-full">
+    <div class="relative p-4 w-full max-w-8xl max-h-full">
         <!-- Modal content -->
         <div class="relative bg-white rounded-lg shadow-sm dark:bg-gray-700">
             <!-- Modal header -->
@@ -567,6 +567,8 @@
    const currentHash = window.location.hash;
    if (currentHash) {
      switchPanel(currentHash.substring(1));
+   } else {
+     switchPanel('preview');
    }
    function switchPanel(mainPanel) {
      console.log(mainPanel);
@@ -767,11 +769,20 @@
      getSpecimenBtn.disabled = true;
      getSpecimenBtn.textContent = 'Processing...';
 
+     const tbiaWrapper = document.getElementById('fetch-tbia-wrapper');
+     const tbiaLabel = document.getElementById('fetch-tbia-label');
+     const tbiaPa = document.getElementById('fetch-tbia-pa');
+     const tbiaProgress = document.getElementById('fetch-tbia-progress');
+     tbiaWrapper.classList.remove('hidden');
      try {
        // Process each scientific name one by one with a small delay
        for (let i = 0; i < itemData.length; i++) {
          const item = itemData[i];
          if (item.rank_id === 34) { // Only process 'species' rank (shlee)
+           tbiaLabel.textContent = `fetching... [${item.name}] from TBIA`;
+           let pa =  Math.round(((i+1) / itemData.length) * 100);
+           tbiaPa.textContent = `${pa}%`;
+           tbiaProgress.style = `width: ${pa}%`;
            await fetchTBIASpecimenData(item.name, item.name_id, i);
 
            // Add a small delay between requests to be respectful to the API
@@ -784,7 +795,7 @@
        getSpecimenBtn.disabled = false;
        getSpecimenBtn.textContent = 'Get Specimen Data';
        console.log('get TBIA specimen data:', itemData);
-
+       tbiaWrapper.classList.add('hidden');
        // Update publication status
        const data = await fetch(`${API_URL}/publications/{{ publication.id }}/patch?status=fetched`)
        const result = await data.json();

@@ -95,7 +95,7 @@ def delete_item(item_id):
             for j in i.specimens:
                 session.delete(j)
             session.delete(i)
-        #session.delete(c) keep collection
+        session.delete(c)
         c.publication_id = None
 
     for i in publication.literatures:
@@ -116,7 +116,7 @@ def patch_item(item_id):
 
     session.commit()
 
-    flash('patch ok')
+    flash('content modified')
     return redirect(url_for('publication.detail_view', item_id=item_id)+'#meta')
 
 

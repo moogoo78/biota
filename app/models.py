@@ -380,6 +380,7 @@ class Item(Base, TimestampMixin, SourceMixin):
     distributions: Mapped[List['ItemDistribution']] = relationship(back_populates='item')
 
     collection: Mapped[Collection] = relationship(back_populates='items')
+    fetched_specimen_data: Mapped[Dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
 
     def get_rank(self):
         if sd := self.source_data:

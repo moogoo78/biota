@@ -405,161 +405,190 @@ def get_namespace_data(namespace_id):
 
     return data
 
+class TBIASpecimens(object):
 
-def fetch_tbia_specimens(taxon_key):
-    DWC_TERMS = {
-        'countryCode': 'cc',
-        'stateProvince': 'adm1',
-        'county': 'adm2',
-        'municipality': 'adm3',
-        'locationID': '',
-        'higherGeographyID': '',
-        'higherGeography': '',
-        'continent': '',
-        'waterBody': '',
-        'islandGroup': '',
-        'island': '',
-        'country': '',
-        'locality': '',
-        'verbatimLocality': '',
-        'minimumElevationInMeters': '',
-        'maximumElevationInMeters': '',
-        'verbatimElevation': '',
-        'verticalDatum': '',
-        'minimumDepthInMeters': '',
-        'maximumDepthInMeters': '',
-        'verbatimDepth': '',
-        'minimumDistanceAboveSurfaceInMeters': '',
-        'maximumDistanceAboveSurfaceInMeters': '',
-        'locationAccordingTo': '',
-        'locationRemarks': '',
-        'decimalLatitude': '',
-        'decimalLongitude': '',
-        'geodeticDatum': '',
-        'coordinateUncertaintyInMeters': '',
-        'coordinatePrecision': '',
-        'pointRadiusSpatialFit': '',
-        'verbatimCoordinates': '',
-        'verbatimLatitude': '',
-        'verbatimLongitude': '',
-        'verbatimCoordinateSystem': '',
-        'verbatimSRS': '',
-        'footprintWKT': '',
-        'footprintSRS': '',
-        'footprintSpatialFit': '',
-        'georeferencedBy': '',
-        'georeferencedDate': '',
-        'georeferenceProtocol': '',
-        'georeferenceSources': '',
-        'georeferenceRemarks': '',
-    }
-
-    TBIA_TERMS = {
-        'county': 'adm1',
-        'municipality': 'adm2',
-    }
-
-    taiwan_counties_english = {
-        '宜蘭縣': 'Yilan',
-        '桃園市': 'Taoyuan',
-        '新竹縣': 'Hsinchu',
-        '苗栗縣': 'Miaoli',
-        '彰化縣': 'Changhua',
-        '南投縣': 'Nantou',
-        '雲林縣': 'Yunlin',
-        '嘉義縣': 'Chiayi',
-        '屏東縣': 'Pingtung',
-        '臺東縣': 'Taitung',
-        '花蓮縣': 'Hualien',
-        '澎湖縣': 'Penghu',
-        '基隆市': 'Keelung',
-        '新竹市': 'Hsinchu',
-        '嘉義市': 'Chiayi',
-        '臺北市': 'Taipei',
-        '新北市': 'New Taipei',
-        '臺中市': 'Taichung',
-        '臺南市': 'Tainan',
-        '高雄市': 'Kaohsiung'
-    }
     records = []
-    limit = 100 #TODO
-    url = f'https://tbiadata.tw/api/v1/occurrence?isCollection=true&taxonID={taxon_key}&limit={limit}'
-    resp = requests.get(url)
-    data = resp.json()
+    url = ''
+    def __init__(self):
 
-    if data['status']['code']!= 200:
-        return {'status': 'error', 'records': []}
+        pass
 
-    for i,v in enumerate(data['data']):
-        specimen_display = {
-            'county': '',
-            'locality': '',
-            'collector': '',
-            'record_number': '',
+    def fetch_taxon(self, taxon_key):
+        self.url = f'https://tbiadata.tw/api/v1/occurrence?isCollection=true&taxonID={taxon_key}&limit=100'
+        current_app.logger.debug(f'TBIASpecimens) fetch_taxon: {taxon_key}')
+        self.records = []
+        res = self.fetch_api(self.url)
+        return {
+            'is_success': res['is_success'],
+            'records': self.records,
         }
-        named_areas = {}
-        for term, field in DWC_TERMS.items():
-            if x := v.get(term):
-                key = term if field == '' else field
-                named_areas[key] = x
-                if key == 'adm2':
-                    if county_en := taiwan_counties_english.get(x):
-                        specimen_display['county'] = county_en.upper()
-                if key == 'locality':
-                    specimen_display['locality'] = x
-                    #'ILAN: Nanhutashan, Lu 24973.
-                    # NANTOU: Mt.Kiraishiu, Wilson 10074 (Type of B. nantoensis, A!);'
-        media = []
-        if x := v.get('associatedMedia'):
-            media.append(x)
 
-        locality_list = []
-        if x:= v.get('county'):
-            locality_list.append(x)
-        if x:= v.get('locality'):
-            locality_list.append(x)
 
-        date = ''
-        if x := v.get('eventDate'):
-            y = x[0:4]
-            m = x[5:7]
-            d = x[8:10]
-            date = f'{y}.{m}.{d}'
+    def fetch_api(self, url):
+        current_app.logger.debug(f'TBIASpecimens) fetch_api: {url}')
+        resp = requests.get(url)
+        is_success = False
+        try:
+            data = resp.json()
+            if data['status']['code']!= 200:
+                is_success = False
+            else:
+                self.records += data['data']
+                is_success = True
 
-        #print(v)
-        #print(named_areas)
-        recorded_by = ''
-        if x := v.get('recordedBy', ''):
-            recorded_by = x
-            specimen_display['collector'] = recorded_by
-        record_number = ''
-        if x := v.get('recordNumber', ''):
-            record_number = x
-            specimen_display['record_number'] = x
+            if next_url := data['links'].get('next'):
+                self.fetch_api(next_url)
+        except:
+            current_app.logger.error('TBIASpecimens) fetch_api error')
 
-        records.append({
-            'recid': i,
-            'url': v.get('references', ''),
-            'institutionCode': '',
-            'recordedBy': recorded_by,
-            'basisOfRecord': v.get('basisOfRecord', ''),
-            'recordNumber': record_number,
-            'catalogNumber': v.get('catalogNumber', ''),
-            'date': date,
-            'remarks': '',
-            'locality': '|'.join(locality_list),
-            'datasetTitle': v['datasetName'],
-            'media': media,
-            'named_areas': named_areas,
-            'specimen_display': specimen_display,
-            '_raw': v,
-        })
 
-    return {
-        'status': 'success',
-        'total': data['meta']['total'],
-        'records': records
-    }
+        return {
+            'is_success': is_success,
+            'records': self.records,
+        }
+
+
+    def conv_data(self, data):
+        DWC_TERMS = {
+            'countryCode': 'cc',
+            'stateProvince': 'adm1',
+            'county': 'adm2',
+            'municipality': 'adm3',
+            'locationID': '',
+            'higherGeographyID': '',
+            'higherGeography': '',
+            'continent': '',
+            'waterBody': '',
+            'islandGroup': '',
+            'island': '',
+            'country': '',
+            'locality': '',
+            'verbatimLocality': '',
+            'minimumElevationInMeters': '',
+            'maximumElevationInMeters': '',
+            'verbatimElevation': '',
+            'verticalDatum': '',
+            'minimumDepthInMeters': '',
+            'maximumDepthInMeters': '',
+            'verbatimDepth': '',
+            'minimumDistanceAboveSurfaceInMeters': '',
+            'maximumDistanceAboveSurfaceInMeters': '',
+            'locationAccordingTo': '',
+            'locationRemarks': '',
+            'decimalLatitude': '',
+            'decimalLongitude': '',
+            'geodeticDatum': '',
+            'coordinateUncertaintyInMeters': '',
+            'coordinatePrecision': '',
+            'pointRadiusSpatialFit': '',
+            'verbatimCoordinates': '',
+            'verbatimLatitude': '',
+            'verbatimLongitude': '',
+            'verbatimCoordinateSystem': '',
+            'verbatimSRS': '',
+            'footprintWKT': '',
+            'footprintSRS': '',
+            'footprintSpatialFit': '',
+            'georeferencedBy': '',
+            'georeferencedDate': '',
+            'georeferenceProtocol': '',
+            'georeferenceSources': '',
+            'georeferenceRemarks': '',
+        }
+
+        TBIA_TERMS = {
+            'county': 'adm1',
+            'municipality': 'adm2',
+        }
+
+        taiwan_counties_english = {
+            '宜蘭縣': 'Yilan',
+            '桃園市': 'Taoyuan',
+            '新竹縣': 'Hsinchu',
+            '苗栗縣': 'Miaoli',
+            '彰化縣': 'Changhua',
+            '南投縣': 'Nantou',
+            '雲林縣': 'Yunlin',
+            '嘉義縣': 'Chiayi',
+            '屏東縣': 'Pingtung',
+            '臺東縣': 'Taitung',
+            '花蓮縣': 'Hualien',
+            '澎湖縣': 'Penghu',
+            '基隆市': 'Keelung',
+            '新竹市': 'Hsinchu',
+            '嘉義市': 'Chiayi',
+            '臺北市': 'Taipei',
+            '新北市': 'New Taipei',
+            '臺中市': 'Taichung',
+            '臺南市': 'Tainan',
+            '高雄市': 'Kaohsiung'
+        }
+        records = []
+        for i,v in enumerate(data):
+            specimen_display = {
+                'county': '',
+                'locality': '',
+                'collector': '',
+                'record_number': '',
+            }
+            named_areas = {}
+            for term, field in DWC_TERMS.items():
+                if x := v.get(term):
+                    key = term if field == '' else field
+                    named_areas[key] = x
+                    if key == 'adm2':
+                        if county_en := taiwan_counties_english.get(x):
+                            specimen_display['county'] = county_en.upper()
+                    if key == 'locality':
+                        specimen_display['locality'] = x
+                        #'ILAN: Nanhutashan, Lu 24973.
+                        # NANTOU: Mt.Kiraishiu, Wilson 10074 (Type of B. nantoensis, A!);'
+            media = []
+            if x := v.get('associatedMedia'):
+                media.append(x)
+
+            locality_list = []
+            if x:= v.get('county'):
+                locality_list.append(x)
+            if x:= v.get('locality'):
+                locality_list.append(x)
+
+            date = ''
+            if x := v.get('eventDate'):
+                y = x[0:4]
+                m = x[5:7]
+                d = x[8:10]
+                date = f'{y}.{m}.{d}'
+
+            recorded_by = ''
+            if x := v.get('recordedBy', ''):
+                recorded_by = x
+                specimen_display['collector'] = recorded_by
+                record_number = ''
+            if x := v.get('recordNumber', ''):
+                record_number = x
+                specimen_display['record_number'] = x
+
+            records.append({
+                'recid': i,
+                'url': v.get('references', ''),
+                'institutionCode': '',
+                'recordedBy': recorded_by,
+                'basisOfRecord': v.get('basisOfRecord', ''),
+                'recordNumber': record_number,
+                'catalogNumber': v.get('catalogNumber', ''),
+                'date': date,
+                'remarks': '',
+                'locality': '|'.join(locality_list),
+                'datasetTitle': v['datasetName'],
+                'media': media,
+                'named_areas': named_areas,
+                'specimen_display': specimen_display,
+                '_raw': v,
+            })
+
+        return records
+
 
 def send_email(to, subject, body):
     ses_client = boto3.client(

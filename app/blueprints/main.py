@@ -26,7 +26,7 @@ from flask_login import (
 )
 
 #from flask.views import MethodView
-from app.helpers import get_namespace_data, generate_docx, fetch_tbia_specimens, send_email
+from app.helpers import get_namespace_data, generate_docx, TBIASpecimens, send_email
 from app.database import session
 
 from app.models import (
@@ -700,26 +700,23 @@ def get_external_data_api(source, taxon_key):
         existSpecimenData = []
         if item_id:
             item = session.get(Item, item_id)
-            has_item = True
-            for x in item.specimens:
-                existSpecimenData.append(x.source_data)
-
-        data = {}
-        if len(existSpecimenData) > 0:
-            data = {
-                'status': 'success',
-                'total': len(existSpecimenData),
-                'records': existSpecimenData
-            }
-        else:
             # fetch tbia (new)
-            data = fetch_tbia_specimens(taxon_key)
-            if has_item:
-                for r in data['records']:
-                    # save to ItemSpecimen
-                    raw = r['_raw']
-                    item_sp = ItemSpecimen(item_id=item.id, source_data=raw, text='', key=raw['id'], source_name='tbia')
-                    session.add(item_sp)
+            tbia = TBIASpecimens()
+            res = tbia.fetch_taxon(taxon_key)
+            data = {
+                'status': 'fail',
+                'total': 0,
+                'records': [],
+            }
+            if res['is_success']:
+                #records = tbia.conv_data(res['records'])
+                data = {
+                    'status': 'success',
+                    'total': len(res['records']),
+                    'records': res['records']
+                }
+                ts = datetime.utcnow().timestamp()
+                item.fetched_specimen_data = [{'source': 'tbia', 'epoch': ts, 'data': res['records']}]
                 session.commit()
 
         # TODO: CORS

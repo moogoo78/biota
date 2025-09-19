@@ -74,12 +74,16 @@ def detail_view(item_id):
             data['_text'] = x.text
             specimens.append(data)
 
+        fetched = []
+        if len(i.fetched_specimen_data) > 0:
+            fetched = i.fetched_specimen_data[0]['data']
         item_data.append({
             'item_id': i.id,
             'name': i.scientific_name,
             'name_id': i.source_data['name_id'],
             'rank_id': i.source_data['rank_id'],
-            'specimens': specimens
+            'selected_specimens': specimens,
+            'fetched_specimens': fetched,
         })
     return render_template('publication_detail.html', publication=publication, API_URL=API_URL, item_data_json=json.dumps(item_data))
 
@@ -147,3 +151,14 @@ def delete_publication_literature(publication_id, item_id):
         return redirect(url_for('publication.detail_view', item_id=publication_id)+'#literatures')
 
     return abort(404)
+
+@bp.route('/<int:item_id>/update-status/<status>')
+@login_required
+def update_status(item_id, status):
+    publication = session.get(Publication, item_id)
+    publication.status = status
+    session.commit()
+
+    return jsonify({
+        'is_success': True,
+    })

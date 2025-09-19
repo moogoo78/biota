@@ -1,5 +1,5 @@
 <div class="mb-8">
-  <button type="button" class="focus:outline-none text-white bg-purple-700 hover:bg-purple-800 focus:ring-4 focus:ring-purple-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-purple-600 dark:hover:bg-purple-700 dark:focus:ring-purple-900" id="get-specimen-btn">
+  <button type="button" class="{% if publication.status != "init" %}hidden {% endif %}focus:outline-none text-white bg-purple-700 hover:bg-purple-800 focus:ring-4 focus:ring-purple-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-purple-600 dark:hover:bg-purple-700 dark:focus:ring-purple-900" id="get-specimen-btn">
     {{ _('從TBIA入口網抓標本資料') }}
   </button>
 </div>
@@ -36,7 +36,7 @@
             Progress
           </th>
           <th scope="col" class="px-6 py-3">
-            Actions
+            Results
           </th>
         </tr>
       </thead>
@@ -69,10 +69,10 @@
               </svg>
               <span class="sr-only">Loading...</span>
             </div>
-            <div class="specimen-count text-sm text-gray-600 hidden">
-              <span class="count">0</span> specimens found
+            <div class="specimen-count text-sm text-gray-600{% if publication.status != "fetched" %} hidden{% endif %}">
+              <span class="count">{% if publication.status == "fetched" %}{{ i.fetched_specimen_data[0]['data']|length }}{% else %}0{% endif %}</span> specimens found
             </div>
-            <button type="button" class="hidden select-specimen-btn text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-3 py-1.5 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800" data-modal-target="specimen-modal" data-modal-toggle="specimen-modal">
+            <button type="button" class="{% if publication.status != "fetched" %}hidden {%endif %}select-specimen-btn text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-3 py-1.5 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800" data-modal-target="specimen-modal" data-modal-toggle="specimen-modal">
               {{ _('選擇標本') }}
             </button>
           </td>

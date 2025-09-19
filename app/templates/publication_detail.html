@@ -102,7 +102,7 @@
                 </th>
                 <td class="px-6 py-4">
                   <a href="https://nametool.taicol.tw/zh-tw/references/{{ i.source_id }}" class="literature-edit" data-litid="{{ i.id }}" target="_blank">
-                    <button type="button" class="focus:outline-none text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800 collection-item">{{ _('編輯') }}</button>
+                    <button type="button" class="focus:outline-none text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800 collection-item">TaiCOL {{ _('編輯') }}</button>
                     {#
                     <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
                       <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m14.304 4.844 2.852 2.852M7 7H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-4.5m2.409-9.91a2.017 2.017 0 0 1 0 2.853l-6.844 6.844L8 14l.713-3.565 6.844-6.844a2.015 2.015 0 0 1 2.852 0Z"/>
@@ -338,6 +338,7 @@
    const itemData = {{ item_data_json|safe }};
    const TAICOL_REF_API = 'https://nametool.taicol.tw/api/citations';
    const CURRENT_URL = "{{ url_for('publication.detail_view', item_id=publication.id ) }}";
+   //console.log(itemData[0].fetched_specimens);
    const literatureSelect = new TomSelect('#literatures-select',{
      valueField: 'reference_id',
      labelField: 'citation',
@@ -407,7 +408,7 @@
        const itemid = e.target.dataset.itemid;
        const spid = e.target.dataset.spid;
        const item = itemData.find((item) => String(item.item_id) === String(itemid));
-       const specimen = item.specimens.find((sp) => String(sp._id) === String(spid));
+       const specimen = item.selected_specimens.find((sp) => String(sp._id) === String(spid));
        //console.log(specimen);
        let highlightList = [];
        if (specimen.recordNumber) {
@@ -467,29 +468,14 @@
          document.location.href = CURRENT_URL;
         });
    };
-   /* utils */
-   /* via MDN
-      function postData(url, data) {
-      return fetch(url, {
-      body: JSON.stringify(data), // must match 'Content-Type' header
-      cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
-      credentials: "same-origin", // include, same-origin, *omit
-      headers: {
-      "user-agent": "Mozilla/4.0 MDN Example",
-      "content-type": "application/json",
-      },
-      method: "POST", // *GET, POST, PUT, DELETE, etc.
-      mode: "cors", // no-cors, cors, *same-origin
-      redirect: "follow", // manual, *follow, error
-      referrer: "no-referrer", // *client, no-referrer
-      }).then((response) => response.json()); // 輸出成 json
-      }*/
 
+   // fetched specimen, update row status
    itemData.forEach( (item, index)  => {
-     if (item.specimens.length > 0) {
-       updateRowStatus(index, 'success', 'Complete', item.specimens.length);
+     if (item.fetched_specimens.length > 0) {
+       updateRowStatus(index, 'success', 'Complete', item.fetched_specimens.length);
      }
    });
+
    const imageButtons = document.querySelectorAll('.fetch-group-image-button');
    const saveImageButtons = document.querySelectorAll('.save-group-image-button');
    saveImageButtons.forEach( x => {
@@ -571,7 +557,7 @@
      switchPanel('preview');
    }
    function switchPanel(mainPanel) {
-     console.log(mainPanel);
+     //console.log(mainPanel);
      sidebarItems.forEach(item => {
        let icon = item.querySelector('svg');
        let label = item.querySelector('span');
@@ -691,7 +677,7 @@
            countText.textContent = ' specimens found';
          }
          if (specimenCount > 0) {
-           selectBtn.classList.remove('hidden');
+           //selectBtn.classList.remove('hidden');
            selectBtn.onclick = () => openSpecimenModal(index);
          }
          break;
@@ -748,7 +734,7 @@
          updateRowStatus(index, 'success', 'Complete', specimenCount);
 
          // Store the specimen data for later use
-         itemData[index].specimens = specimenData.records;
+         //itemData[index].specimens = specimenData.records;
        } else {
          updateRowStatus(index, 'error', specimenData.message || 'No specimens found');
        }
@@ -797,31 +783,32 @@
        console.log('get TBIA specimen data:', itemData);
        tbiaWrapper.classList.add('hidden');
        // Update publication status
-       const data = await fetch(`${API_URL}/publications/{{ publication.id }}/patch?status=fetched`)
+       const data = await fetch(`${CURRENT_URL}/update-status/fetched`)
        const result = await data.json();
-       console.log(result);
+       //console.log(result);
        // refresh, let backend data display
-       document.location.href = CURRENT_URL;
-     }
+       location.reload();
+     };
    }
 
    // Function to open specimen selection modal
    function openSpecimenModal(index) {
      currentSpecimenIndex = index;
      const item = itemData[index];
-     const specimens = itemData[index].specimens || [];
+     const fetched_specimens = itemData[index].fetched_specimens || [];
      
      // Update modal title
      document.getElementById('modal-species-name').textContent = item.name;
      
      // Populate counties dropdown based on available specimens
-     populateCountiesDropdown(specimens);
+     populateCountiesDropdown(fetched_specimens);
      
      // Populate specimens table
      const tableBody = document.getElementById('specimens-table-body');
      tableBody.innerHTML = '';
-     
-     specimens.forEach((specimen, specimenIndex) => {
+
+     console.log(fetched_specimens);
+     fetched_specimens.forEach((specimen, specimenIndex) => {
        const row = document.createElement('tr');
        row.className = 'bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600';
 
@@ -1013,7 +1000,7 @@
      if (selectedCheckboxes.length === 0) {
        summaryDiv.innerHTML = '<p>No specimens selected</p>';
      } else {
-       const specimens = itemData[currentSpecimenIndex].specimens;
+       const specimens = itemData[currentSpecimenIndex].fetched_specimens;
        let summaryHTML = `<p><strong>${selectedCheckboxes.length} specimens selected:</strong></p><ul class="list-disc list-inside mt-2 space-y-1">`;
        
        selectedCheckboxes.forEach(checkbox => {
@@ -1046,13 +1033,13 @@
      }
 
      itemData[currentSpecimenIndex].selectedSpecimens = selectedIndices.map(index => {
-       return itemData[currentSpecimenIndex].specimens[index];
+       return itemData[currentSpecimenIndex].fetched_specimens[index];
      });
 
      console.log('Selected specimens for', itemData[currentSpecimenIndex].name, selectedIndices);
 
      let selectedIds = selectedIndices.map( x => {
-       return itemData[currentSpecimenIndex].specimens[x]['_id'];
+       return itemData[currentSpecimenIndex].fetched_specimens[x]['_id'];
      });
      // Patch ItemSpecimen
      fetch(`${API_URL}/items/${itemData[currentSpecimenIndex]['item_id']}/patch-specimens?selected=${selectedIds.join(',')}`)

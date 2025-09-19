@@ -109,7 +109,7 @@
   <!-- =============================================================== -->
   <header class="bg-blue-800 shadow">
       <div class="max-w-screen-2xl mx-auto px-4 h-12 flex justify-between items-center">
-          <h1 class="text-lg font-semibold text-white">{{ subheader }}</h1>
+          <h1 class="text-lg font-semibold text-white">{% block subheader_title %}INDEX{% endblock %}</h1>
           {#
           <div class="flex items-center space-x-4">
               <button class="flex items-center text-white text-sm">

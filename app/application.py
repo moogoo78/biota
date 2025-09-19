@@ -22,8 +22,13 @@ from flask_login import (
     login_user,
     logout_user,
 )
-import pymysql.cursors
-#from app.database import session
+from flask_babel import (
+    Babel,
+    gettext,
+    #ngettext,
+)
+from app.jinja_func import *
+
 
 logger = logging.getLogger("myapp")
 logger.setLevel(logging.DEBUG)
@@ -49,6 +54,12 @@ def apply_blueprints(app):
     app.register_blueprint(auth_bp, url_prefix='/auth')
 
 def apply_extensions(app):
+    # babel
+    babel = Babel(app, locale_selector=get_locale)
+    app.jinja_env.globals['get_locale'] = get_locale
+    app.jinja_env.globals['get_lang_path'] = get_lang_path
+    app.jinja_env.globals['str_to_date'] = str_to_date
+
     # login
     login_manager = LoginManager()
     login_manager.init_app(app)

@@ -38,6 +38,7 @@ from app.models import (
 from app.database import session
 from app.helpers import (
     put_publication_by_taicol_namespace,
+    format_specimen_display,
 )
 
 bp = Blueprint('publication', __name__)
@@ -77,6 +78,7 @@ def detail_view(item_id):
         fetched = []
         if len(i.fetched_specimen_data) > 0:
             fetched = i.fetched_specimen_data[0]['data']
+
         item_data.append({
             'item_id': i.id,
             'name': i.scientific_name,
@@ -162,3 +164,76 @@ def update_status(item_id, status):
     return jsonify({
         'is_success': True,
     })
+
+
+@bp.route('/items/<int:item_id>/save-images')
+@login_required
+def create_item_image(item_id):
+    if item := session.get(Item, item_id):
+        if payload := request.args.get('payload'):
+            data = json.loads(payload)
+            for k, v in data.items():
+                source_id = k[4:] # chk-xxxx
+                vlist = v.split('|')
+                im = ItemImage(item_id=item_id, source_id=source_id, text=vlist[0], attribution=vlist[1])
+                session.add(im)
+            session.commit()
+            flash('save images')
+            return jsonify({
+                'status': 'success',
+            })
+
+    return jsonify({
+        'status': 'error',
+        'massage': 'no item or payload'
+    })
+
+@bp.route('/<int:publication_id>/items/<int:item_id>/patch-specimens')
+@login_required
+def patch_item_specimen(publication_id, item_id):
+    # default specimen format
+    if item := session.get(Item, item_id):
+        exist = {}
+        exist_ids = []
+        selected_ids = []
+        for s in item.specimens:
+            exist[s.source_name] = s
+            exist_ids.append(s.source_name)
+
+        selectedIndex = request.args.get('selected', '')
+        for i in selectedIndex.split(','):
+            if data := item.fetched_specimen_data:
+                d = data[0]['data'][int(i)]
+                _id = d['id']
+                selected_ids.append(_id)
+                text = format_specimen_display(d)
+                if _id in exist:
+                    exist[_id].text = text
+                else:
+                    s = ItemSpecimen(item_id=item_id, source_data=d, source_name=_id, text=text)
+                    session.add(s)
+
+        session.commit()
+
+        # delete un checkted
+        for k, v in exist.items():
+            if k not in selected_ids:
+                session.delete(v)
+        session.commit()
+
+        return jsonify({'message': 'success'})
+
+@login_required
+@bp.route('/<int:item_id>/modify-specimen/post', methods=['POST'])
+def modify_specimen_text(item_id):
+    if payload := request.json:
+        print(payload)
+        content = payload.get('content', '')
+        if spid := payload.get('spid', ''):
+            if sp := session.get(ItemSpecimen, spid):
+                sp.text = content
+                session.commit()
+                #flash('edit specimen format')
+            return jsonify({'is_success': True})
+
+    return jsonify({'is_success': False})

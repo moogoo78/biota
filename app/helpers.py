@@ -695,3 +695,9 @@ def put_publication_by_taicol_namespace(user, namespace_id):
     return result
 
 
+def format_specimen_display(data):
+    record_number = data.get('recordNumber', '--')
+    recorded_by = data.get('recordedBy', '--')
+    locality = data.get('locality', '--')
+    dataset_name = data.get('datasetName', '--') # institudion ID ?
+    return f'{locality}, {recorded_by} {record_number} ({dataset_name})'

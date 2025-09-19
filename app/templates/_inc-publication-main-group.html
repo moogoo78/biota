@@ -36,7 +36,16 @@
             Progress
           </th>
           <th scope="col" class="px-6 py-3">
-            Results
+            Fetched Specimens
+          </th>
+          <th scope="col" class="px-6 py-3">
+            Selected Specimens
+          </th>
+          <th scope="col" class="px-6 py-3">
+            Select
+          </th>
+          <th scope="col" class="px-6 py-3">
+            Modify
           </th>
         </tr>
       </thead>
@@ -61,6 +70,16 @@
               <span class="status-text">Ready</span>
             </span>
           </td>
+          <td class="px-6 py-4">
+            <div class="specimen-count text-sm text-gray-600">
+              <span class="count">{% if publication.status == "fetched" %}{{ i.fetched_specimen_data[0]['data']|length }}{% else %}0{% endif %}</span>{# specimens found#}
+            </div>
+          </td>
+          <td class="px-6 py-4">
+            <div class="specimen-select-count text-sm text-gray-600">
+              <span class="count">{{ i.specimens|length }}</span>
+            </div>
+          </td>
           <td class="px-6 py-4 item-action">
             <div class="spinner hidden" role="status">
               <svg aria-hidden="true" class="w-8 h-8 text-gray-200 animate-spin dark:text-gray-600 fill-blue-600" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -69,16 +88,18 @@
               </svg>
               <span class="sr-only">Loading...</span>
             </div>
-            <div class="specimen-count text-sm text-gray-600{% if publication.status != "fetched" %} hidden{% endif %}">
-              <span class="count">{% if publication.status == "fetched" %}{{ i.fetched_specimen_data[0]['data']|length }}{% else %}0{% endif %}</span> specimens found
-            </div>
             <button type="button" class="{% if publication.status != "fetched" %}hidden {%endif %}select-specimen-btn text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-3 py-1.5 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800" data-modal-target="specimen-modal" data-modal-toggle="specimen-modal">
               {{ _('選擇標本') }}
             </button>
           </td>
+          <td class="px-6 py-4 item-action">
+            <button type="button" class="{% if publication.status != "fetched" %}hidden {%endif %}select-specimen2-btn text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-3 py-1.5 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800" data-modal-target="specimen2-modal" data-modal-toggle="specimen2-modal">
+              {{ _('修改標本') }}
+            </button>
+          </td>
         </tr>
         <tr class="hidden bg-gray-50 dark:bg-gray-800/50">
-          <td colspan="5" class="px-6 py-4">
+          <td colspan="8" class="px-6 py-4">
             <div class="details-container p-4">
               <p><span class="item-scientific-name">{{ i.source_data.usage_references_text | safe }}</span></p>
               {% if i.synonyms|length > 0%}

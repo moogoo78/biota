@@ -1,6 +1,7 @@
 # Flask
 Flask==3.1.1
 Flask-Login==0.6.3
+Flask-babel==4.0.0
 
 # database
 SQLAlchemy==2.0.41

@@ -64,6 +64,7 @@ def index():
 def nametool():
     return render_template('main.html')
 
+'''
 @bp.route('/publications')
 @login_required
 def publication_list():
@@ -93,6 +94,7 @@ def publication_list():
     else:
         collections = Collection.query.filter(Collection.user_id==current_user.id).all()
         return render_template('publication_list.html', collections=collections, subheader='Publications')
+
 
 @bp.route('/publications/create/<int:collection_id>')
 @login_required
@@ -132,7 +134,30 @@ def create_publication(collection_id):
         flash(f'publication created, via: namespace_id {collection.source_id}')
     return redirect(url_for('main.publication_detail', publication_id=pub.id))
 
+
 @bp.route('/publications/<int:publication_id>')
+@login_required
+def publication_detail(publication_id):
+    publication = session.get(Publication, publication_id)
+    API_URL=current_app.config['API_URL']
+    item_data = []
+    for i in publication.collections[0].items:
+        # 整理給前端
+        specimens = []
+        for x in i.specimens:
+            data = x.source_data
+            data['_id'] = x.id
+            data['_text'] = x.text
+            specimens.append(data)
+
+        item_data.append({
+            'item_id': i.id,
+            'name': i.scientific_name,
+            'name_id': i.source_data['name_id'],
+            'rank_id': i.source_data['rank_id'],
+            'specimens': specimens
+        })
+    return render_template('publication_detail.html', publication=publication, subheader='Publications', API_URL=API_URL, item_data_json=json.dumps(item_data))@bp.route('/publications/<int:publication_id>')
 @login_required
 def publication_detail(publication_id):
     publication = session.get(Publication, publication_id)
@@ -156,6 +181,7 @@ def publication_detail(publication_id):
         })
     return render_template('publication_detail.html', publication=publication, subheader='Publications', API_URL=API_URL, item_data_json=json.dumps(item_data))
 
+
 @bp.route('/publications/<int:publication_id>/delete')
 @login_required
 def delete_publication(publication_id):
@@ -176,7 +202,7 @@ def delete_publication(publication_id):
     session.delete(publication)
     session.commit()
     return redirect(url_for('main.publication_list'))
-
+'''
 
 @bp.route('/literatures/patch')
 @login_required
@@ -194,24 +220,8 @@ def patch_literatures():
     flash('update literature')
     return jsonify({'status': 'success'})
 
-@bp.route('/publications/<int:publication_id>/literatures/create')
-@login_required
-def create_publication_literature(publication_id):
-    if payload_str:= request.args.get('payload'):
-        payload = json.loads(payload_str)
-        source_id = payload.get('reference_id', '')
-        name = payload.get('citation', '')
-        pl = PublicationLiterature(publication_id=publication_id, source_id=source_id, name=name)
-        session.add(pl)
-        session.commit()
-        flash('add literature')
-        return jsonify({
-            'status': 'success'
-        })
-    return jsonify({
-        'status': 'error'
-    })
 
+'''
 @bp.route('/publications/<int:publication_id>/patch')
 @login_required
 def patch_publication(publication_id):
@@ -225,7 +235,7 @@ def patch_publication(publication_id):
     #return redirect(url_for('main.publication_detail', publication_id=publication_id))
     #flash('patch ok')
     return jsonify({'status': 'success'})
-
+'''
 @bp.route('/items/<int:item_id>/save-images')
 @login_required
 def create_item_image(item_id):

@@ -17,6 +17,10 @@
 </style>
 {% endblock %}
 
+{% block subheader_title %}
+{{ _('出版') }}: {{ publication.title }}
+{% endblock %}
+
 {% block main %}
 {% include "_inc-publication-sidebar.html" %}
 <!-- Center Content -->
@@ -51,7 +55,7 @@
       </div>
   </div>
     <div id="main-content-meta" class="main-content-panel hidden">
-    <form class="max-w-4xl" id="meta">
+    <form class="max-w-4xl" id="meta" method="POST" action="{{ url_for('publication.patch_item', item_id=publication.id) }}">
       <div class="mb-5">
         <label for="meta-title" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Title</label>
         <input type="text" id="meta-title" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" value="{{ publication.title }}" name="title" required />
@@ -71,29 +75,44 @@
           <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
             <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
               <tr>
-                <th scope="col" class="px-6 py-3">
+                {#<th scope="col" class="px-6 py-3">
                   TaiCOL ref_id
-                </th>
+                </th>#}
                 <th scope="col" class="px-6 py-3">
                   Citations
                 </th>
                 <th scope="col" class="px-6 py-3">
-                  Edit
+                  TaiCOL nametool
+                </th>
+                <th scope="col" class="px-6 py-3">
+
                 </th>
               </tr>
             </thead>
             <tbody>
               {% for i in publication.literatures %}
               <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200">
-                <th scope="row" class="px-6 py-4 font-medium text-gray-900 dark:text-white">
+                {#<th scope="row" class="px-6 py-4 font-medium text-gray-900 dark:text-white">
                   {{ i.source_id }}
                 </th>
                 <td class="px-6 py-4" id="literature-{{ i.id }}">{{ i.name }}</td>
+                #}
+                <th scope="row" class="px-6 py-4 font-medium text-gray-900 dark:text-white">
+                  {{ i.name }}
+                </th>
                 <td class="px-6 py-4">
-                  <a href="#" class="literature-edit" data-litid="{{ i.id }}">
+                  <a href="https://nametool.taicol.tw/zh-tw/references/{{ i.source_id }}" class="literature-edit" data-litid="{{ i.id }}" target="_blank">
+                    <button type="button" class="focus:outline-none text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800 collection-item">{{ _('編輯') }}</button>
+                    {#
                     <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
                       <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m14.304 4.844 2.852 2.852M7 7H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-4.5m2.409-9.91a2.017 2.017 0 0 1 0 2.853l-6.844 6.844L8 14l.713-3.565 6.844-6.844a2.015 2.015 0 0 1 2.852 0Z"/>
-                    </svg></a>
+                    </svg>
+                    #}
+                  </a>
+                </td>
+                <td class="px-6 py-4">
+                  <a href="{{ url_for('publication.delete_publication_literature', publication_id=publication.id, item_id=i.id)}}" class="literature-edit" data-litid="{{ i.id }}">
+                    <button type="button" class="focus:outline-none text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-800 collection-item">{{ _('移除') }}</button>
                 </td>
               </tr>
               {% endfor %}
@@ -102,20 +121,16 @@
         </div>
       </div>
     </form>
-    <button id="literature-save-button" type="button" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 my-4">Save</button>
+
     <div class="my-4">
-      <label class="block mb-2 text-sm font-medium text-gray-900">Add new literature:</label>
+      <label class="block mb-2 text-sm font-medium text-gray-900">{{ _('新增文獻') }}:</label>
       <div class="flex items-center gap-2">
         <select id="literatures-select" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"></select>
-        <button id="literature-add-button" type="button" class="text-white bg-blue-700 hover:bg-gray-900 font-medium rounded-lg text-sm px-5 py-2.5">Add</button>
+        <button id="literature-add-button" type="button" class="text-white bg-blue-700 hover:bg-gray-900 font-medium rounded-lg text-sm px-5 py-2.5">{{ _('新增') }}</button>
       </div>
       <p class="mt-2 text-sm text-gray-500">Search via TaiCOL nametool.</p>
     </div>
 
-    <hr class="h-px my-8 bg-gray-200 border-0 dark:bg-gray-700">
-    <p>
-      <a href="https://nametool.taicol.tw/zh-tw/namespaces/{{ publication.collections[0].source_id }}/usages/" target="_blank"><button type="button" class="text-yellow-400 hover:text-white border border-yellow-400 hover:bg-yellow-500 focus:ring-4 focus:outline-none focus:ring-yellow-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2 dark:border-yellow-300 dark:text-yellow-300 dark:hover:text-white dark:hover:bg-yellow-400 dark:focus:ring-yellow-900">去 TaiCOL nametootl 修改內容</button></a>
-    </p>
   </div>
   <div id="main-content-groups" class="main-content-panel hidden">
     {% include "_inc-publication-main-group.html" %}
@@ -322,7 +337,7 @@
    const API_URL = '{{ API_URL }}';
    const itemData = {{ item_data_json|safe }};
    const TAICOL_REF_API = 'https://nametool.taicol.tw/api/citations';
-
+   const CURRENT_URL = "{{ url_for('publication.detail_view', item_id=publication.id ) }}";
    const literatureSelect = new TomSelect('#literatures-select',{
      valueField: 'reference_id',
      labelField: 'citation',
@@ -358,45 +373,26 @@
      },
    });
 
-   const literatureEdits = document.querySelectorAll('.literature-edit');
-   literatureEdits.forEach( x => {
-     x.onclick = (e) => {
-       e.preventDefault();
-       let litId = e.currentTarget.dataset.litid;
-       let targetText = document.getElementById(`literature-${litId}`);
-       targetText.innerHTML = `<textarea name="literature_text_${litId}" rows="4" class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">${targetText.textContent}</textarea>`;
-     }
-   });
-   const literatureSaveButton = document.getElementById('literature-save-button');
-   literatureSaveButton.onclick = (e) => {
-     e.preventDefault();
-     const form = document.getElementById('literature-form');
-     const formData = new FormData(form);
-     let params = new URLSearchParams();
-     for (const [key, value] of formData) {
-       params.set(key, value);
-     }
-     fetch(`${API_URL}/literatures/patch?${params.toString()}`)
-       .then(resp => resp.json())
-       .then(result => {
-         console.log(result);
-         document.location.href = "{{ url_for('main.publication_detail', publication_id=publication.id ) }}";
-       });
-   };
    const literatureAddButton = document.getElementById('literature-add-button');
    literatureAddButton.onclick = (e) => {
      e.preventDefault();
      const referenceId = literatureSelect.getValue();
      const citation = literatureSelect.getItem(referenceId).textContent;
-     let payload = {
-       reference_id: referenceId,
-       citation: citation,
-     };
-     fetch(`${API_URL}/publications/{{ publication.id }}/literatures/create?payload=${JSON.stringify(payload)}`)
+     fetch(`${CURRENT_URL}/literatures/post`,{
+       method: "POST",
+       headers: {
+         "Content-Type": "application/json",
+       },
+       body: JSON.stringify({
+         reference_id: referenceId,
+         citation: citation,
+       }),
+     })
        .then(resp => resp.json())
        .then(result => {
-         console.log(result);
-         document.location.href = "{{ url_for('main.publication_detail', publication_id=publication.id ) }}";
+         //console.log(result);
+         // force reload
+         location.reload(true);
        });
    };
    const previewSpecimenSpans = document.querySelectorAll('.preview-specimen-box');
@@ -468,7 +464,7 @@
        .then(resp => resp.json())
        .then(result => {
          console.log(result);
-         document.location.href = "{{ url_for('main.publication_detail', publication_id=publication.id ) }}";
+         document.location.href = CURRENT_URL;
         });
    };
    /* utils */
@@ -568,6 +564,10 @@
    const mainContent = document.getElementById('main-content');
    const sidebarItems = sidebarNav.querySelectorAll('.sidebar-item');
    const mainContentPanels = mainContent.querySelectorAll('.main-content-panel');
+   const currentHash = window.location.hash;
+   if (currentHash) {
+     switchPanel(currentHash.substring(1));
+   }
    function switchPanel(mainPanel) {
      console.log(mainPanel);
      sidebarItems.forEach(item => {
@@ -590,6 +590,7 @@
      label.classList.add('text-gray-900');
      //link.classList.add('text-gray-900');
      targetPanel.classList.remove('hidden');
+     window.location.hash = mainPanel;
    }
    sidebarNav.onclick = (e) => {
      const clickedSidebar = event.target.closest('.sidebar-item');
@@ -599,6 +600,7 @@
      switchPanel(main);
    }
 
+     /*
    const saveMetaButton = document.getElementById('save-meta-btn');
    saveMetaButton.onclick = (e) => {
      e.preventDefault();
@@ -609,13 +611,13 @@
      for (const [key, value] of formData) {
        params.set(key, value);
      }
-     fetch(`${API_URL}/publications/{{ publication.id }}/patch?${params.toString()}`)
+     fetch(`${API_URL}/publications/patch?${params.toString()}`)
        .then(resp => resp.json())
        .then(result => {
-         console.log(result);
-         document.location.href = "{{ url_for('main.publication_detail', publication_id=publication.id ) }}";
+           console.log(result);
+           document.location.href = `${CURRENT_URL}#meta`;
        })
-   };
+   };*/
 
    /* table row detail */
    document.getElementById('item-table-body').addEventListener('click', function(e) {
@@ -640,7 +642,7 @@
    deleteButton.onclick = (e) => {
      e.preventDefault();
      if (confirm('Are you sure?')) {
-       document.location.href = "{{ url_for('main.delete_publication', publication_id=publication.id ) }}";
+       document.location.href = "{{ url_for('publication.delete_item', item_id=publication.id ) }}";
      }
    };
    const getSpecimenBtn = document.getElementById('get-specimen-btn');
@@ -788,7 +790,7 @@
        const result = await data.json();
        console.log(result);
        // refresh, let backend data display
-       document.location.href = "{{ url_for('main.publication_detail', publication_id=publication.id ) }}";
+       document.location.href = CURRENT_URL;
      }
    }
 

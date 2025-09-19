@@ -2,6 +2,9 @@ import json
 from datetime import datetime
 
 from flask import g, current_app
+from sqlalchemy import (
+    select,
+)
 from docx import Document
 from docx.shared import Pt, Mm, Cm, Inches
 from docx.oxml import OxmlElement, parse_xml
@@ -17,24 +20,14 @@ import requests
 import boto3
 from botocore.exceptions import ClientError
 
-#import pymysql
-#pymysql.install_as_MySQLdb()
-#import MySQLdb
-
-#mysql_conn = MySQLdb.connect(host="mysql", user="root", passwd="example", db="taicol")
-#mysql_cursor = mysql_conn.cursor()
-
-#import pymysql.cursors
-
-def get_db_connection():
-    """Opens a new database connection if there is none for the current context."""
-    if 'db' not in g:
-        g.db = pymysql.connect(host='mysql',
-                                 user='root',
-                                 password='example',
-                                 database='taicol',
-                                 cursorclass=pymysql.cursors.DictCursor)
-    return g.db
+from app.models import (
+    Collection,
+    Publication,
+    PublicationLiterature,
+    Item,
+    ItemSynonym,
+)
+from app.database import session
 
 class BiotaPrint(object):
     doc = None
@@ -606,3 +599,70 @@ def send_email(to, subject, body):
         error_message = e.response['Error']['Message']
         current_app.logger.error(f"Error sending email: {error_code} - {error_message}")
         return None
+
+def create_collection_by_taicol_namespace(user_id, namespace_id):
+    url = f"{current_app.config['TAICOL_API']}/biota?namespace_id={namespace_id}&token={current_app.config['TAICOL_TOKEN']}"
+    resp = requests.get(url)
+    data = resp.json()
+    collection = Collection(name=data['title'], source_name=f'taicol:namespace', source_data=data, source_id=namespace_id, user_id=user_id)
+    session.add(collection)
+    session.commit()
+
+    for i in data['group']:
+        name = i['name'].replace('<i>', '').replace('</i>', '')
+        item = Item(collection_id=collection.id, description=i['description'], distribution=i['distribution'], note=i['note'], user_id=user_id, scientific_name=name, source_data=i, common_names='|'.join(i['common_names']))
+        session.add(item)
+        session.commit()
+
+        for syn in i['synonyms']:
+            item_syn = ItemSynonym(item_id=item.id, name=syn['usage_references_text'], ref=f"name_id:{i['name_id']}")
+            session.add(item_syn)
+
+        session.commit()
+
+    return collection
+
+
+def put_publication_by_taicol_namespace(user, namespace_id):
+    taicol_api = current_app.config['TAICOL_API']
+    email = user.email
+    resp = requests.get(f'{taicol_api}/user/namespace?email={email}')
+    result = {
+        'message': '',
+        'is_success': False
+    }
+    if resp.ok:
+        resp_json = resp.json()
+        available_namespaces = resp_json.get('namespaces', [])
+
+        if int(namespace_id) in available_namespaces:
+            if pub := Publication.query.join(Collection).filter(
+                Collection.user_id==user.id,
+                Collection.source_id==namespace_id,
+                Collection.source_name=='taicol:namespace').scalar(): # exist: do nothing
+                current_app.logger.info(f'publication [{pub.id}] already exist')
+                result['message'] = 'publication already exists'
+                # TODO: sync literatures, groups (Item)
+
+            else: # create new pub
+                pub = Publication(title='', author=user.username)
+                session.add(pub)
+                session.commit()
+
+                c = create_collection_by_taicol_namespace(user.id, namespace_id)
+                pub.title = c.name
+                c.publication_id = pub.id
+
+                for i in c.source_data['literatures']:
+                    pl = PublicationLiterature(publication_id=pub.id, source_id=i['reference_id'], name=i['citation'])
+                    session.add(pl)
+
+                session.commit()
+                result['is_success'] = True
+                return result
+        else:
+            result['message'] = 'namespace not available'
+
+    return result
+
+

@@ -47,11 +47,13 @@ logger.addHandler(console_handler)
 
 def apply_blueprints(app):
     from app.blueprints.main import bp as main_bp
+    from app.blueprints.publication import bp as publication_bp
     from app.blueprints.api import bp as api_bp
     from app.blueprints.auth import bp as auth_bp
     app.register_blueprint(main_bp, url_prefix='/')
     app.register_blueprint(api_bp, url_prefix='/api/v1')
     app.register_blueprint(auth_bp, url_prefix='/auth')
+    app.register_blueprint(publication_bp, url_prefix='/publications')
 
 def apply_extensions(app):
     # babel

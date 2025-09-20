@@ -1,6 +1,7 @@
 import json
 import re
 from datetime import datetime
+from io import BytesIO
 
 from flask import (
     Blueprint,
@@ -39,6 +40,7 @@ from app.database import session
 from app.helpers import (
     put_publication_by_taicol_namespace,
     format_specimen_display,
+    generate_docx,
 )
 
 bp = Blueprint('publication', __name__)
@@ -237,3 +239,53 @@ def modify_specimen_text(item_id):
             return jsonify({'is_success': True})
 
     return jsonify({'is_success': False})
+
+
+@bp.route('/<int:item_id>/publish/post', methods=['POST', 'GET'])
+def post_publish(item_id):
+    if request.method == 'GET':
+        #payload  = request.json
+        pub = session.get(Publication, item_id)
+        #if payload.get('format', '') == 'docx':
+        fmt = request.args.get('format')
+        if fmt == 'docx':
+            data = {
+                'title': pub.title,
+                'author': pub.author,
+                'literatures': [],
+                'items': [],
+            }
+            for i in pub.literatures:
+                data['literatures'].append(i.name)
+
+            for i in pub.collections[0].items:
+                item = {
+                    'commonNames': i.common_names,
+                    'description': i.description,
+                    'distribution': i.distribution,
+                    'scientificName': i.scientific_name,
+                    'note': i.note,
+                    'synonyms': [],
+                    'specimens': [],
+                }
+                for s in i.synonyms:
+                    item['synonyms'].append(s.name)
+                for j in i.specimens:
+                    item['specimens'].append(j.text)
+                data['items'].append(item)
+
+            docx = generate_docx([data])
+            buf = BytesIO()
+            docx.save(buf)
+            buf.seek(0)
+            filename = f"output-biota-pub-{pub.id}.docx"
+            response = send_file(
+                buf,
+                as_attachment=True,
+                download_name=filename,
+                mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            )
+            response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
+            response.headers['filename'] = filename
+
+            return response

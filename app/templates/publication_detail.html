@@ -1156,6 +1156,24 @@
    });
 
    document.getElementById('save-specimens-btn').addEventListener('click', saveSelectedSpecimens);
+
+   /*
+   document.getElementById('download-btn').addEventListener('click', (e) => {
+     fetch(`${CURRENT_URL}/publish/post`,{
+       method: "POST",
+       headers: {
+         "Content-Type": "application/json",
+       },
+       body: JSON.stringify({
+         format: 'docx',
+       }),
+     })
+       .then(resp => resp.json())
+       .then(result => {
+         console.log(result);
+       });
+       });
+   */
  });
 </script>
 {% endblock %}

@@ -88,7 +88,7 @@ class BiotaPrint(object):
             p.add_run(x + '\n')
 
 
-def generate_docx(data):
+def generate_docx2(data):
 
     biota = BiotaPrint()
 
@@ -150,6 +150,64 @@ def generate_docx(data):
                         s = f'{s}:{y}'
                     sps.append(s)
                 biota.add_list(sps)
+
+            if x:= v['note']:
+                biota.add_content('NOTE', 'h3')
+                biota.add_content(x)
+
+    return biota.as_docx()
+
+def generate_docx(data):
+
+    biota = BiotaPrint()
+
+    # default section
+    biota.add_content('Biota Taiwanica', 'h3')
+    biota.add_content(f'generated: {datetime.now()}')
+    biota.doc.add_page_break()
+
+    for idx, d in enumerate(data):
+        section = biota.create_column_section(1)
+        biota.add_content(d['title'], 'h2', 'center')
+        biota.add_content(d['author'], 'h3', 'center')
+        biota.add_content('LITERATURE', 'h3')
+        biota.add_list(d['literatures'])
+
+        section = biota.create_column_section(2)
+        for i, v in enumerate(d['items']):
+            #print(i, v)
+            s = f"{int(i+1)}. {v['scientificName']}"
+            if len(v['commonNames']):
+                s += ', '.join(v['commonNames'])
+            biota.add_content(s)
+
+            biota.add_content('SYNONYMS', 'h3')
+            syns = []
+            for x in v['synonyms']:
+                syns.append(x)
+            biota.add_list(syns)
+
+            '''
+            if len(v['synonyms']):
+                p_synonyms = doc.add_paragraph()
+                for j in v['synonyms']:
+                    r1 = p_synonyms.add_run(j[0])
+                    r1.italic = True
+                    if j[1]:
+                        p_synonyms.add_run(f' {j[1]}')
+
+            '''
+            if x := v.get('description'):
+                biota.add_content('DESCRIPTION', 'h3')
+                biota.add_content(x)
+
+            if x:= v.get('distribution'):
+                biota.add_content('DISTRIBUTION', 'h3')
+                biota.add_content(x)
+
+            if len(v['specimens']):
+                biota.add_content('SPECIMENS', 'h3')
+                biota.add_list(v['specimens'])
 
             if x:= v['note']:
                 biota.add_content('NOTE', 'h3')

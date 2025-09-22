@@ -78,7 +78,7 @@ def detail_view(item_id):
             specimens.append(data)
 
         fetched = []
-        if len(i.fetched_specimen_data) > 0:
+        if i.fetched_specimen_data and len(i.fetched_specimen_data) > 0:
             fetched = i.fetched_specimen_data[0]['data']
 
         item_data.append({

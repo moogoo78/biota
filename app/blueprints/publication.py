@@ -66,6 +66,10 @@ def list_view():
 @login_required
 def detail_view(item_id):
     publication = session.get(Publication, item_id)
+
+    if current_user.id not in publication.get_user_id():
+        return abort(401)
+
     API_URL=current_app.config['API_URL']
     item_data = []
     for i in publication.collections[0].items:

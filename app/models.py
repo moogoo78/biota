@@ -93,6 +93,10 @@ class Publication(Base, TimestampMixin):
     literatures: Mapped[List['PublicationLiterature']] = relationship(back_populates='publication')
     collections: Mapped[List['Collection']] = relationship(back_populates='publication')
 
+    def get_user_id(self):
+        return [x.user_id for x in self.collections]
+
+
 class PublicationLiterature(Base, TimestampMixin, SourceMixin):
     # TaiCOL ref
     __tablename__ = 'publication_literature'

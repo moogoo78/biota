@@ -732,12 +732,13 @@ def put_publication_by_taicol_namespace(user, namespace_id):
                 # TODO: sync literatures, groups (Item)
 
             else: # create new pub
-                pub = Publication(title='', author=user.username)
+                pub = Publication(title='', author='')
                 session.add(pub)
                 session.commit()
 
                 c = create_collection_by_taicol_namespace(user.id, namespace_id)
                 pub.title = c.name
+                pub.author = c.source_data.get('author')
                 c.publication_id = pub.id
 
                 for i in c.source_data['literatures']:
@@ -758,4 +759,4 @@ def format_specimen_display(data):
     recorded_by = data.get('recordedBy', '--')
     locality = data.get('locality', '--')
     dataset_name = data.get('datasetName', '--') # institudion ID ?
-    return f'{locality}, {recorded_by} {record_number} ({dataset_name})'
+    return f'{locality}, {recorded_by} {record_number} ({dataset_name})' #TODO code:

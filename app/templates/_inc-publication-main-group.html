@@ -72,7 +72,7 @@
           </td>
           <td class="px-6 py-4">
             <div class="specimen-count text-sm text-gray-600">
-              <span class="count">{% if publication.status == "fetched" %}{{ i.fetched_specimen_data[0]['data']|length }}{% else %}0{% endif %}</span>{# specimens found#}
+              <span class="count">{% if publication.status == "fetched" and i.fetched_specimen_data and i.fetched_specimen_data|length > 0 %}{{ i.fetched_specimen_data[0]['data']|length }}{% else %}0{% endif %}</span>{# specimens found#}
             </div>
           </td>
           <td class="px-6 py-4">

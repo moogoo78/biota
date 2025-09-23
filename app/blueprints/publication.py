@@ -282,7 +282,7 @@ def post_publish(item_id):
             buf = BytesIO()
             docx.save(buf)
             buf.seek(0)
-            filename = f"output-biota-pub-{pub.id}.docx"
+            filename = f"output-biota-pub-{pub.title}.docx"
             response = send_file(
                 buf,
                 as_attachment=True,

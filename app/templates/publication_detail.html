@@ -156,7 +156,7 @@
 </main>
 
 <!-- Specimen Selection Modal -->
-<div id="specimen-modal" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+<div id="specimen-modal" data-modal-backdrop="static" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
     <div class="relative p-4 w-full max-w-8xl max-h-full">
         <!-- Modal content -->
         <div class="relative bg-white rounded-lg shadow-sm dark:bg-gray-700">
@@ -254,7 +254,7 @@
 </div>
 
 <!-- Specimen2 Selection Modal -->
-<div id="specimen2-modal" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+<div id="specimen2-modal" data-modal-backdrop="static" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
     <div class="relative p-4 w-full max-w-4xl max-h-full">
         <!-- Modal content -->
         <div class="relative bg-white rounded-lg shadow-sm dark:bg-gray-700">
@@ -803,7 +803,7 @@
          box.textContent = x[1];
          box.onclick = handleSpecimenEdit;
          const del = document.createElement('span');
-         del.textContent = ( idx < county.data.length - 1) ? ',' : '.';
+         del.textContent = ( idx < county.data.length - 1) ? ';' : '.';
          countySpan.appendChild(box);
          countySpan.appendChild(del);
        });

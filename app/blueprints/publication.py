@@ -80,6 +80,12 @@ def detail_view(item_id):
             data = x.source_data
             data['_id'] = x.id
             data['_text'] = x.text
+            data['_recorded_by'] = x.recorded_by
+            data['_record_number'] = x.record_number
+            data['_locality'] = x.locality
+            data['_catalog_number'] = x.catalog_number
+            data['_county'] = x.county
+            data['_institution_code'] = x.institution_code
             specimens.append(data)
 
         fetched = []
@@ -233,7 +239,18 @@ def patch_item_specimen(publication_id, item_id):
                 if _id in exist:
                     exist[_id].text = text
                 else:
-                    s = ItemSpecimen(item_id=item_id, source_data=d, source_name=_id, text=text)
+                    s = ItemSpecimen(
+                        item_id=item_id,
+                        source_data=d,
+                        source_name=_id,
+                        text=text,
+                        recorded_by=d.get('recordedBy', ''),
+                        locality=d.get('locality', ''),
+                        record_number=d.get('recordNumber', ''),
+                        catalog_number=d.get('catalogNumber', ''),
+                        institution_code=d.get('datasetName'), # TODO
+                        county=d.get('county', ''),
+                    )
                     session.add(s)
 
         session.commit()
@@ -247,14 +264,20 @@ def patch_item_specimen(publication_id, item_id):
         return jsonify({'message': 'success'})
 
 @login_required
-@bp.route('/<int:item_id>/modify-specimen/post', methods=['POST'])
+@bp.route('/<int:item_id>/modify-specimen/patch', methods=['POST'])
 def modify_specimen_text(item_id):
     if payload := request.json:
         print(payload)
-        content = payload.get('content', '')
         if spid := payload.get('spid', ''):
             if sp := session.get(ItemSpecimen, spid):
-                sp.text = content
+                sp.text = payload.get('content', '')
+                sp.record_number = payload.get('recordNumber', '')
+                sp.recorded_by = payload.get('recordedBy', '')
+                sp.catalog_number = payload.get('catalogNumber', '')
+                sp.institution_code = payload.get('institutionCode', '')
+                sp.locality = payload.get('locality', '')
+                sp.county = payload.get('county', '')
+
                 session.commit()
                 #flash('edit specimen format')
             return jsonify({'is_success': True})

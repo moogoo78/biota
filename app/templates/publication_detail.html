@@ -274,31 +274,46 @@
             <div class="p-4 md:p-5">
               <p id="modify-specimen-wrapper"></p>
               <hr class="my-4"/>
-              <form id="specimen-edit-form">
+              <form id="specimen-edit-form" class="hidden">
+                <input type="hidden" name="spid" value="" id="specimen-edit-spid"/>
+
+                <div class="relative overflow-x-auto">
+                  <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                    {#
+                    <caption class="p-5 text-lg font-semibold text-left rtl:text-right text-gray-900 bg-white dark:text-white dark:bg-gray-800">
+                      {{ _('修改標本') }}
+                      <p class="mt-1 text-sm font-normal text-gray-500 dark:text-gray-400">Browse a list of Flowbite products designed to help you work and play, stay organized, get answers, keep in touch, grow your business, and more.</p>
+                      #}
+                    </caption>
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                      <tr>
+                        <th scope="col" class="px-6 py-3">
+                          欄位
+                        </th>
+                        <th scope="col" class="px-6 py-3">
+                          原始資料
+                        </th>
+                        <th scope="col" class="px-6 py-3">
+                          編輯
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody id="specimen-edit-table-body">
+                    </tbody>
+                  </table>
+                </div>
+
                 <div>
                   <label for="specimen-content" class="block mb-2 text-lg font-medium text-gray-900 dark:text-white">{{ _('顯示') }}</label>
                   <textarea id="specimen-edit-content" name="content" rows="2" class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"></textarea>
                 </div>
-                <input type="hidden" name="spid" value="" id="specimen-edit-spid"/>
+
                 <div class="my-4">
                   <button type="submit" id="specimen-edit-submit" class="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">{{ _('儲存') }}</button>
                 </div>
+                
+                <img class="h-auto max-w-full" src="" alt="image description" id="specimen-edit-image">
 
-                <div class="flex flex-col md:flex-row gap-6">
-                  <div class="w-full md:w-1/2 bg-white p-6 rounded-lg shadow-md">
-                    <img class="h-auto max-w-full" src="" alt="image description" id="specimen-edit-image">
-                  </div>
-                  <div class="w-full md:w-1/2 bg-white p-6 rounded-lg shadow-md">
-                    <ul class="text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" id="specimen-edit-highlight">
-                      {#
-                      <li class="w-full px-4 py-2 border-b border-gray-200 rounded-t-lg dark:border-gray-600">Profile</li>
-                      <li class="w-full px-4 py-2 border-b border-gray-200 dark:border-gray-600">Settings</li>
-                      <li class="w-full px-4 py-2 border-b border-gray-200 dark:border-gray-600">Messages</li>
-                      <li class="w-full px-4 py-2 rounded-b-lg">Download</li>
-                      #}
-                    </ul>
-                  </div>
-                </div>
                 <h2 class="mb-2 text-lg font-semibold text-gray-900 dark:text-white">TBIA specimen Raw data:</h2>
                 <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 font-mono text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap overflow-auto max-h-96" id="specimen-raw"></div>
               </form>
@@ -412,8 +427,7 @@
      for (const [k, v] of formData.entries()) {
        payload[k] = v;
      }
-     console.log(payload);
-     fetch(`${CURRENT_URL}/modify-specimen/post`, {
+     fetch(`${CURRENT_URL}/modify-specimen/patch`, {
        method: "POST",
        headers: {
          "Content-Type": "application/json",
@@ -813,57 +827,89 @@
    }
 
    function handleSpecimenEdit(e) {
+     document.getElementById('specimen-edit-form').classList.remove('hidden');
      let textarea = document.getElementById('specimen-edit-content');
      const specimenEditLink = document.getElementById('specimen-edit-link');
      const specimenEditImage = document.getElementById('specimen-edit-image');
-     const specimenHighlight = document.getElementById('specimen-edit-highlight');
      const specimenSPID = document.getElementById('specimen-edit-spid');
-     console.log(e.target.textContent);
+     const tableBody = document.getElementById('specimen-edit-table-body');
      textarea.value = e.target.textContent;
      const spid = e.target.dataset.spid;
      specimenSPID.value = spid;
      let item = itemData[e.target.dataset.itemidx];
      const specimen = item.selected_specimens.find((sp) => String(sp._id) === String(spid));
+     //console.log(specimen);
      const specimenRaw = document.getElementById('specimen-raw');
      specimenRaw.innerHTML = `<pre><code>${JSON.stringify(specimen, null, 2)}</code></pre>`;
-     let highlightList = [];
-     if (specimen.recordNumber) {
-       highlightList.push(['採集者', specimen.recordedBy]);
-     }
-     if (specimen.recordNumber) {
-       highlightList.push(['採集號', specimen.recordNumber]);
-     }
-     if (specimen.catalogNumber) {
-       highlightList.push(['館號', specimen.catalogNumber]);
-     }
-     if (specimen.datasetName) {
-       highlightList.push(['資料集名稱', specimen.datasetName]);
-     }
-     if (specimen.locality) {
-       highlightList.push(['採集地點', specimen.locality]);
-     }
-     if (specimen.county) {
-       highlightList.push(['縣市', specimen.county]);
-     }
-     if (specimen.municipality) {
-       highlightList.push(['鄉鎮', specimen.municipality]);
-     }
-     specimenHighlight.innerHTML = '';
-     highlightList.forEach( (x, idx) => {
-       if (idx === 0) {
-         specimenHighlight.innerHTML += `<li class="w-full px-4 py-2 border-b border-gray-200 rounded-t-lg">${x[0]}: ${x[1]}</li>`;
-       } else {
-         specimenHighlight.innerHTML += `<li class="w-full px-4 py-2 border-b border-gray-200">${x[0]}: ${x[1]}</li>`;
-       }
-     });
-
-     if (specimen.references) {
-       specimenHighlight.innerHTML += `<li class="w-full px-4 py-2 rounded-b-lg"><a href="${specimen.references}" target="_blank" class="font-medium text-blue-600 hover:underline">link</a></li>`;
-     }
+     //console.log(specimen);
+     let coreFields = [
+         ['採集者', 'recordedBy', specimen._recorded_by],
+         ['採集號', 'recordNumber', specimen._record_number],
+         ['館號', 'catalogNumber', specimen._catalog_number],
+         ['資料集名稱(館代碼)', 'institutionCode', specimen._institution_code],
+         ['採集地點', 'locality', specimen._locality],
+         //['縣市', 'county', specimen.county]
+     ];
      if (specimen.associatedMedia) {
        specimenEditImage.src = specimen.associatedMedia;
      }
-   }
+
+     let tableString = '';
+     coreFields.forEach( (x) => {
+       tableString += `<tr class="bg-white dark:bg-gray-800 dark:border-gray-700 border-gray-200">
+                <th scope="row" class="px-4 py-1 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                   ${x[0]}
+                </th>
+                <td class="px-4 py-1">
+                  ${x[2] || ''}
+                </td>
+                <td class="px-4 py-1">
+                  <input value="${x[2] || ''}" id="specimen-edit-form-${x[1]}" type="text" name="${x[1]}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" />
+      </td></tr>`;
+     });
+     // count select
+     tableString += `<tr class="bg-white dark:bg-gray-800 dark:border-gray-700 border-gray-200">
+                <th scope="row" class="px-4 py-1 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                   縣市
+                </th>
+                <td class="px-4 py-1">
+                  ${specimen.county || ''}
+                </td>
+     <td class="px-4 py-1">`;
+
+     let optString = '';
+     COUNTY_ORDER.forEach( county => {
+       const foundEntry = Object.entries(COUNTY_MAP).find(([key, value]) => value.toUpperCase() === county);
+       const foundKey = foundEntry ? foundEntry[0] : undefined;
+
+       optString += `<option value="${county}">${foundKey}</option>`;
+     });
+     tableString += `<select name="county" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"><option value="">-- 選擇 --</option>${optString}</select></td></tr>`;
+     tableBody.innerHTML = tableString;
+
+     const inp1 = document.querySelector(`#specimen-edit-form-recordedBy`);
+     const inp2 = document.querySelector(`#specimen-edit-form-recordNumber`);
+     const inp3 = document.querySelector(`#specimen-edit-form-catalogNumber`);
+     const inp4 = document.querySelector(`#specimen-edit-form-institutionCode`);
+     const inp5 = document.querySelector(`#specimen-edit-form-locality`);
+
+     coreFields.forEach( (x) => {
+       const inputElement = document.querySelector(`#specimen-edit-form-${x[1]}`);
+
+       inputElement.addEventListener('input', (event) => {
+         let recorded_by = inp1.value || '';
+         let record_number = inp2.value || '';
+         let catalog_number = inp3.value || '';
+         let institution_code = inp4.value || '';
+         let locality = inp5.value || '';
+         if (catalog_number) {
+           textarea.value = `${locality}, ${recorded_by} ${record_number} (${institution_code}:${catalog_number})`;
+         } else {
+           textarea.value = `${locality}, ${recorded_by} ${record_number} (${institution_code})`;
+         }
+       });
+     });
+   } // end of handleEditSpecimen
 
    // Function to open specimen selection modal
    function openSpecimenModal(index) {

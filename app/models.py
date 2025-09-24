@@ -440,6 +440,12 @@ class ItemSpecimen(Base, SourceMixin):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     text: Mapped[Optional[str]] = mapped_column(String(500))
+    recorded_by: Mapped[Optional[str]] = mapped_column(String(500))
+    record_number: Mapped[Optional[str]] = mapped_column(String(500))
+    catalog_number: Mapped[Optional[str]] = mapped_column(String(500))
+    locality: Mapped[Optional[str]] = mapped_column(String(500))
+    county: Mapped[Optional[str]] = mapped_column(String(500))
+    institution_code: Mapped[Optional[str]] = mapped_column(String(500))
     named_area_id: Mapped[Optional[int]] = mapped_column(ForeignKey('named_area.id'))
     item_id: Mapped[int] = mapped_column(ForeignKey('item.id'))
     item: Mapped[Item] = relationship(back_populates='specimens')

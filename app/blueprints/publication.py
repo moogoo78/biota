@@ -49,6 +49,7 @@ bp = Blueprint('publication', __name__)
 @bp.route('/')
 @login_required
 def list_view():
+    # create publication
     if namespace_id := request.args.get('namespace_id'):
         res = put_publication_by_taicol_namespace(current_user, namespace_id)
 
@@ -145,6 +146,22 @@ def create_publication_literature(item_id):
         return jsonify({
             'status': 'success'
         })
+    return jsonify({
+        'status': 'fail'
+    })
+
+@bp.route('/<int:item_id>/literatures/patch', methods=['POST'])
+@login_required
+def patch_publication_literature(item_id):
+    if payload := request.json:
+        for k, v in payload.items():
+            if pl := session.get(PublicationLiterature, int(k)):
+                pl.sort = v
+        session.commit()
+        return jsonify({
+            'status': 'success'
+        })
+
     return jsonify({
         'status': 'fail'
     })

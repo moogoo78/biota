@@ -104,6 +104,7 @@ class PublicationLiterature(Base, TimestampMixin, SourceMixin):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(500))
     publication_id: Mapped[int] = mapped_column(ForeignKey('publication.id'))
+    sort: Mapped[Optional[int]] = mapped_column(Integer)
 
     publication: Mapped[Publication] = relationship(back_populates='literatures')
 

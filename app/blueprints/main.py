@@ -65,23 +65,6 @@ def nametool():
     return render_template('main.html')
 
 
-@bp.route('/literatures/patch')
-@login_required
-def patch_literatures():
-    #for k, v in request.form.items():
-    #    print(k, v)
-    #session.commit()
-    for k, v in request.args.items():
-        if 'literature_text_' in k:
-            lit_id = k.replace('literature_text_', '')
-            print(lit_id, v)
-            if lit := session.get(PublicationLiterature, lit_id):
-                lit.name = v
-    session.commit()
-    flash('update literature')
-    return jsonify({'status': 'success'})
-
-
 @bp.route('/client')
 def client():
     return render_template('client.html')

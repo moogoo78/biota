@@ -741,8 +741,8 @@ def put_publication_by_taicol_namespace(user, namespace_id):
                 pub.author = c.source_data.get('author')
                 c.publication_id = pub.id
 
-                for i in c.source_data['literatures']:
-                    pl = PublicationLiterature(publication_id=pub.id, source_id=i['reference_id'], name=i['citation'])
+                for i, v in enumerate(c.source_data['literatures']):
+                    pl = PublicationLiterature(publication_id=pub.id, source_id=i['reference_id'], name=i['citation'], sort=i+1)
                     session.add(pl)
 
                 session.commit()

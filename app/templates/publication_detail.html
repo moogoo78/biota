@@ -82,6 +82,9 @@
                   Citations
                 </th>
                 <th scope="col" class="px-6 py-3">
+                  {{ _('排序') }}
+                </th>
+                <th scope="col" class="px-6 py-3">
                   TaiCOL Name Tool
                 </th>
                 <th scope="col" class="px-6 py-3">
@@ -100,6 +103,9 @@
                 <th scope="row" class="px-6 py-4 font-medium text-gray-900 dark:text-white">
                   {{ i.name }}
                 </th>
+                <td class="px-6 py-4">
+                  <input  name="sort_{{ i.id }}" value="{{ i.sort or '' }}" type="number" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"  />
+                </td>
                 <td class="px-6 py-4">
                   <a href="https://nametool.taicol.tw/zh-tw/references/{{ i.source_id }}" class="literature-edit" data-litid="{{ i.id }}" target="_blank">
                     <button type="button" class="focus:outline-none text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800 collection-item">TaiCOL {{ _('編輯') }}</button>
@@ -120,6 +126,7 @@
           </table>
         </div>
       </div>
+      <button id="literature-save-button" type="button" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 my-4">{{ _('儲存') }}</button>
     </form>
 
     <div class="my-4">
@@ -1173,7 +1180,32 @@
          console.log(result);
        });
        });
-   */
+    */
+   const literatureSaveButton = document.getElementById('literature-save-button');
+   literatureSaveButton.onclick = (e) => {
+     e.preventDefault();
+     const form = document.getElementById('literature-form');
+     const formData = new FormData(form);
+     console.log(formData);
+     let payload = {};
+     for (const [key, value] of formData) {
+       //console.log(key, value);
+       let klist = key.split('_');
+       payload[klist[1]] = value;
+     }
+     fetch(`${CURRENT_URL}/literatures/patch`, {
+       method: "POST",
+       headers: {
+         "Content-Type": "application/json",
+       },
+       body: JSON.stringify(payload),
+     })
+       .then(resp => resp.json())
+       .then(result => {
+         console.log(result);
+         //document.location.href = CURRENT_URL;
+       });
+   };
  });
 </script>
 {% endblock %}

@@ -580,7 +580,7 @@
            resultsWrapper.innerHTML = '';
            data.records.data.forEach( x => {
              x.associatedMedia.forEach( y => {
-               photos = photos.concat(x.url);
+               photos = photos.concat(y.url);
              });
            });
            console.log(photos.length, 'results');

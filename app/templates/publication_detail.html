@@ -578,8 +578,10 @@
            let photos = [];
            let resultsWrapper = document.getElementById(`group-gallery-${index}`);
            resultsWrapper.innerHTML = '';
-           data.data[0].associatedMedia.forEach( x => {
-             photos = photos.concat(x.url);
+           data.records.data.forEach( x => {
+             x.associatedMedia.forEach( y => {
+               photos = photos.concat(x.url);
+             });
            });
            console.log(photos.length, 'results');
            photos.forEach( x => {

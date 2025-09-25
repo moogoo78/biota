@@ -175,6 +175,7 @@ def get_namespaces_data_api(namespace_ids):
 @bp.route('/api/external/names/<source>/<key>')
 def get_external_names_api(source, key):
     records = []
+
     if source == 'gbif':
         nlist = key.split(' ')
         cname = nlist[0]
@@ -592,7 +593,23 @@ def get_external_data_api(source, taxon_key):
             'records': records,
         })
 
-
+@bp.route('/api/external/images/<source>/<key>')
+def get_external_images_api(source, key):
+    if source == 'taieol':
+        headers = {
+            'host': 'data.taieol.tw',
+            'user-agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:128.0) Gecko/20100101 Firefox/128.0',
+            'accept': '*/*',
+        }
+        resp = requests.get(f"https://data.taieol.tw/api/v2/taieol_object/taxon_id/{key}?token={current_app.config['TAIEOL_TOKEN']}", headers=headers)
+        #print(resp)
+        data = resp.json()
+        #print(data)
+        return jsonify({
+            'status': 'success',
+            'total': len(data),
+            'records': data,
+        })
 @bp.route('/api/publish', methods=['POST'])
 def post_publish():
     if request.method == 'POST':

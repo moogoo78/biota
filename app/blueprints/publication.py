@@ -2,6 +2,7 @@ import json
 import re
 from datetime import datetime
 from io import BytesIO
+from urllib.parse import quote
 
 from flask import (
     Blueprint,
@@ -303,11 +304,12 @@ def post_publish(item_id):
                 data['literatures'].append(i.name)
 
             for i in pub.collections[0].items:
+                #print(i.source_data['usage_references_text'])
                 item = {
                     'commonNames': i.common_names,
                     'description': i.description,
                     'distribution': i.distribution,
-                    'scientificName': i.scientific_name,
+                    'scientificName': i.source_data.get('usage_references_text', '') if i.source_data else '',
                     'note': i.note,
                     'synonyms': [],
                     'specimens': [],
@@ -322,14 +324,14 @@ def post_publish(item_id):
             buf = BytesIO()
             docx.save(buf)
             buf.seek(0)
-            filename = f"output-biota-pub-{pub.title}.docx"
+            filename = quote(f"output-biota-pub-{pub.title}.docx")
             response = send_file(
                 buf,
                 as_attachment=True,
                 download_name=filename,
                 mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
             )
-            response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
+            response.headers['Content-Disposition'] = f"attachment; filename*=UTF-8''{filename}" # for unicode
             response.headers['filename'] = filename
 
             return response

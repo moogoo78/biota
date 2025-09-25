@@ -16,7 +16,7 @@
 
   {% if i.synonyms|length > 0%}
   <div class="mb-4">
-    <h5 class="font-semibold text-gray-900 dark:text-white mb-2">SYNONYMS</h5>
+    {#<h5 class="font-semibold text-gray-900 dark:text-white mb-2">SYNONYMS</h5>#}
     {% for syn in i.synonyms %}
     <p>{{ syn.name|safe }}</p>
     {% endfor %}

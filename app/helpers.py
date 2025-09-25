@@ -1,3 +1,4 @@
+import re
 import json
 from datetime import datetime
 
@@ -68,19 +69,42 @@ class BiotaPrint(object):
         section._sectPr.append(cols)
         return section
 
-    def add_content(self, title, size='text', align=''):
-        p = self.doc.add_paragraph()
+    def add_content(self, content, size='text', align='', italic=False, paragraph=None):
+
+        p = None
+        if paragraph:
+            p = paragraph
+        else:
+            p = self.doc.add_paragraph()
+
         if align == 'center':
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
 
-        run = p.add_run(title)
+        run = p.add_run(content)
         if 'h' in size:
             run.bold = True
 
+        if italic:
+            run.italic = True
+
         if size == 'h2':
-            run.font.size = Pt(14)
-        elif size == 'h3':
             run.font.size = Pt(12)
+        elif size == 'h3':
+            run.font.size = Pt(11)
+
+    def add_content_with_i(self, content, size='text', align=''):
+        p = self.doc.add_paragraph()
+        i_pattern = r"<i>(.*?)</i>"
+        matches = re.findall(i_pattern, content)
+        #print(content, matches) # TODO
+        for m in matches:
+            s = content.split(f'<i>{m}</i>')
+            #print(m, s)
+            if s[0]:
+                self.add_content(s[0], paragraph=p, size=size)
+            self.add_content(m, italic=True, paragraph=p, size=size)
+            if s[1]:
+                self.add_content(s[1], paragraph=p, size=size)
 
     def add_list(self, data):
         p = self.doc.add_paragraph()
@@ -174,29 +198,26 @@ def generate_docx(data):
         biota.add_list(d['literatures'])
 
         section = biota.create_column_section(2)
+
         for i, v in enumerate(d['items']):
-            #print(i, v)
-            s = f"{int(i+1)}. {v['scientificName']}"
-            if len(v['commonNames']):
-                s += ', '.join(v['commonNames'])
-            biota.add_content(s)
+            name_list = v['scientificName'].split('</i>')
+            scname = name_list[0].replace('<i>', '')
+            #if len(v['commonNames']):
+            #    s += ', '.join(v['commonNames'])
+            #biota.add_content(s)
+            #p = biota.doc.add_paragraph()
+            #p.add_run(f"{int(i+1)}. ")
+            #it = p.add_run(scname)
+            #it.italic = True
+            #p.add_run(name_list[1])
+            title = f"{int(i+1)}. {v['scientificName']}"
+            biota.add_content_with_i(title, size='h3')
 
-            biota.add_content('SYNONYMS', 'h3')
-            syns = []
+            #biota.add_content('SYNONYMS', 'h3')
             for x in v['synonyms']:
-                syns.append(x)
-            biota.add_list(syns)
+                biota.add_content_with_i(x)
 
-            '''
-            if len(v['synonyms']):
-                p_synonyms = doc.add_paragraph()
-                for j in v['synonyms']:
-                    r1 = p_synonyms.add_run(j[0])
-                    r1.italic = True
-                    if j[1]:
-                        p_synonyms.add_run(f' {j[1]}')
 
-            '''
             if x := v.get('description'):
                 biota.add_content('DESCRIPTION', 'h3')
                 biota.add_content(x)
@@ -742,7 +763,7 @@ def put_publication_by_taicol_namespace(user, namespace_id):
                 c.publication_id = pub.id
 
                 for i, v in enumerate(c.source_data['literatures']):
-                    pl = PublicationLiterature(publication_id=pub.id, source_id=i['reference_id'], name=i['citation'], sort=i+1)
+                    pl = PublicationLiterature(publication_id=pub.id, source_id=v['reference_id'], name=v['citation'], sort=i+1)
                     session.add(pl)
 
                 session.commit()

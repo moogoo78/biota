@@ -16,6 +16,7 @@ class Config(object):
     API_URL = os.getenv('API_URL')
     TAICOL_TOKEN = os.getenv('TAICOL_TOKEN')
     TAICOL_API = os.getenv('TAICOL_API')
+    TAIEOL_TOKEN = os.getenv('TAIEOL_TOKEN')
 
     AWS_SES_SOURCE = os.getenv('AWS_SES_SOURCE')
     AWS_SES_REGION_NAME = os.getenv('AWS_SES_REGION_NAME')

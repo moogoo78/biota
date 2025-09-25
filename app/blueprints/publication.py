@@ -238,7 +238,8 @@ def patch_item_specimen(publication_id, item_id):
                 selected_ids.append(_id)
                 text = format_specimen_display(d)
                 if _id in exist:
-                    exist[_id].text = text
+                    #exist[_id].text = text
+                    pass
                 else:
                     s = ItemSpecimen(
                         item_id=item_id,

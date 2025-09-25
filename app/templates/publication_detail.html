@@ -574,11 +574,12 @@
        fetch(url)
          .then(resp => resp.json())
          .then(data => {
+           console.log('taieol: ', data);
            let photos = [];
            let resultsWrapper = document.getElementById(`group-gallery-${index}`);
            resultsWrapper.innerHTML = '';
-           data.results.forEach( x => {
-             photos = photos.concat(x.observation_photos);
+           data.data[0].associatedMedia.forEach( x => {
+             photos = photos.concat(x.url);
            });
            console.log(photos.length, 'results');
            photos.forEach( x => {

@@ -149,6 +149,13 @@ def create_publication_literature(item_id):
         pl = PublicationLiterature(publication_id=item_id, source_id=source_id, name=name)
         session.add(pl)
         session.commit()
+
+        # re-sort literatures
+        pl_all = PublicationLiterature.query.filter(PublicationLiterature.publication_id==item_id).order_by(PublicationLiterature.name).all()
+        for i, v in enumerate(pl_all):
+            v.sort = i+1
+
+        session.commit()
         flash('新增文獻')
         return jsonify({
             'status': 'success'

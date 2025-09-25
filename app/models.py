@@ -90,7 +90,7 @@ class Publication(Base, TimestampMixin):
     title: Mapped[str] = mapped_column(String(500))
     author: Mapped[str] = mapped_column(String(500))
     status: Mapped[str] = mapped_column(String(500), default='init') # init, fetched, fetchedSpecimen
-    literatures: Mapped[List['PublicationLiterature']] = relationship(back_populates='publication')
+    literatures: Mapped[List['PublicationLiterature']] = relationship(back_populates='publication', order_by='PublicationLiterature.name')
     collections: Mapped[List['Collection']] = relationship(back_populates='publication')
 
     def get_user_id(self):
@@ -118,7 +118,7 @@ class Collection(Base, SourceMixin):
     publication_id: Mapped[Optional[int]] = mapped_column(ForeignKey('publication.id'))
 
     publication: Mapped[Publication] = relationship(back_populates='collections')
-    items: Mapped[List['Item']] = relationship(back_populates='collection')
+    items: Mapped[List['Item']] = relationship(back_populates='collection', order_by="Item.sort")
 
 
 class Item(Base, TimestampMixin, SourceMixin):
@@ -375,6 +375,7 @@ class Item(Base, TimestampMixin, SourceMixin):
     description: Mapped[Optional[str]] = mapped_column(Text)
     distribution: Mapped[Optional[str]] = mapped_column(Text)
     note: Mapped[Optional[str]] = mapped_column(Text)
+    sort: Mapped[Optional[int]] = mapped_column(Integer)
 
     user_id: Mapped[int] = mapped_column(ForeignKey('user.id'))
     collection_id: Mapped[int] = mapped_column(ForeignKey('collection.id'))

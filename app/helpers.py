@@ -716,9 +716,21 @@ def create_collection_by_taicol_namespace(user_id, namespace_id):
     session.add(collection)
     session.commit()
 
+    counter = 0
     for i in data['group']:
+        counter += 1
         name = i['name'].replace('<i>', '').replace('</i>', '')
-        item = Item(collection_id=collection.id, description=i['description'], distribution=i['distribution'], note=i['note'], user_id=user_id, scientific_name=name, source_data=i, common_names='|'.join(i['common_names']))
+        item = Item(
+            collection_id=collection.id,
+            description=i['description'],
+            distribution=i['distribution'],
+            note=i['note'],
+            user_id=user_id,
+            scientific_name=name,
+            source_data=i,
+            common_names='|'.join(i['common_names']),
+            sort=counter
+        )
         session.add(item)
         session.commit()
 

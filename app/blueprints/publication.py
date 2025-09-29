@@ -279,11 +279,11 @@ def modify_specimen_text(item_id):
         print(payload)
         if spid := payload.get('spid', ''):
             if sp := session.get(ItemSpecimen, spid):
-                sp.text = payload.get('content', '')
-                sp.record_number = payload.get('recordNumber', '')
-                sp.recorded_by = payload.get('recordedBy', '')
-                sp.catalog_number = payload.get('catalogNumber', '')
-                sp.institution_code = payload.get('institutionCode', '')
+                sp.text = payload.get('text', '')
+                sp.record_number = payload.get('record_number', '')
+                sp.recorded_by = payload.get('recorded_by', '')
+                sp.catalog_number = payload.get('catalog_number', '')
+                sp.institution_code = payload.get('institution_code', '')
                 sp.locality = payload.get('locality', '')
                 sp.county = payload.get('county', '')
 

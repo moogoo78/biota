@@ -46,6 +46,7 @@
   {% endfor %}
   {% endif %}
   {% endwith %}
+
   <div id="main-content-sync" class="main-content-panel">
     <button type="button" class="focus:outline-none text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800">Sync</button>
     <div>Latest: <span id="main-sync-datetime"></span></div>
@@ -258,74 +259,6 @@
     </div>
 </div>
 
-<!-- Specimen2 Selection Modal -->
-<div id="specimen2-modal" data-modal-backdrop="static" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
-    <div class="relative p-4 w-full max-w-4xl max-h-full">
-        <!-- Modal content -->
-        <div class="relative bg-white rounded-lg shadow-sm dark:bg-gray-700">
-            <!-- Modal header -->
-            <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600 border-gray-200">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-                  Modified Specimens for <span id="modal-species-name2" class="italic"></span>
-                </h3>
-                <button type="button" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white" data-modal-toggle="specimen2-modal">
-                    <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
-                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
-                    </svg>
-                    <span class="sr-only">Close modal</span>
-                </button>
-            </div>
-            <!-- Modal body -->
-            <div class="p-4 md:p-5">
-              <p id="modify-specimen-wrapper"></p>
-              <hr class="my-4"/>
-              <form id="specimen-edit-form" class="hidden">
-                <input type="hidden" name="spid" value="" id="specimen-edit-spid"/>
-
-                <div class="relative overflow-x-auto">
-                  <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
-                    {#
-                    <caption class="p-5 text-lg font-semibold text-left rtl:text-right text-gray-900 bg-white dark:text-white dark:bg-gray-800">
-                      {{ _('修改標本') }}
-                      <p class="mt-1 text-sm font-normal text-gray-500 dark:text-gray-400">Browse a list of Flowbite products designed to help you work and play, stay organized, get answers, keep in touch, grow your business, and more.</p>
-                      #}
-                    </caption>
-                    <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                      <tr>
-                        <th scope="col" class="px-6 py-3">
-                          欄位
-                        </th>
-                        <th scope="col" class="px-6 py-3">
-                          原始資料
-                        </th>
-                        <th scope="col" class="px-6 py-3">
-                          編輯
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody id="specimen-edit-table-body">
-                    </tbody>
-                  </table>
-                </div>
-
-                <div>
-                  <label for="specimen-content" class="block mb-2 text-lg font-medium text-gray-900 dark:text-white">{{ _('顯示') }}</label>
-                  <textarea id="specimen-edit-content" name="content" rows="2" class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"></textarea>
-                </div>
-
-                <div class="my-4">
-                  <button type="submit" id="specimen-edit-submit" class="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">{{ _('儲存') }}</button>
-                </div>
-                
-                <img class="h-auto max-w-full" src="" alt="image description" id="specimen-edit-image">
-
-                <h2 class="mb-2 text-lg font-semibold text-gray-900 dark:text-white">TBIA specimen Raw data:</h2>
-                <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 font-mono text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap overflow-auto max-h-96" id="specimen-raw"></div>
-              </form>
-            </div>
-        </div>
-    </div>
-</div>
 
 <!-- Image Modal -->
 <div id="image-modal" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full bg-black bg-opacity-50">
@@ -355,6 +288,166 @@
     </div>
 </div>
 
+<!-- Specimen Quick Edit Modal -->
+<div id="specimen-edit-modal" data-modal-backdrop="static" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+  <div class="relative p-4 w-full max-w-8xl max-h-full">
+    <!-- Modal content -->
+    <div class="relative bg-white rounded-lg shadow-sm dark:bg-gray-700">
+      <!-- Modal header -->
+      <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600 border-gray-200">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+          {{ _('編輯標本資訊') }}
+        </h3>
+        <button type="button" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white" data-modal-toggle="specimen-edit-modal">
+          <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+          </svg>
+          <span class="sr-only">Close modal</span>
+        </button>
+      </div>
+      <!-- Modal body -->
+      <div class="p-4 md:p-5">
+        <div class="flex flex-col md:flex-row gap-6">
+          <div class="w-full md:w-1/2 bg-white p-6 rounded-lg shadow-md">
+            <!-- The main viewport for the image -->
+            <div id="viewer" class="w-full h-[60vh] md:h-[70vh] bg-gray-800 border-4 border-gray-700 rounded-xl shadow-2xl overflow-hidden relative">
+              <div id="image-container" class="w-full h-full flex items-center justify-center">
+                <img id="image-display" src="" alt="Interactive image" class="max-w-full max-h-full object-contain">
+              </div>
+            </div>
+            <!-- Controls Section -->
+            <div class="flex items-center justify-center space-x-4 mt-6">
+              <!-- Zoom Controls -->
+              <div class="flex items-center bg-gray-200 rounded-lg p-1 shadow-md">
+                <button id="zoom-out" class="p-2 rounded-md hover:bg-gray-400 transition-colors duration-200" aria-label="Zoom out">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7" /></svg>
+                </button>
+                <button id="reset-zoom" class="p-2 rounded-md hover:bg-gray-400 transition-colors duration-200" aria-label="Reset zoom">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h5M20 20v-5h-5" /></svg>
+                </button>
+                <button id="zoom-in" class="p-2 rounded-md hover:bg-gray-400 transition-colors duration-200" aria-label="Zoom in">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3h-6" /></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="w-full md:w-1/2 bg-white p-6 rounded-lg shadow-md">
+            {# nav #}
+            <div class="flex flex-col items-center">
+              <!-- Help text -->
+              <span class="text-sm text-gray-700 dark:text-gray-400">
+                <span class="font-semibold text-gray-900 dark:text-white" id="specimen-edit-nav-index"></span> / <span class="font-semibold text-gray-900 dark:text-white" id="specimen-edit-nav-length"></span> Selected Specimens
+              </span>
+              <div class="inline-flex mt-2 xs:mt-0">
+                <!-- Buttons -->
+                <button id="specimen-edit-nav-prev-btn" class="flex items-center justify-center px-3 h-8 text-sm font-medium text-white bg-gray-800 rounded-s hover:bg-gray-900 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">
+                  <svg class="w-3.5 h-3.5 me-2 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 10">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5H1m0 0 4 4M1 5l4-4"/>
+                  </svg>
+                  Prev
+                </button>
+                <button id="specimen-edit-nav-next-btn" class="flex items-center justify-center px-3 h-8 text-sm font-medium text-white bg-gray-800 border-0 border-s border-gray-700 rounded-e hover:bg-gray-900 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">
+                  Next
+                  <svg class="w-3.5 h-3.5 ms-2 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 10">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 5h12m0 0L9 1m4 4L9 9"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            {# table #}
+            <div class="relative overflow-x-auto py-4">
+              <form id="specimen-edit-form">
+                <input type="hidden" name="spid" value="" id="specimen-edit-spid"/>
+                <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                  <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                    <tr>
+                      <th scope="col" class="px-6 py-3 w-[80px]">
+                        {{ _('欄位') }}
+                      </th>
+                      <th scope="col" class="px-6 py-3 w-[300px]">
+                        {{ _('原始內容') }}
+                      </th>
+                      <th scope="col" class="px-6 py-3 w-[300px]">
+                        {{ _('自訂內容') }}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr class="bg-white dark:bg-gray-800 border-gray-200">
+                      <th scope="row" class="px-3 py-2 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                        {{ _('採集者') }}
+                      </th>
+                      <td class="px-3 py-2" id="specimen-edit-orig-recorded-by"></td>
+                      <td class="px-3 py-2">
+                        <input type="text" name="recorded_by" id="specimen-edit-custom-recorded-by" class="specimen-edit-input block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer" />
+                      </td>
+                    </tr>
+                    <tr class="bg-white dark:bg-gray-800 border-gray-200">
+                      <th scope="row" class="px-3 py-2 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                        {{ _('採集號') }}
+                      </th>
+                      <td class="px-3 py-2" id="specimen-edit-orig-record-number"></td>
+                      <td class="px-3 py-2">
+                        <input type="text" name="record_number" id="specimen-edit-custom-record-number" class="specimen-edit-input block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer" />
+                      </td>
+                    </tr>
+                    <tr class="bg-white dark:bg-gray-800 border-gray-200">
+                      <th scope="row" class="px-3 py-2 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                        {{ _('館號') }}
+                      </th>
+                      <td class="px-3 py-2" id="specimen-edit-orig-catalog-number"></td>
+                      <td class="px-3 py-2">
+                        <input type="text" name="catalog_number" id="specimen-edit-custom-catalog-number" class="specimen-edit-input block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer" />
+                      </td>
+                    </tr>
+                    <tr class="bg-white dark:bg-gray-800 border-gray-200">
+                      <th scope="row" class="px-3 py-2 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                        {{ _('資料集名稱(館代碼)') }}
+                      </th>
+                      <td class="px-3 py-2" id="specimen-edit-orig-institution-code"></td>
+                      <td class="px-3 py-2">
+                        <input type="text" name="institution_code" id="specimen-edit-custom-institution-code" class="specimen-edit-input block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer" />
+                      </td>
+                    </tr>
+                    <tr class="bg-white dark:bg-gray-800 border-gray-200">
+                      <th scope="row" class="px-3 py-2 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                        {{ _('採集地點') }}
+                      </th>
+                      <td class="px-3 py-2" id="specimen-edit-orig-locality"></td>
+                      <td class="px-3 py-2">
+                        <input type="text" name="locality" id="specimen-edit-custom-locality" class="specimen-edit-input block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer" />
+                      </td>
+                    </tr>
+                    <tr class="bg-white dark:bg-gray-800 border-gray-200">
+                      <th scope="row" class="px-3 py-2 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                        {{ _('縣市') }}
+                      </th>
+                      <td class="px-3 py-2" id="specimen-edit-orig-county"></td>
+                      <td class="px-3 py-2">
+                        <select name="county" id="specimen-edit-custom-county" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"></select>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </form>
+            </div>
+            <p class="text-gray-600 mb-1">{{ _('顯示') }}</p>
+            <div class="flex items-center bg-white p-4 rounded-lg shadow-md">
+              <p class="text-sm text-gray-600" id="specimen-edit-display"></p>
+              <button type="submit" id="specimen-edit-submit"  class="ml-auto text-white bg-blue-700 hover:bg-blue-800 font-medium rounded-lg text-sm px-5 py-2.5">
+                {{ _('儲存') }}
+              </button>
+            </div>
+            <details>
+              <summary>raw data</summary>
+              <div class="bg-gray-50 rounded-lg p-2 font-mono text-sm text-gray-800 whitespace-pre-wrap overflow-auto max-h-96"><pre><code id="specimen-edit-raw"></code></pre></div>
+            </details>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}
 
 {% block script %}
@@ -392,6 +485,9 @@
    const itemData = {{ item_data_json|safe }};
    const TAICOL_REF_API = 'https://nametool.taicol.tw/api/citations';
    const CURRENT_URL = "{{ url_for('publication.detail_view', item_id=publication.id ) }}";
+   let currentItemIndex = 0;
+   let currentSpecimenIndex = 0;
+
    //console.log(itemData[0].fetched_specimens);
    const literatureSelect = new TomSelect('#literatures-select',{
      valueField: 'reference_id',
@@ -451,6 +547,14 @@
        });
    };
 
+
+   function flashMessage(message) {
+     const tpl = document.getElementById('toast-success-template');
+     const msg = document.getElementById('toast-success-message');
+     tpl.classList.remove('hidden');
+     msg.textContent = message;
+     
+   }
    const specimenEditSubmit = document.getElementById('specimen-edit-submit');
    specimenEditSubmit.onclick = (e) => {
      e.preventDefault();
@@ -460,6 +564,8 @@
      for (const [k, v] of formData.entries()) {
        payload[k] = v;
      }
+     payload['text'] = document.getElementById('specimen-edit-display').textContent;
+     console.log(payload);
      fetch(`${CURRENT_URL}/modify-specimen/patch`, {
        method: "POST",
        headers: {
@@ -470,8 +576,13 @@
        .then(resp => resp.json())
        .then(result => {
          console.log(result);
-         document.location.href = `${CURRENT_URL}#groups`;
-         document.querySelector('[data-modal-toggle="specimen2-modal"]').click();
+         // update ItemData
+         for (const [k, v] of Object.entries(payload)) {
+           itemData[currentItemIndex].selected_specimens[currentSpecimenIndex][`_${k}`] = v;
+         }
+         //document.location.href = `${CURRENT_URL}#groups`;
+         //document.querySelector('[data-modal-toggle="specimen-edit-modal"]').click();
+         flashMessage('saved');
        });
    };
 
@@ -758,7 +869,7 @@
      const specimenCountDiv = row.querySelector('.specimen-count');
      const countSpan = row.querySelector('.count');
      const selectBtn = row.querySelector('.select-specimen-btn');
-     const select2Btn = row.querySelector('.select-specimen2-btn');
+     const specimenEditBtn = row.querySelector('.specimen-edit-btn');
 
      // Hide spinner
      spinner.classList.add('hidden');
@@ -790,7 +901,7 @@
          if (specimenCount > 0) {
            //selectBtn.classList.remove('hidden');
            selectBtn.onclick = () => openSpecimenModal(index);
-           select2Btn.onclick = () => openSpecimen2Modal(index);
+           specimenEditBtn.onclick = () => openSpecimenEditModal(index);
          }
          break;
        case 'error':
@@ -902,153 +1013,20 @@
        location.reload();
      };
    }
-   function openSpecimen2Modal(index) {
-     currentSpecimenIndex = index;
+   function openSpecimenEditModal(index) {
+     currentItemIndex = index;
+     currentSpecimenIndex = 0;
      const item = itemData[index];
-     document.getElementById('modal-species-name2').textContent = item.name;
-     const wrapper = document.getElementById('modify-specimen-wrapper');
-
-     let grouped = {};
-     let ordered = [];
-     itemData[index].selected_specimens.forEach( x => {
-       key = '';
-       if (x['county'] in COUNTY_MAP) {
-         key = COUNTY_MAP[x['county']].toUpperCase();
-       } else {
-         key = 'TBD';
-       }
-
-       if (Object.keys(grouped).indexOf(key) < 0) {
-         grouped[key] = [];
-       }
-       grouped[key].push([x['_id'], x['_text']])
-     });
-     COUNTY_ORDER.forEach( x => {
-       if (x in grouped) {
-         ordered.push({
-           label: x,
-           data: grouped[x]
-         });
-       }
-     });
-     if ('TBD' in grouped) {
-       ordered.push({
-         label: 'TBD',
-         data: grouped['TBD']
-       });
+     if (item.selected_specimens.length > 0 && item.selected_specimens[0].associatedMedia) {
+       imageDisplay.src = item.selected_specimens[0].associatedMedia;
      }
-     //console.log(grouped, ordered);
-     wrapper.innerHTML = '';
-     ordered.forEach( county => {
-       const countySpan = document.createElement('span');
-       const countyLabel = document.createElement('span');
-       countyLabel.textContent = `${county.label}: `;
-       countySpan.appendChild(countyLabel);
-       county.data.forEach( (x, idx) => {
-         const box = document.createElement('span');
-         box.classList.add('preview-specimen-box');
-         box.dataset.spid = x[0];
-         box.dataset.itemidx = index;
-         box.textContent = x[1];
-         box.onclick = handleSpecimenEdit;
-         const del = document.createElement('span');
-         del.textContent = ( idx < county.data.length - 1) ? ';' : '.';
-         countySpan.appendChild(box);
-         countySpan.appendChild(del);
-       });
-       wrapper.appendChild(countySpan);
-     });
+     refreshViewer(0);
 
    }
 
-   function handleSpecimenEdit(e) {
-     document.getElementById('specimen-edit-form').classList.remove('hidden');
-     let textarea = document.getElementById('specimen-edit-content');
-     const specimenEditLink = document.getElementById('specimen-edit-link');
-     const specimenEditImage = document.getElementById('specimen-edit-image');
-     const specimenSPID = document.getElementById('specimen-edit-spid');
-     const tableBody = document.getElementById('specimen-edit-table-body');
-     textarea.value = e.target.textContent;
-     const spid = e.target.dataset.spid;
-     specimenSPID.value = spid;
-     let item = itemData[e.target.dataset.itemidx];
-     const specimen = item.selected_specimens.find((sp) => String(sp._id) === String(spid));
-     //console.log(specimen);
-     const specimenRaw = document.getElementById('specimen-raw');
-     specimenRaw.innerHTML = `<pre><code>${JSON.stringify(specimen, null, 2)}</code></pre>`;
-     //console.log(specimen);
-     let coreFields = [
-         ['採集者', 'recordedBy', specimen._recorded_by],
-         ['採集號', 'recordNumber', specimen._record_number],
-         ['館號', 'catalogNumber', specimen._catalog_number],
-         ['資料集名稱(館代碼)', 'institutionCode', specimen._institution_code],
-         ['採集地點', 'locality', specimen._locality],
-         //['縣市', 'county', specimen.county]
-     ];
-     if (specimen.associatedMedia) {
-       specimenEditImage.src = specimen.associatedMedia;
-     }
-
-     let tableString = '';
-     coreFields.forEach( (x) => {
-       tableString += `<tr class="bg-white dark:bg-gray-800 dark:border-gray-700 border-gray-200">
-                <th scope="row" class="px-4 py-1 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                   ${x[0]}
-                </th>
-                <td class="px-4 py-1">
-                  ${x[2] || ''}
-                </td>
-                <td class="px-4 py-1">
-                  <input value="${x[2] || ''}" id="specimen-edit-form-${x[1]}" type="text" name="${x[1]}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" />
-      </td></tr>`;
-     });
-     // count select
-     tableString += `<tr class="bg-white dark:bg-gray-800 dark:border-gray-700 border-gray-200">
-                <th scope="row" class="px-4 py-1 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                   縣市
-                </th>
-                <td class="px-4 py-1">
-                  ${specimen.county || ''}
-                </td>
-     <td class="px-4 py-1">`;
-
-     let optString = '';
-     COUNTY_ORDER.forEach( county => {
-       const foundEntry = Object.entries(COUNTY_MAP).find(([key, value]) => value.toUpperCase() === county);
-       const foundKey = foundEntry ? foundEntry[0] : undefined;
-
-       optString += `<option value="${county}">${foundKey}</option>`;
-     });
-     tableString += `<select name="county" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"><option value="">-- 選擇 --</option>${optString}</select></td></tr>`;
-     tableBody.innerHTML = tableString;
-
-     const inp1 = document.querySelector(`#specimen-edit-form-recordedBy`);
-     const inp2 = document.querySelector(`#specimen-edit-form-recordNumber`);
-     const inp3 = document.querySelector(`#specimen-edit-form-catalogNumber`);
-     const inp4 = document.querySelector(`#specimen-edit-form-institutionCode`);
-     const inp5 = document.querySelector(`#specimen-edit-form-locality`);
-
-     coreFields.forEach( (x) => {
-       const inputElement = document.querySelector(`#specimen-edit-form-${x[1]}`);
-
-       inputElement.addEventListener('input', (event) => {
-         let recorded_by = inp1.value || '';
-         let record_number = inp2.value || '';
-         let catalog_number = inp3.value || '';
-         let institution_code = inp4.value || '';
-         let locality = inp5.value || '';
-         if (catalog_number) {
-           textarea.value = `${locality}, ${recorded_by} ${record_number} (${institution_code}:${catalog_number})`;
-         } else {
-           textarea.value = `${locality}, ${recorded_by} ${record_number} (${institution_code})`;
-         }
-       });
-     });
-   } // end of handleEditSpecimen
-
    // Function to open specimen selection modal
    function openSpecimenModal(index) {
-     currentSpecimenIndex = index;
+     currentItemIndex = index;
      const item = itemData[index];
      const fetched_specimens = itemData[index].fetched_specimens || [];
      let selectedIds = itemData[index].selected_specimens.map( x => x.id );
@@ -1259,7 +1237,7 @@
      if (selectedCheckboxes.length === 0) {
        summaryDiv.innerHTML = '<p>No specimens selected</p>';
      } else {
-       const specimens = itemData[currentSpecimenIndex].fetched_specimens;
+       const specimens = itemData[currentItemIndex].fetched_specimens;
        let summaryHTML = `<p><strong>${selectedCheckboxes.length} specimens selected:</strong></p><ul class="list-disc list-inside mt-2 space-y-1">`;
        
        selectedCheckboxes.forEach(checkbox => {
@@ -1304,7 +1282,7 @@
      //  return itemData[currentSpecimenIndex].fetched_specimens[x]['_id'];
      //});
      // Patch ItemSpecimen
-     fetch(`${CURRENT_URL}/items/${itemData[currentSpecimenIndex]['item_id']}/patch-specimens?selected=${selectedIndices.join(',')}`)
+     fetch(`${CURRENT_URL}/items/${itemData[currentItemIndex]['item_id']}/patch-specimens?selected=${selectedIndices.join(',')}`)
        .then(data => data.json())
        .then(result => {
          console.log(result);
@@ -1387,7 +1365,133 @@
          //document.location.href = CURRENT_URL;
        });
    };
- });
 
+   {% include "_inc_image_viewer.js" %}
+   const specimenEditModal = document.getElementById('specimen-edit-modal');
+   let btnNext = document.getElementById('btn-viewer-next');
+   let btnPrev = document.getElementById('btn-viewer-prev');
+   function isFormElement(element) {
+     const formTags = ['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON'];
+     return formTags.includes(element.tagName) ||
+            element.contentEditable === 'true' ||
+            element.isContentEditable;
+   }
+   const nextBtn = document.getElementById('specimen-edit-nav-next-btn');
+   nextBtn.onclick = (e) => {
+     if (currentSpecimenIndex < itemData[currentItemIndex].selected_specimens.length -1) {
+       currentSpecimenIndex += 1;
+       nextBtn.classList.remove('cursor-not-allowed');
+       refreshViewer(currentSpecimenIndex);
+     } else {
+       nextBtn.classList.add('cursor-not-allowed');
+     }
+   };
+   const prevBtn = document.getElementById('specimen-edit-nav-prev-btn');
+   prevBtn.onclick = (e) => {
+     if (currentSpecimenIndex > 0) {
+       currentSpecimenIndex -= 1;
+       prevBtn.classList.remove('cursor-not-allowed');
+       refreshViewer(currentSpecimenIndex);
+     } else {
+       prevBtn.classList.add('cursor-not-allowed');
+    }
+   };
+
+   function refreshViewer(idx) {
+     let spData = itemData[currentItemIndex].selected_specimens[idx]
+     //console.log(spData);
+     if (spData.associatedMedia) {
+       imageDisplay.src = spData.associatedMedia;
+     }
+     document.getElementById('specimen-edit-nav-index').textContent = idx + 1;
+     document.getElementById('specimen-edit-nav-length').textContent = itemData[currentItemIndex].selected_specimens.length;
+     document.getElementById('specimen-edit-spid').value = spData._id;
+     const origRecordedBy = document.getElementById('specimen-edit-orig-recorded-by');
+     const origRecordNumber = document.getElementById('specimen-edit-orig-record-number');
+     const origCatalogNumber = document.getElementById('specimen-edit-orig-catalog-number');
+     const origInstitutionCode = document.getElementById('specimen-edit-orig-institution-code');
+     const origLocality = document.getElementById('specimen-edit-orig-locality');
+     const origCounty = document.getElementById('specimen-edit-orig-county');
+     const customRecordedBy = document.getElementById('specimen-edit-custom-recorded-by');
+     const customRecordNumber = document.getElementById('specimen-edit-custom-record-number');
+     const customLocality = document.getElementById('specimen-edit-custom-locality');
+     const customInstitutionCode = document.getElementById('specimen-edit-custom-institution-code');
+     const customCatalogNumber = document.getElementById('specimen-edit-custom-catalog-number');
+     const customCounty = document.getElementById('specimen-edit-custom-county');
+     const displayInput = document.getElementById('specimen-edit-display');
+
+     origRecordedBy.textContent = spData.recordedBy;
+     origRecordNumber.textContent = spData.recordNumber;
+     origLocality.textContent = spData.locality;
+     origCatalogNumber.textContent = spData.catalogNumber;
+     origInstitutionCode.textContent = spData.institutionCode;
+     customRecordedBy.value = spData._recorded_by;
+     customRecordNumber.value = spData._record_number;
+     customLocality.value = spData._locality;
+     customCatalogNumber.value = spData._catalog_number;
+     customInstitutionCode.value = spData._institution_code;
+     COUNTY_ORDER.forEach( (county, idx) => {
+       const foundEntry = Object.entries(COUNTY_MAP).find(([key, value]) => value.toUpperCase() === county);
+       const foundKey = foundEntry ? foundEntry[0] : undefined;
+       if (spData._county === county) {
+         customCounty[idx] = new Option(foundKey, county, true, true);
+       } else {
+         customCounty[idx] = new Option(foundKey, county);
+       }
+     });
+     customCounty[COUNTY_ORDER.length] = new Option('不確定', 'TBD');
+
+     document.getElementById('specimen-edit-raw').innerHTML = JSON.stringify(spData, null, 2);
+     let inputList = document.querySelectorAll('.specimen-edit-input');
+
+     function updateDisplay() {
+       let recorded_by = customRecordedBy.value || '';
+       let record_number = customRecordNumber.value || '';
+       let catalog_number = customCatalogNumber.value || '';
+       let institution_code = customInstitutionCode.value || '';
+       let locality = customLocality.value || '';
+       if (catalog_number) {
+         displayInput.textContent = `${locality}, ${recorded_by} ${record_number} (${institution_code}:${catalog_number})`;
+       } else {
+         displayInput.textContent = `${locality}, ${recorded_by} ${record_number} (${institution_code})`;
+       }
+     }
+
+     inputList.forEach ( x => {
+       x.addEventListener('input', (event) => {
+         updateDisplay();
+       });
+     });
+     updateDisplay();
+   }
+
+   document.addEventListener('keydown', function(event) {
+     if (specimenEditModal.classList.contains("hidden")) {
+       return;
+     }
+     if (isFormElement(document.activeElement)) {
+       return; // Use default behavior for form elements
+     }
+     // Custom behavior for non-form elements
+     if (event.keyCode == 39) {
+       if (currentSpecimenIndex < itemData[currentItemIndex].selected_specimens.length -1) {
+         currentSpecimenIndex += 1;
+         nextBtn.classList.remove('cursor-not-allowed');
+         refreshViewer(currentSpecimenIndex);
+       } else {
+         nextBtn.classList.add('cursor-not-allowed');
+       }
+     }
+     else if (event.keyCode == 37) {
+       if (currentSpecimenIndex > 0) {
+         currentSpecimenIndex -= 1;
+         prevBtn.classList.remove('cursor-not-allowed');
+         refreshViewer(currentSpecimenIndex);
+       } else {
+         prevBtn.classList.add('cursor-not-allowed');
+       }
+     }
+   });
+ });
 </script>
 {% endblock %}

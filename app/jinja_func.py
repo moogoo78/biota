@@ -31,7 +31,7 @@ def pick_first(string, seperator='', lang='zh'):
     a = string.split(seperator)
     if len(a) > 1:
         if lang == 'zh':
-            other = '，'.join(a[1:])
+            other = '、'.join(a[1:])
             return f'{a[0]}（{other}）'
     elif len(a) == 1:
         return a[0]

@@ -29,6 +29,7 @@ from app.models import (
     ItemSynonym,
 )
 from app.database import session
+from app.jinja_func import pick_first
 
 class BiotaPrint(object):
     doc = None
@@ -79,6 +80,8 @@ class BiotaPrint(object):
 
         if align == 'center':
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        else:
+            p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
 
         run = p.add_run(content)
         if 'h' in size:
@@ -213,25 +216,28 @@ def generate_docx(data):
             title = f"{int(i+1)}. {v['scientificName']}"
             biota.add_content_with_i(title, size='h3')
 
+            if v['commonNames']:
+                x = pick_first(v['commonNames'], '|', 'zh')
+                biota.add_content(x)
             #biota.add_content('SYNONYMS', 'h3')
             for x in v['synonyms']:
                 biota.add_content_with_i(x)
 
 
             if x := v.get('description'):
-                biota.add_content('DESCRIPTION', 'h3')
+                #biota.add_content('DESCRIPTION', 'h3')
                 biota.add_content(x)
 
             if x:= v.get('distribution'):
-                biota.add_content('DISTRIBUTION', 'h3')
+                #biota.add_content('DISTRIBUTION', 'h3')
                 biota.add_content(x)
 
             if len(v['specimens']):
-                biota.add_content('SPECIMENS', 'h3')
+                #biota.add_content('SPECIMENS', 'h3')
                 biota.add_list(v['specimens'])
 
             if x:= v['note']:
-                biota.add_content('NOTE', 'h3')
+                #biota.add_content('NOTE', 'h3')
                 biota.add_content(x)
 
     return biota.as_docx()

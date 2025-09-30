@@ -118,7 +118,7 @@ class Collection(Base, SourceMixin):
     publication_id: Mapped[Optional[int]] = mapped_column(ForeignKey('publication.id'))
 
     publication: Mapped[Publication] = relationship(back_populates='collections')
-    items: Mapped[List['Item']] = relationship(back_populates='collection', order_by="Item.sort")
+    items: Mapped[List['Item']] = relationship(back_populates='collection', order_by='Item.sort')
 
 
 class Item(Base, TimestampMixin, SourceMixin):
@@ -381,7 +381,7 @@ class Item(Base, TimestampMixin, SourceMixin):
     collection_id: Mapped[int] = mapped_column(ForeignKey('collection.id'))
 
     synonyms: Mapped[List['ItemSynonym']] = relationship(back_populates='item')
-    specimens: Mapped[List['ItemSpecimen']] = relationship(back_populates='item')
+    specimens: Mapped[List['ItemSpecimen']] = relationship(back_populates='item', order_by='ItemSpecimen.sort')
     images: Mapped[List['ItemImage']] = relationship(back_populates='item')
     distributions: Mapped[List['ItemDistribution']] = relationship(back_populates='item')
 
@@ -397,14 +397,7 @@ class Item(Base, TimestampMixin, SourceMixin):
         grouped = {}
         for i in self.specimens:
             if i.text:
-                key = ''
-                if county := i.source_data.get('county'):
-                    key = county
-                    if county_en := self.COUNTY_MAP.get(key, ''):
-                        key = county_en.upper()
-                else:
-                    key = 'unsure'
-
+                key = i.county or 'TBD'
                 if key not in grouped:
                     grouped[key] = []
 
@@ -416,14 +409,17 @@ class Item(Base, TimestampMixin, SourceMixin):
         dist = []
         for i in self.specimens:
             d = []
-            if x:= i.source_data.get('stateProvince'):
-                d.append(x)
-            if x:= i.source_data.get('county'):
-                d.append(x)
-            if x:= i.source_data.get('municipality'):
-                d.append(x)
+            if i.source_data:
+              if x:= i.source_data.get('stateProvince'):
+                  d.append(x)
+              if x:= i.source_data.get('county'):
+                  d.append(x)
+              if x:= i.source_data.get('municipality'):
+                  d.append(x)
 
-            dist.append('|'.join(d))
+              dist.append('|'.join(d))
+            else:
+                pass
 
         return list(set(dist))
 
@@ -447,6 +443,7 @@ class ItemSpecimen(Base, SourceMixin):
     locality: Mapped[Optional[str]] = mapped_column(String(500))
     county: Mapped[Optional[str]] = mapped_column(String(500))
     institution_code: Mapped[Optional[str]] = mapped_column(String(500))
+    sort: Mapped[Optional[int]] = mapped_column(Integer)
     named_area_id: Mapped[Optional[int]] = mapped_column(ForeignKey('named_area.id'))
     item_id: Mapped[int] = mapped_column(ForeignKey('item.id'))
     item: Mapped[Item] = relationship(back_populates='specimens')

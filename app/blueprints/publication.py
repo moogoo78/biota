@@ -78,7 +78,12 @@ def detail_view(item_id):
         # 整理給前端
         specimens = []
         for x in i.specimens:
-            data = x.source_data
+            data = None
+            if x.source_data:
+                data = x.source_data
+            else:
+                data = {}
+
             data['_id'] = x.id
             data['_text'] = x.text
             data['_recorded_by'] = x.recorded_by
@@ -87,6 +92,7 @@ def detail_view(item_id):
             data['_catalog_number'] = x.catalog_number
             data['_county'] = x.county
             data['_institution_code'] = x.institution_code
+            data['_sort'] = x.sort
             specimens.append(data)
 
         fetched = []
@@ -237,8 +243,10 @@ def patch_item_specimen(publication_id, item_id):
             exist[s.source_name] = s
             exist_ids.append(s.source_name)
 
+        sort = 0
         selectedIndex = request.args.get('selected', '')
         for i in selectedIndex.split(','):
+            sort += 1
             if data := item.fetched_specimen_data:
                 d = data[0]['data'][int(i)]
                 _id = d['id']
@@ -253,6 +261,7 @@ def patch_item_specimen(publication_id, item_id):
                         source_data=d,
                         source_name=_id,
                         text=text,
+                        sort=sort,
                         recorded_by=d.get('recordedBy', ''),
                         locality=d.get('locality', ''),
                         record_number=d.get('recordNumber', ''),
@@ -273,10 +282,10 @@ def patch_item_specimen(publication_id, item_id):
         return jsonify({'message': 'success'})
 
 @login_required
-@bp.route('/<int:item_id>/modify-specimen/patch', methods=['POST'])
-def modify_specimen_text(item_id):
+@bp.route('/<int:publication_id>/modify-specimen/patch', methods=['POST'])
+def modify_specimen_text(publication_id):
     if payload := request.json:
-        print(payload)
+        #print(payload)
         if spid := payload.get('spid', ''):
             if sp := session.get(ItemSpecimen, spid):
                 sp.text = payload.get('text', '')
@@ -286,9 +295,28 @@ def modify_specimen_text(item_id):
                 sp.institution_code = payload.get('institution_code', '')
                 sp.locality = payload.get('locality', '')
                 sp.county = payload.get('county', '')
-
+                if sort := payload.get('sort'):
+                    sp.sort = sort
                 session.commit()
                 #flash('edit specimen format')
+            return jsonify({'is_success': True})
+        else:
+            if item_id := payload.get('item_id'):
+                sp = ItemSpecimen(item_id=item_id)
+                sp.text = payload.get('text', '')
+                sp.record_number = payload.get('record_number', '')
+                sp.recorded_by = payload.get('recorded_by', '')
+                sp.catalog_number = payload.get('catalog_number', '')
+                sp.institution_code = payload.get('institution_code', '')
+                sp.locality = payload.get('locality', '')
+                sp.county = payload.get('county', '')
+                if sort := payload.get('sort'):
+                    sp.sort = sort
+                else:
+                    if item := session.get(Item, item_id):
+                        sp.sort = len(item.specimens) + 1
+                session.add(sp)
+                session.commit()
             return jsonify({'is_success': True})
 
     return jsonify({'is_success': False})

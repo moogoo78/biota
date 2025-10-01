@@ -70,175 +70,137 @@ class BiotaPrint(object):
         section._sectPr.append(cols)
         return section
 
-    def add_content(self, content, size='text', align='', italic=False, paragraph=None):
+    def parse_styled_text(self, text):
 
-        p = None
-        if paragraph:
-            p = paragraph
-        else:
-            p = self.doc.add_paragraph()
+        result = []
+        text = text.replace('<br>', '\n\n')
+        parts = re.split(r'(</?i>)', text)
 
-        if align == 'center':
-            p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        else:
-            p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+        is_italic = False
+        for part in parts:
+            if part == '<i>':
+                is_italic = True
+            elif part == '</i>':
+                is_italic = False
+            elif part:  # Keep the text segment as-is
+                style = 'italic' if is_italic else 'normal'
+                result.append([part, style])
 
-        run = p.add_run(content)
-        if 'h' in size:
-            run.bold = True
+        return result
 
-        if italic:
-            run.italic = True
 
-        if size == 'h2':
-            run.font.size = Pt(12)
-        elif size == 'h3':
-            run.font.size = Pt(11)
+    def add_box(self, data, args={}):
 
-    def add_content_with_i(self, content, size='text', align=''):
+        is_list = False
+        if isinstance(data, list):
+            is_list = True
+
         p = self.doc.add_paragraph()
-        i_pattern = r"<i>(.*?)</i>"
-        matches = re.findall(i_pattern, content)
-        #print(content, matches) # TODO
-        for m in matches:
-            s = content.split(f'<i>{m}</i>')
-            #print(m, s)
-            if s[0]:
-                self.add_content(s[0], paragraph=p, size=size)
-            self.add_content(m, italic=True, paragraph=p, size=size)
-            if s[1]:
-                self.add_content(s[1], paragraph=p, size=size)
 
-    def add_list(self, data):
+        align = args.get('align', '')
+        styles = args.get('styles', [])
+        size = args.get('size', '')
+
+        if align == 'justify':
+            p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+        elif align == 'center':
+            p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+
+        runs = []
+
+        if is_list:
+            for x in data:
+                res = self.parse_styled_text(x)
+                runs += res
+            runs.append(['\n', 'normal'])
+
+        else:
+            res = self.parse_styled_text(data)
+            runs = res
+
+        for t in runs:
+            run = p.add_run(t[0])
+
+            if 'h' in size:
+                if 'bold' not in styles:
+                    styles.append('bold')
+
+            if 'italic' in styles or t[1] == 'italic':
+                run.italic = True
+
+            if 'bold' in styles:
+                run.bold = True
+
+            if size == 'h2':
+                run.font.size = Pt(12)
+            elif size == 'h3':
+                run.font.size = Pt(11)
+
+
+    def add_list(self, data, has_italic=False):
         p = self.doc.add_paragraph()
         for x in data:
-            p.add_run(x + '\n')
+            self.add_content(x + '\n', align='left', paragraph=p, has_italic=has_italic)
 
-
-def generate_docx2(data):
-
-    biota = BiotaPrint()
-
-    # default section
-    biota.add_content('Biota Taiwanica', 'h3')
-    biota.add_content(f'generated: {datetime.now()}')
-    biota.doc.add_page_break()
-
-    for idx, d in enumerate(data):
-        section = biota.create_column_section(1)
-        biota.add_content(d['title'], 'h2', 'center')
-        biota.add_content(d['author'], 'h3', 'center')
-        biota.add_content('LITERATURE', 'h3')
-        biota.add_list(d['literatures'])
-
-        section = biota.create_column_section(2)
-        for i, v in enumerate(d['items']):
-            #print(i, v)
-            s = f"{int(i+1)}. {v['scientificName']}"
-            if len(v['commonNames']):
-                s += ', '.join(v['commonNames'])
-            biota.add_content(s)
-
-            biota.add_content('SYNONYMS', 'h3')
-            syns = []
-            for x in v['synonyms']:
-                s = x[0]
-                if s[1]:
-                    s = f'{x[0]} [{x[1]}]'
-                syns.append(s)
-            biota.add_list(syns)
-
-            '''
-            if len(v['synonyms']):
-                p_synonyms = doc.add_paragraph()
-                for j in v['synonyms']:
-                    r1 = p_synonyms.add_run(j[0])
-                    r1.italic = True
-                    if j[1]:
-                        p_synonyms.add_run(f' {j[1]}')
-
-            '''
-            if x := v['addFields'].get('description'):
-                biota.add_content('DESCRIPTION', 'h3')
-                biota.add_content(x)
-
-            if x:= v['addFields'].get('distribution'):
-                biota.add_content('DISTRIBUTION', 'h3')
-                biota.add_content(x)
-
-            if len(v['specimens']):
-                biota.add_content('SPECIMENS', 'h3')
-                sps = []
-                for x in v['specimens']:
-                    s = ''
-                    if y := x.get('herbarium'):
-                        s = y
-                    if y := x.get('accession_number'):
-                        s = f'{s}:{y}'
-                    sps.append(s)
-                biota.add_list(sps)
-
-            if x:= v['note']:
-                biota.add_content('NOTE', 'h3')
-                biota.add_content(x)
-
-    return biota.as_docx()
 
 def generate_docx(data):
 
     biota = BiotaPrint()
 
     # default section
-    biota.add_content('Biota Taiwanica', 'h3')
-    biota.add_content(f'generated: {datetime.now()}')
+    biota.add_box('Biota Taiwanica', {'size':'h3'})
+    biota.add_box(f'generated: {datetime.now()}')
     biota.doc.add_page_break()
 
     for idx, d in enumerate(data):
         section = biota.create_column_section(1)
-        biota.add_content(d['title'], 'h2', 'center')
-        biota.add_content(d['author'], 'h3', 'center')
-        biota.add_content('LITERATURE', 'h3')
-        biota.add_list(d['literatures'])
+        biota.add_box(d['title'], {'size': 'h2', 'align': 'center'})
+        biota.add_box(d['author'], {'size': 'h3', 'align': 'center'})
+        biota.add_box('LITERATURE', {'size': 'h3'})
+        biota.add_box(d['literatures'])
+
+        #biota.add_content(['a <i>haha</i> b', 'foo<i>o</i>, and <i>oo</i>p'])
 
         section = biota.create_column_section(2)
 
         for i, v in enumerate(d['items']):
             name_list = v['scientificName'].split('</i>')
             scname = name_list[0].replace('<i>', '')
-            #if len(v['commonNames']):
-            #    s += ', '.join(v['commonNames'])
-            #biota.add_content(s)
-            #p = biota.doc.add_paragraph()
-            #p.add_run(f"{int(i+1)}. ")
-            #it = p.add_run(scname)
-            #it.italic = True
-            #p.add_run(name_list[1])
+
             title = f"{int(i+1)}. {v['scientificName']}"
-            biota.add_content_with_i(title, size='h3')
+            biota.add_box(title, {'size': 'h3'})
 
             if v['commonNames']:
                 x = pick_first(v['commonNames'], '|', 'zh')
-                biota.add_content(x)
+                biota.add_box(x)
+
             #biota.add_content('SYNONYMS', 'h3')
             for x in v['synonyms']:
-                biota.add_content_with_i(x)
-
+                biota.add_box(x)
 
             if x := v.get('description'):
                 #biota.add_content('DESCRIPTION', 'h3')
-                biota.add_content(x)
+                biota.add_box(x, {'align': 'justify'})
 
             if x:= v.get('distribution'):
                 #biota.add_content('DISTRIBUTION', 'h3')
-                biota.add_content(x)
+                biota.add_box(x, {'align': 'justify'})
 
             if len(v['specimens']):
                 #biota.add_content('SPECIMENS', 'h3')
-                biota.add_list(v['specimens'])
+                #    biota.add_box(v['specimens'])
+                s = ''
+                for dist, sp_list in v['specimens'].items():
+                    #s = dist
+                    sp_arr = [x[1] for x in sp_list]
+                    sp_str = ';'.join(sp_arr)
+                    s += f'{dist}: {sp_str}. '
+                biota.add_box(s)
 
             if x:= v['note']:
                 #biota.add_content('NOTE', 'h3')
-                biota.add_content(x)
+                biota.add_box(x, {'align': 'justify'})
 
     return biota.as_docx()
 

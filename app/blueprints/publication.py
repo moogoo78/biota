@@ -352,8 +352,9 @@ def post_publish(item_id):
                 }
                 for s in i.synonyms:
                     item['synonyms'].append(s.name)
-                for j in i.specimens:
-                    item['specimens'].append(j.text)
+                #for j in i.specimens:
+                #    item['specimens'].append(j.text)
+                item['specimens'] = i.get_grouped_specimens()
                 data['items'].append(item)
 
             docx = generate_docx([data])

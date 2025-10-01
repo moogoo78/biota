@@ -55,7 +55,7 @@ def list_view():
         res = put_publication_by_taicol_namespace(current_user, namespace_id)
 
         if res['is_success'] is True:
-            return redirect(url_for('publication.list_view'))
+            return redirect(url_for('publication.detail_view', item_id=res['publication_id']) + '?action=fetchAll#groups')
         else:
             return res['message']
     else:

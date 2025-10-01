@@ -263,6 +263,7 @@
    const sidebarItems = sidebarNav.querySelectorAll('.sidebar-item');
    const mainContentPanels = mainContent.querySelectorAll('.main-content-panel');
    const currentHash = window.location.hash;
+
    if (currentHash) {
      switchPanel(currentHash.substring(1));
    } else {
@@ -298,7 +299,7 @@
      e.preventDefault();
      const main = clickedSidebar.dataset.main;
      switchPanel(main);
-   }
+   };
 
      /*
    const saveMetaButton = document.getElementById('save-meta-btn');
@@ -535,7 +536,8 @@
        const result = await data.json();
        //console.log(result);
        // refresh, let backend data display
-       location.reload();
+       //location.reload();
+       location.href = CURRENT_URL;
      };
    }
    function openSpecimenEditModal(index) {
@@ -1106,4 +1108,11 @@
 
      document.getElementById('specimen-edit-raw').innerHTML = '';
    };
+
+   const urlParams = new URLSearchParams(window.location.search);
+   const action = urlParams.get('action');
+   if (action && action === 'fetchAll') {
+     //location.href = `${CURRENT_URL}#group`;
+     fetchAllTBIAData();
+   }
  });

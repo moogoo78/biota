@@ -748,6 +748,7 @@ def put_publication_by_taicol_namespace(user, namespace_id):
 
                 session.commit()
                 result['is_success'] = True
+                result['publication_id'] = pub.id
                 return result
         else:
             result['message'] = 'namespace not available'

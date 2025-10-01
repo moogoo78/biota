@@ -950,6 +950,7 @@
      const customCatalogNumber = document.getElementById('specimen-edit-custom-catalog-number');
      const customCounty = document.getElementById('specimen-edit-custom-county');
      const displayInput = document.getElementById('specimen-edit-display');
+     const toItemSelect = document.getElementById('specimen-edit-to-item');
 
      /*
      const chk = document.getElementById('specimen-edit-custom-chk');
@@ -983,6 +984,15 @@
        }
      });
      customCounty[COUNTY_ORDER.length+1] = new Option('縣市不明', 'TBD');
+
+     toItemSelect[0] = new Option('-- choose --', '');
+     let counter = 0;
+     itemData.forEach( x => {
+       if (x.rank_id == 34) {
+         counter += 1;
+         toItemSelect[counter] = new Option(`${counter}. ${x.name}`, x.item_id);
+       }
+     });
 
      document.getElementById('specimen-edit-raw').innerHTML = JSON.stringify(spData, null, 2);
 

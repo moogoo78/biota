@@ -297,10 +297,23 @@ def modify_specimen_text(publication_id):
                 sp.county = payload.get('county', '')
                 if sort := payload.get('sort'):
                     sp.sort = sort
+
+                if item_id := payload.get('to_item', ''):
+                    old_item_id = sp.item_id
+                    if item := session.get(Item, item_id):
+                        sp.item_id = item_id
+
+                        if not sp.changed_history:
+                            now = datetime.now().strftime('%y%m%d_%H%M%S')
+                            sp.changed_history = [[now, int(old_item_id), int(item_id)]]
+                    else:
+                        return jsonify({'is_success': False, 'message': 'no item_id'})
+
                 session.commit()
                 #flash('edit specimen format')
             return jsonify({'is_success': True})
         else:
+            ## new 
             if item_id := payload.get('item_id'):
                 sp = ItemSpecimen(item_id=item_id)
                 sp.text = payload.get('text', '')

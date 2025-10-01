@@ -446,6 +446,8 @@ class ItemSpecimen(Base, SourceMixin):
     sort: Mapped[Optional[int]] = mapped_column(Integer)
     named_area_id: Mapped[Optional[int]] = mapped_column(ForeignKey('named_area.id'))
     item_id: Mapped[int] = mapped_column(ForeignKey('item.id'))
+    changed_history: Mapped[Dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+
     item: Mapped[Item] = relationship(back_populates='specimens')
 
 class ItemImage(Base, SourceMixin):

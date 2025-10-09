@@ -355,6 +355,7 @@ def post_publish(item_id):
             for i in pub.collections[0].items:
                 #print(i.source_data['usage_references_text'])
                 item = {
+                    'rank_id': i.source_data.get('rank_id', '') if i.source_data else '',
                     'commonNames': i.common_names,
                     'description': i.description,
                     'distribution': i.distribution,

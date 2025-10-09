@@ -100,6 +100,7 @@ class BiotaPrint(object):
         align = args.get('align', '')
         styles = args.get('styles', [])
         size = args.get('size', '')
+        custom = args.get('custom', '')
 
         if align == 'justify':
             p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
@@ -113,7 +114,7 @@ class BiotaPrint(object):
             for x in data:
                 res = self.parse_styled_text(x)
                 runs += res
-            runs.append(['\n', 'normal'])
+                runs.append(['\n', 'normal'])
 
         else:
             res = self.parse_styled_text(data)
@@ -126,8 +127,17 @@ class BiotaPrint(object):
                 if 'bold' not in styles:
                     styles.append('bold')
 
+            # auto add serial number (scientific name) to bold
+            sn_pattern = r"^[0-9]+\. $"
+            if m := re.match(sn_pattern, t[0]):
+                run.bold = True
+
             if 'italic' in styles or t[1] == 'italic':
                 run.italic = True
+
+                if custom and custom == 'italic-to-bold':
+                    run.italic = False
+                    run.bold = True
 
             if 'bold' in styles:
                 run.bold = True
@@ -136,6 +146,9 @@ class BiotaPrint(object):
                 run.font.size = Pt(12)
             elif size == 'h3':
                 run.font.size = Pt(11)
+            else:
+                if size:
+                    run.font.size = Pt(int(size))
 
 
     def add_list(self, data, has_italic=False):
@@ -164,12 +177,15 @@ def generate_docx(data):
 
         section = biota.create_column_section(2)
 
+        counter = 0
         for i, v in enumerate(d['items']):
-            name_list = v['scientificName'].split('</i>')
-            scname = name_list[0].replace('<i>', '')
+            if str(v['rank_id']) == '34': # only species has sort number
+                counter += 1
+                title = f"{counter}. {v['scientificName']}"
+            else:
+                title = v['scientificName']
 
-            title = f"{int(i+1)}. {v['scientificName']}"
-            biota.add_box(title, {'size': 'h3'})
+            biota.add_box(title, {'size': '11', 'custom': 'italic-to-bold'})
 
             if v['commonNames']:
                 x = pick_first(v['commonNames'], '|', 'zh')

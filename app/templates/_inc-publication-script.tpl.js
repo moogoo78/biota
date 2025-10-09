@@ -557,6 +557,21 @@
 
    }
 
+   function formatDate(dateString) {
+     // Check if the input string has the correct format
+     if (!/^\d{8}$/.test(dateString)) {
+       return "Invalid date format. Please use 'YYYYMMDD'.";
+     }
+
+     // Extract year, month, and day using substring
+     const year = dateString.substring(0, 4);
+     const month = dateString.substring(4, 6);
+     const day = dateString.substring(6, 8);
+
+     // Return the new formatted string
+     return `${year}-${month}-${day}`;
+   }
+
    // Function to open specimen selection modal
    function openSpecimenModal(index) {
      currentItemIndex = index;
@@ -577,9 +592,11 @@
      fetched_specimens.forEach((specimen, specimenIndex) => {
        const row = document.createElement('tr');
        row.className = 'bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600';
-
        const locality = specimen.locality ? specimen.locality.replace('|', ', ') : '';
-       const date = specimen.date || '';
+       let date = '';
+       if (specimen.eventDate) {
+         date = formatDate(specimen.eventDate);
+       }
        const collector = specimen.recordedBy || '';
        const catalogNumber = specimen.catalogNumber || '';
        const institutionCode = specimen.institutionCode || specimen.datasetTitle || '';

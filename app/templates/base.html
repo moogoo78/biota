@@ -6,7 +6,9 @@
     <title>Biota Taiwanica - 臺灣生物誌出版工具</title>
     <!-- Tailwind CSS -->
     <link rel="icon" href="data:,">{# a fake empty favicon #}
-    <script src="https://cdn.tailwindcss.com"></script>
+    {#<script src="https://cdn.tailwindcss.com"></script>#}
+    {#<script src="{{ url_for('static', filename='vendor/tailwind.css') }}"></script>#}
+    <link href="{{ url_for('static', filename='vendor/tailwind-build.css') }}" rel="stylesheet" />
     <!-- Flowbite CSS and JS -->
     {% if  config.WEB_ENV == 'dev' %}
     <link href="{{ url_for('static', filename='/vendor/flowbite.min.css')}}" rel="stylesheet" />

@@ -16,3 +16,4 @@ compose.prod-vhosts.yml
 
 #app/templates/sites/*
 #app/static/sites/*
+

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,7 +8,11 @@
     <link rel="icon" href="data:,">{# a fake empty favicon #}
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Flowbite CSS and JS -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.css" rel="stylesheet" />
+    {% if  config.WEB_ENV == 'dev' %}
+    <link href="{{ url_for('static', filename='/vendor/flowbite.min.css')}}" rel="stylesheet" />
+    {% else %}
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/3.1.2/flowbite.min.css" rel="stylesheet" />
+    {% endif %}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -21,10 +25,14 @@
        height: calc(100vh - 112px); /* Full viewport height minus the two navbars (64px + 48px) */
      }
     </style>
+    <script>
+     // Force light mode by preventing dark mode detection
+     localStorage.setItem('color-theme', 'light');
+    </script>
     {% block style %}
     {% endblock %}
 </head>
-<body class="bg-gray-50 dark:bg-gray-900">
+<body class="bg-gray-50">
 
   <!-- =============================================================== -->
   <!-- Top Navigation Bar                                              -->
@@ -135,7 +143,12 @@
   <div class="main-layout max-w-screen-2xl mx-auto flex">
     {% block main %}{% endblock %}
   </div>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.js"></script>
+  {% if  config.WEB_ENV == 'dev' %}
+  <script src="{{ url_for('static', filename='/vendor/flowbite.min.js')}}"></script>
+  {% else %}
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/3.1.2/flowbite.min.js"></script>
+  {% endif %}
+
   {% block script %}
   {% endblock %}
   </body>

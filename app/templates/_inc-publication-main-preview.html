@@ -1,7 +1,7 @@
-<h1 class="mb-2 text-2xl font-bold text-gray-900 dark:text-white" id="display-title">{{ publication.title }}</h1>
-<p class="mb-4 text-lg text-gray-700 dark:text-gray-300">Author: <span id="display-author">{{ publication.author }}</span></p>
-<h2 class="mb-2 text-lg font-semibold text-gray-900 dark:text-white">LITERATURES</h2>
-<ul class="list-disc list-inside space-y-1 text-gray-600 dark:text-gray-400 mb-6">
+<h1 class="mb-2 text-2xl font-bold text-gray-900" id="display-title">{{ publication.title }}</h1>
+<p class="mb-4 text-lg text-gray-700">Author: <span id="display-author">{{ publication.author }}</span></p>
+<h2 class="mb-2 text-lg font-semibold text-gray-900">LITERATURES</h2>
+<ul class="list-disc list-inside space-y-1 text-gray-600 mb-6">
   {% for i in publication.literatures %}
   <li>{{ i.name }}</li>
   {% endfor %}
@@ -11,7 +11,7 @@
 {% set ns = namespace(count=0) %}
 {% for i in publication.collections[0].items %}
 <div class="my-8 pb-6">
-  <h3 class="font-bold text-gray-900 dark:text-white text-lg mb-1">
+  <h3 class="font-bold text-gray-900 text-lg mb-1">
     {% if i.get_rank()[0] == "Species" %}
       {% set ns.count = ns.count + 1 %}
       {{ ns.count }}. {{ i.source_data.usage_references_text|safe }}
@@ -19,11 +19,11 @@
       {{ i.source_data.usage_references_text|safe }}
     {% endif %}
   </h3>
-  <p class="text-gray-700 dark:text-gray-300 text-lg mb-4">{{ pick_first(i.common_names, '|', 'zh') }}</p>
+  <p class="text-gray-700 text-lg mb-4">{{ pick_first(i.common_names, '|', 'zh') }}</p>
 
   {% if i.synonyms|length > 0%}
   <div class="mb-4">
-    {#<h5 class="font-semibold text-gray-900 dark:text-white mb-2">SYNONYMS</h5>#}
+    {#<h5 class="font-semibold text-gray-900 mb-2">SYNONYMS</h5>#}
     {% for syn in i.synonyms %}
     <p>{{ syn.name|safe }}</p>
     {% endfor %}
@@ -31,14 +31,14 @@
   {% endif %}
   {% if i.description %}
   <div class="mb-4">
-    {#<h5 class="font-semibold text-gray-900 dark:text-white mb-2">DESCRIPTION</h5>#}
-    <p class="text-gray-800 dark:text-gray-200 text-sm leading-relaxed">{{ i.description }}</p>
+    {#<h5 class="font-semibold text-gray-900 mb-2">DESCRIPTION</h5>#}
+    <p class="text-gray-800 text-sm leading-relaxed">{{ i.description }}</p>
   </div>
   {% endif %}
   {% if i.distribution %}
   <div class="mb-4">
-    {#<h5 class="font-semibold text-gray-900 dark:text-white mb-2">DISTRIBUTION</h5>#}
-    <p class="text-gray-800 dark:text-gray-200 text-sm leading-relaxed">{{ i.distribution }}</p>
+    {#<h5 class="font-semibold text-gray-900 mb-2">DISTRIBUTION</h5>#}
+    <p class="text-gray-800 text-sm leading-relaxed">{{ i.distribution }}</p>
     <p class="text-teal-600 text-sm">Summary from TBIA specimens:</p>
     {% for x in i.get_distribution_from_specimens() %}
     <p class="text-teal-600 text-sm leading-relaxed">{{ x }}</p>
@@ -48,8 +48,8 @@
 
   {% with specimens = i.get_grouped_specimens() %}
   <div class="mb-4">
-    {#<h5 class="font-semibold text-gray-900 dark:text-white mb-2">SPECIMENS</h5>#}
-    <p class="text-gray-800 dark:text-gray-200 text-sm leading-relaxed">
+    {#<h5 class="font-semibold text-gray-900 mb-2">SPECIMENS</h5>#}
+    <p class="text-gray-800 text-sm leading-relaxed">
       {% for k, v in specimens.items() %}
       {% if v|length > 0 %}
       {{ k }}: {% for x in v %}<span>{{ x[1] }}</span>{% if not loop.last %}; {% else %}.{% endif %}{% endfor %}
@@ -61,12 +61,12 @@
 
   {% if i.note %}
   <div class="mb-4">
-    <h5 class="font-semibold text-gray-900 dark:text-white mb-2">NOTE</h5>
-    <p class="text-gray-800 dark:text-gray-200 text-sm leading-relaxed">{{ i.note }}</p>
+    <h5 class="font-semibold text-gray-900 mb-2">NOTE</h5>
+    <p class="text-gray-800 text-sm leading-relaxed">{{ i.note }}</p>
   </div>
   {% endif %}
 
 {% endfor %}
 
 
-<a href="{{ url_for('publication.post_publish', item_id=publication.id) }}?format=docx"><button type="button" class="focus:outline-none text-white bg-purple-700 hover:bg-purple-800 focus:ring-4 focus:ring-purple-300 font-medium rounded-lg text-sm px-5 py-2.5 mb-2 dark:bg-purple-600 dark:hover:bg-purple-700 dark:focus:ring-purple-900" id="download-btn">下載</button></a>
+<a href="{{ url_for('publication.post_publish', item_id=publication.id) }}?format=docx"><button type="button" class="focus:outline-none text-white bg-purple-700 hover:bg-purple-800 focus:ring-4 focus:ring-purple-300 font-medium rounded-lg text-sm px-5 py-2.5 mb-2" id="download-btn">下載</button></a>

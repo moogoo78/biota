@@ -42,6 +42,7 @@ from app.helpers import (
     put_publication_by_taicol_namespace,
     format_specimen_display,
     generate_docx,
+    generate_pdf,
 )
 
 bp = Blueprint('publication', __name__)
@@ -342,35 +343,36 @@ def post_publish(item_id):
         pub = session.get(Publication, item_id)
         #if payload.get('format', '') == 'docx':
         fmt = request.args.get('format')
-        if fmt == 'docx':
-            data = {
-                'title': pub.title,
-                'author': pub.author,
-                'literatures': [],
-                'items': [],
-            }
-            for i in pub.literatures:
-                data['literatures'].append(i.name)
 
-            for i in pub.collections[0].items:
-                #print(i.source_data['usage_references_text'])
-                item = {
-                    'rank_id': i.source_data.get('rank_id', '') if i.source_data else '',
-                    'commonNames': i.common_names,
-                    'description': i.description,
-                    'distribution': i.distribution,
-                    'scientificName': i.source_data.get('usage_references_text', '') if i.source_data else '',
-                    'note': i.note,
-                    'synonyms': [],
-                    'specimens': [],
-                }
-                for s in i.synonyms:
-                    item['synonyms'].append(s.name)
+        data = {
+            'title': pub.title,
+            'author': pub.author,
+            'literatures': [],
+            'items': [],
+        }
+        for i in pub.literatures:
+            data['literatures'].append(i.name)
+
+        for i in pub.collections[0].items:
+            #print(i.source_data['usage_references_text'])
+            item = {
+                'rank_id': i.source_data.get('rank_id', '') if i.source_data else '',
+                'commonNames': i.common_names,
+                'description': i.description,
+                'distribution': i.distribution,
+                'scientificName': i.source_data.get('usage_references_text', '') if i.source_data else '',
+                'note': i.note,
+                'synonyms': [],
+                'specimens': [],
+            }
+            for s in i.synonyms:
+                item['synonyms'].append(s.name)
                 #for j in i.specimens:
                 #    item['specimens'].append(j.text)
-                item['specimens'] = i.get_grouped_specimens()
-                data['items'].append(item)
+            item['specimens'] = i.get_grouped_specimens()
+            data['items'].append(item)
 
+        if fmt == 'docx':
             docx = generate_docx([data])
             buf = BytesIO()
             docx.save(buf)
@@ -381,6 +383,18 @@ def post_publish(item_id):
                 as_attachment=True,
                 download_name=filename,
                 mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            )
+            response.headers['Content-Disposition'] = f"attachment; filename*=UTF-8''{filename}" # for unicode
+            response.headers['filename'] = filename
+
+        elif fmt == 'pdf':
+            pdf_buffer = generate_pdf([data])
+            filename = quote(f"output-biota-pub-{pub.title}.pdf")
+            response = send_file(
+                pdf_buffer,
+                as_attachment=True,
+                download_name=filename,
+                mimetype='application/pdf'
             )
             response.headers['Content-Disposition'] = f"attachment; filename*=UTF-8''{filename}" # for unicode
             response.headers['filename'] = filename

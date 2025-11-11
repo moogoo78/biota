@@ -26,7 +26,7 @@ from flask_login import (
 )
 
 #from flask.views import MethodView
-from app.helpers import get_namespace_data, generate_docx, TBIASpecimens, send_email
+from app.helpers import get_namespace_data, generate_docx, generate_pdf, TBIASpecimens, send_email
 from app.database import session
 
 from app.models import (
@@ -619,7 +619,9 @@ def post_publish():
             for namespace_id in ids.split(','):
                 data.append(get_namespace_data(namespace_id))
 
-            if payload.get('format', '') == 'docx':
+            export_format = payload.get('format', '')
+
+            if export_format == 'docx':
                 docx = generate_docx(data)
                 buf = BytesIO()
                 docx.save(buf)
@@ -634,6 +636,21 @@ def post_publish():
                 )
                 response.headers['Content-Disposition'] = 'attachment'
                 response.headers['filename'] = filename
+
+                return response
+
+            elif export_format == 'pdf':
+                pdf_buffer = generate_pdf(data)
+
+                filename = f"output-{ids.replace(',', 'x')}.pdf"
+                response = send_file(
+                    pdf_buffer,
+                    as_attachment=True,
+                    download_name=filename,
+                    mimetype='application/pdf'
+                )
+                response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
+                response.headers['Content-Type'] = 'application/pdf'
 
                 return response
 

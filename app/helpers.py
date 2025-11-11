@@ -221,6 +221,178 @@ def generate_docx(data):
     return biota.as_docx()
 
 
+def generate_pdf(data):
+    """Generate a PDF document from namespace data."""
+    from reportlab.lib.pagesizes import letter
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib.units import inch
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageBreak, KeepTogether, Table, TableStyle
+    from reportlab.lib.enums import TA_JUSTIFY, TA_CENTER, TA_LEFT
+    from reportlab.lib import colors
+    from io import BytesIO
+    from xml.sax.saxutils import escape
+
+    def sanitize_html(text):
+        """Sanitize HTML content for ReportLab compatibility."""
+        if not text:
+            return ''
+        # Convert br tags to self-closing
+        text = re.sub(r'<br\s*>', '<br/>', text, flags=re.IGNORECASE)
+        # Escape special characters but preserve valid HTML tags
+        # ReportLab supports: b, i, u, strike, super, sub, br, a
+        return text
+
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=letter,
+        rightMargin=72,
+        leftMargin=72,
+        topMargin=72,
+        bottomMargin=18,
+    )
+
+    # Container for the 'flowable' objects
+    elements = []
+
+    # Define styles
+    styles = getSampleStyleSheet()
+
+    # Custom styles
+    title_style = ParagraphStyle(
+        'CustomTitle',
+        parent=styles['Heading1'],
+        fontSize=14,
+        alignment=TA_CENTER,
+        spaceAfter=12,
+    )
+
+    author_style = ParagraphStyle(
+        'CustomAuthor',
+        parent=styles['Heading2'],
+        fontSize=12,
+        alignment=TA_CENTER,
+        spaceAfter=12,
+    )
+
+    section_heading_style = ParagraphStyle(
+        'SectionHeading',
+        parent=styles['Heading2'],
+        fontSize=12,
+        spaceAfter=6,
+        spaceBefore=12,
+    )
+
+    scientific_name_style = ParagraphStyle(
+        'ScientificName',
+        parent=styles['Normal'],
+        fontSize=11,
+        spaceAfter=4,
+    )
+
+    body_style = ParagraphStyle(
+        'BodyJustify',
+        parent=styles['Normal'],
+        alignment=TA_JUSTIFY,
+        fontSize=10,
+        spaceAfter=6,
+    )
+
+    normal_style = ParagraphStyle(
+        'NormalText',
+        parent=styles['Normal'],
+        fontSize=10,
+        spaceAfter=4,
+    )
+
+    # Add header
+    elements.append(Paragraph('Biota Taiwanica', title_style))
+    elements.append(Paragraph(f'Generated: {datetime.now().strftime("%Y-%m-%d %H:%M")}', normal_style))
+    elements.append(PageBreak())
+
+    # Process each namespace
+    for idx, d in enumerate(data):
+        # Add title and author
+        elements.append(Paragraph(d['title'], title_style))
+        elements.append(Paragraph(d['author'], author_style))
+
+        # Add literature section
+        elements.append(Paragraph('LITERATURE', section_heading_style))
+        for lit in d.get('literatures', []):
+            if isinstance(lit, dict):
+                content = lit.get('content', '')
+            else:
+                content = str(lit)
+            if content:
+                elements.append(Paragraph(sanitize_html(content), normal_style))
+
+        elements.append(Spacer(1, 0.2*inch))
+
+        # Process items (species)
+        counter = 0
+        for i, v in enumerate(d['items']):
+            item_elements = []
+
+            # Scientific name with counter
+            if str(v.get('rank_id', '')) == '34':  # species level
+                counter += 1
+                sci_name = f"<b>{counter}. </b><i>{sanitize_html(v['scientificName'])}</i>"
+            else:
+                sci_name = f"<i>{sanitize_html(v['scientificName'])}</i>"
+
+            item_elements.append(Paragraph(sci_name, scientific_name_style))
+
+            # Common names
+            if v.get('commonNames'):
+                common = pick_first(v['commonNames'], '|', 'zh')
+                if common:
+                    item_elements.append(Paragraph(sanitize_html(common), normal_style))
+
+            # Synonyms
+            for syn in v.get('synonyms', []):
+                if syn:
+                    item_elements.append(Paragraph(sanitize_html(syn), normal_style))
+
+            # Description
+            if desc := v.get('description'):
+                item_elements.append(Paragraph(sanitize_html(desc), body_style))
+
+            # Distribution
+            if dist := v.get('distribution'):
+                item_elements.append(Paragraph(sanitize_html(dist), body_style))
+
+            # Specimens
+            if specimens := v.get('specimens'):
+                if specimens and len(specimens):
+                    s = ''
+                    for dist, sp_list in specimens.items():
+                        sp_arr = [sanitize_html(x[1]) for x in sp_list]
+                        sp_str = '; '.join(sp_arr)
+                        s += f'{dist}: {sp_str}. '
+                    if s:
+                        item_elements.append(Paragraph(s, normal_style))
+
+            # Note
+            if note := v.get('note'):
+                item_elements.append(Paragraph(sanitize_html(note), body_style))
+
+            # Keep each item together
+            elements.append(KeepTogether(item_elements))
+            elements.append(Spacer(1, 0.1*inch))
+
+        # Add page break between namespaces (except for the last one)
+        if idx < len(data) - 1:
+            elements.append(PageBreak())
+
+    # Build PDF
+    doc.build(elements)
+
+    # Reset buffer position to beginning for reading
+    buffer.seek(0)
+
+    return buffer
+
+
 def get_namespace_data(namespace_id):
     conn = get_db_connection()
     data = {

@@ -229,8 +229,11 @@ def generate_pdf(data):
     from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageBreak, KeepTogether, Table, TableStyle
     from reportlab.lib.enums import TA_JUSTIFY, TA_CENTER, TA_LEFT
     from reportlab.lib import colors
+    from reportlab.pdfbase import pdfmetrics
+    from reportlab.pdfbase.ttfonts import TTFont
     from io import BytesIO
     from xml.sax.saxutils import escape
+    import os
 
     def sanitize_html(text):
         """Sanitize HTML content for ReportLab compatibility."""
@@ -242,8 +245,51 @@ def generate_pdf(data):
         # ReportLab supports: b, i, u, strike, super, sub, br, a
         return text
 
+    # Register Chinese fonts
+    # Try to find and register a Chinese font
+    chinese_font = None
+    font_paths = [
+        # Common Linux font paths - Regular and Bold variants
+        ('/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc', '/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc'),
+        ('/usr/share/fonts/opentype/noto/NotoSerifCJK-Regular.ttc', '/usr/share/fonts/opentype/noto/NotoSerifCJK-Bold.ttc'),
+        ('/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc', '/usr/share/fonts/truetype/noto/NotoSansCJK-Bold.ttc'),
+        ('/usr/share/fonts/truetype/arphic/uming.ttc', '/usr/share/fonts/truetype/arphic/uming.ttc'),
+        ('/usr/share/fonts/truetype/wqy/wqy-microhei.ttc', '/usr/share/fonts/truetype/wqy/wqy-microhei.ttc'),
+    ]
+
+    for regular_path, bold_path in font_paths:
+        if os.path.exists(regular_path):
+            try:
+                # Register regular font
+                if regular_path.endswith('.ttc'):
+                    pdfmetrics.registerFont(TTFont('ChineseFont', regular_path, subfontIndex=0))
+                else:
+                    pdfmetrics.registerFont(TTFont('ChineseFont', regular_path))
+
+                # Register bold font if available
+                if os.path.exists(bold_path):
+                    if bold_path.endswith('.ttc'):
+                        pdfmetrics.registerFont(TTFont('ChineseFont-Bold', bold_path, subfontIndex=0))
+                    else:
+                        pdfmetrics.registerFont(TTFont('ChineseFont-Bold', bold_path))
+
+                chinese_font = 'ChineseFont'
+                break
+            except Exception as e:
+                # Log error but continue trying other fonts
+                print(f"Failed to register font {regular_path}: {e}")
+                continue
+
+    # Fallback to Helvetica if no Chinese font found
+    if not chinese_font:
+        chinese_font = 'Helvetica'
+
     buffer = BytesIO()
-    doc = SimpleDocTemplate(
+
+    # We'll use a custom document template to support two-column layout
+    from reportlab.platypus import BaseDocTemplate, Frame, PageTemplate
+
+    doc = BaseDocTemplate(
         buffer,
         pagesize=letter,
         rightMargin=72,
@@ -252,71 +298,120 @@ def generate_pdf(data):
         bottomMargin=18,
     )
 
+    # Define frames for single and two-column layouts
+    page_width, page_height = letter
+    frame_width = page_width - 144  # Total width minus margins
+    frame_height = page_height - 90  # Total height minus margins
+
+    # Single column frame
+    single_frame = Frame(
+        72, 18, frame_width, frame_height,
+        id='single_col',
+        showBoundary=0
+    )
+
+    # Two column frames
+    col_width = (frame_width - 20) / 2  # 20 points gap between columns
+    left_frame = Frame(
+        72, 18, col_width, frame_height,
+        id='col_left',
+        showBoundary=0
+    )
+    right_frame = Frame(
+        72 + col_width + 20, 18, col_width, frame_height,
+        id='col_right',
+        showBoundary=0
+    )
+
+    # Add page templates
+    doc.addPageTemplates([
+        PageTemplate(id='SingleCol', frames=[single_frame]),
+        PageTemplate(id='TwoCol', frames=[left_frame, right_frame]),
+    ])
+
     # Container for the 'flowable' objects
     elements = []
 
     # Define styles
     styles = getSampleStyleSheet()
 
-    # Custom styles
+    # Custom styles with Chinese font support (matching DOCX)
     title_style = ParagraphStyle(
         'CustomTitle',
         parent=styles['Heading1'],
-        fontSize=14,
+        fontName=chinese_font,
+        fontSize=12,  # h2 size
         alignment=TA_CENTER,
-        spaceAfter=12,
+        spaceAfter=8,
+        spaceBefore=0,
     )
 
     author_style = ParagraphStyle(
         'CustomAuthor',
         parent=styles['Heading2'],
-        fontSize=12,
+        fontName=chinese_font,
+        fontSize=11,  # h3 size
         alignment=TA_CENTER,
-        spaceAfter=12,
+        spaceAfter=8,
+        spaceBefore=0,
     )
 
     section_heading_style = ParagraphStyle(
         'SectionHeading',
         parent=styles['Heading2'],
-        fontSize=12,
-        spaceAfter=6,
-        spaceBefore=12,
+        fontName=chinese_font,
+        fontSize=11,  # h3 size
+        spaceAfter=4,
+        spaceBefore=8,
     )
 
     scientific_name_style = ParagraphStyle(
         'ScientificName',
         parent=styles['Normal'],
+        fontName=chinese_font,
         fontSize=11,
-        spaceAfter=4,
+        spaceAfter=2,
+        spaceBefore=0,
+        leading=13,
     )
 
     body_style = ParagraphStyle(
         'BodyJustify',
         parent=styles['Normal'],
+        fontName=chinese_font,
         alignment=TA_JUSTIFY,
         fontSize=10,
-        spaceAfter=6,
+        spaceAfter=2,
+        spaceBefore=0,
+        leading=12,
     )
 
     normal_style = ParagraphStyle(
         'NormalText',
         parent=styles['Normal'],
+        fontName=chinese_font,
         fontSize=10,
-        spaceAfter=4,
+        spaceAfter=2,
+        spaceBefore=0,
+        leading=12,
     )
 
-    # Add header
+    # Add header (single column)
+    from reportlab.platypus import NextPageTemplate
+
+    elements.append(NextPageTemplate('SingleCol'))
     elements.append(Paragraph('Biota Taiwanica', title_style))
     elements.append(Paragraph(f'Generated: {datetime.now().strftime("%Y-%m-%d %H:%M")}', normal_style))
     elements.append(PageBreak())
 
     # Process each namespace
     for idx, d in enumerate(data):
-        # Add title and author
+        # Add title and author (single column)
+        elements.append(NextPageTemplate('SingleCol'))
         elements.append(Paragraph(d['title'], title_style))
         elements.append(Paragraph(d['author'], author_style))
 
-        # Add literature section
+        # Add literature section (single column)
         elements.append(Paragraph('LITERATURE', section_heading_style))
         for lit in d.get('literatures', []):
             if isinstance(lit, dict):
@@ -328,7 +423,11 @@ def generate_pdf(data):
 
         elements.append(Spacer(1, 0.2*inch))
 
-        # Process items (species)
+        # Switch to two-column layout for species list
+        elements.append(NextPageTemplate('TwoCol'))
+        elements.append(PageBreak())
+
+        # Process items (species) - will flow into two columns
         counter = 0
         for i, v in enumerate(d['items']):
             item_elements = []
@@ -378,7 +477,8 @@ def generate_pdf(data):
 
             # Keep each item together
             elements.append(KeepTogether(item_elements))
-            elements.append(Spacer(1, 0.1*inch))
+            # Small space between items (matching DOCX spacing)
+            elements.append(Spacer(1, 3))
 
         # Add page break between namespaces (except for the last one)
         if idx < len(data) - 1:

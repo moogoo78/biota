@@ -250,11 +250,12 @@ def generate_pdf(data):
     chinese_font = None
     font_paths = [
         # Common Linux font paths - Regular and Bold variants
-        ('/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc', '/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc'),
-        ('/usr/share/fonts/opentype/noto/NotoSerifCJK-Regular.ttc', '/usr/share/fonts/opentype/noto/NotoSerifCJK-Bold.ttc'),
-        ('/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc', '/usr/share/fonts/truetype/noto/NotoSansCJK-Bold.ttc'),
-        ('/usr/share/fonts/truetype/arphic/uming.ttc', '/usr/share/fonts/truetype/arphic/uming.ttc'),
-        ('/usr/share/fonts/truetype/wqy/wqy-microhei.ttc', '/usr/share/fonts/truetype/wqy/wqy-microhei.ttc'),
+        # ('/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc', '/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc'),
+        # ('/usr/share/fonts/opentype/noto/NotoSerifCJK-Regular.ttc', '/usr/share/fonts/opentype/noto/NotoSerifCJK-Bold.ttc'),
+        # ('/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc', '/usr/share/fonts/truetype/noto/NotoSansCJK-Bold.ttc'),
+        # ('/usr/share/fonts/truetype/arphic/uming.ttc', '/usr/share/fonts/truetype/arphic/uming.ttc'),
+        # ('/usr/share/fonts/truetype/wqy/wqy-microhei.ttc', '/usr/share/fonts/truetype/wqy/wqy-microhei.ttc'),
+        ('app/fonts/noto/NotoSansTC-Regular.ttf', 'app/fonts/noto/NotoSansTC-Bold.ttf'),
     ]
 
     for regular_path, bold_path in font_paths:

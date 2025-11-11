@@ -6,6 +6,7 @@ from typing import (
     List,
 )
 import uuid
+import re
 
 from sqlalchemy import (
     Column,
@@ -422,6 +423,13 @@ class Item(Base, TimestampMixin, SourceMixin):
                 pass
 
         return list(set(dist))
+
+    def get_title_format(self):
+        if usage := self.source_data.get('usage_references_text'):
+            if m := re.match(r'^<i>(.*?)</i>(.+)', usage):
+                return [m.group(1), m.group(2)]
+        return [usage, '']
+
 
 class ItemSynonym(Base):
     __tablename__ = 'item_synonym'

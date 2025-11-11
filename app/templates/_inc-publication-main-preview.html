@@ -11,14 +11,15 @@
 {% set ns = namespace(count=0) %}
 {% for i in publication.collections[0].items %}
 <div class="my-8 pb-6">
-  <h3 class="font-bold text-gray-900 text-lg mb-1">
+  <span class="text-gray-900 text-lg mb-1">
+    {% set scientific_name, usage = i.get_title_format() %}
     {% if i.get_rank()[0] == "Species" %}
       {% set ns.count = ns.count + 1 %}
-      {{ ns.count }}. {{ i.source_data.usage_references_text|safe }}
+      {{ ns.count }}. <span class="font-bold"><i>{{ scientific_name }}</i></span> {{ usage }}
     {% else %}
-      {{ i.source_data.usage_references_text|safe }}
+      <i>{{ scientific_name }}</i> {{ usage }}
     {% endif %}
-  </h3>
+  </span>
   <p class="text-gray-700 text-lg mb-4">{{ pick_first(i.common_names, '|', 'zh') }}</p>
 
   {% if i.synonyms|length > 0%}

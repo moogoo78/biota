@@ -60,7 +60,7 @@ def list_view():
         else:
             return res['message']
     else:
-        collections = Collection.query.filter(Collection.user_id==current_user.id).all()
+        collections = Collection.query.filter(Collection.user_id==current_user.id, Collection.publication_id > 0).all()
         publications = [x.publication for x in collections]
         return render_template('publication_list.html', publications=publications)
     return abort(404)

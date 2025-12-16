@@ -20,7 +20,7 @@ services:
  #   restart: always
 
   traefik:
-    image: traefik:3.2
+    image: traefik:3.6
     command:
       #- "--api.insecure=true"
       - "--providers.docker=true"

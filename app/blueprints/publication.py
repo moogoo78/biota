@@ -399,4 +399,4 @@ def post_publish(item_id):
             response.headers['Content-Disposition'] = f"attachment; filename*=UTF-8''{filename}" # for unicode
             response.headers['filename'] = filename
 
-            return response
+        return response

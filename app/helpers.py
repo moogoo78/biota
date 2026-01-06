@@ -31,6 +31,29 @@ from app.models import (
 from app.database import session
 from app.jinja_func import pick_first
 
+TAIWAN_COUNTIES = {
+    '宜蘭縣': 'Yilan',
+    '桃園市': 'Taoyuan',
+    '新竹縣': 'Hsinchu',
+    '苗栗縣': 'Miaoli',
+    '彰化縣': 'Changhua',
+    '南投縣': 'Nantou',
+    '雲林縣': 'Yunlin',
+    '嘉義縣': 'Chiayi',
+    '屏東縣': 'Pingtung',
+    '臺東縣': 'Taitung',
+    '花蓮縣': 'Hualien',
+    '澎湖縣': 'Penghu',
+    '基隆市': 'Keelung',
+    '新竹市': 'Hsinchu',
+    '嘉義市': 'Chiayi',
+    '臺北市': 'Taipei',
+    '新北市': 'New Taipei',
+    '臺中市': 'Taichung',
+    '臺南市': 'Tainan',
+    '高雄市': 'Kaohsiung'
+}
+
 class BiotaPrint(object):
     doc = None
 
@@ -227,10 +250,11 @@ def generate_pdf(data):
     from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
     from reportlab.lib.units import inch
     from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageBreak, KeepTogether, Table, TableStyle
-    from reportlab.lib.enums import TA_JUSTIFY, TA_CENTER, TA_LEFT
-    from reportlab.lib import colors
+    from reportlab.lib.enums import TA_JUSTIFY, TA_CENTER, TA_LEFT, TA_RIGHT
+    from reportlab.lib import colors, fonts
     from reportlab.pdfbase import pdfmetrics
     from reportlab.pdfbase.ttfonts import TTFont
+    from reportlab.lib.fonts import addMapping
     from io import BytesIO
     from xml.sax.saxutils import escape
     import os
@@ -245,45 +269,33 @@ def generate_pdf(data):
         # ReportLab supports: b, i, u, strike, super, sub, br, a
         return text
 
-    # Register Chinese fonts
-    # Try to find and register a Chinese font
-    chinese_font = None
-    font_paths = [
-        # Common Linux font paths - Regular and Bold variants
-        # ('/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc', '/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc'),
-        # ('/usr/share/fonts/opentype/noto/NotoSerifCJK-Regular.ttc', '/usr/share/fonts/opentype/noto/NotoSerifCJK-Bold.ttc'),
-        # ('/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc', '/usr/share/fonts/truetype/noto/NotoSansCJK-Bold.ttc'),
-        # ('/usr/share/fonts/truetype/arphic/uming.ttc', '/usr/share/fonts/truetype/arphic/uming.ttc'),
-        # ('/usr/share/fonts/truetype/wqy/wqy-microhei.ttc', '/usr/share/fonts/truetype/wqy/wqy-microhei.ttc'),
-        ('app/fonts/noto/NotoSansTC-Regular.ttf', 'app/fonts/noto/NotoSansTC-Bold.ttf'),
-    ]
+    # Register regular font
+    #font_regular2 = 'app/fonts/tinos/Tinos-Regular.ttf'
+    #font_bold2 = 'app/fonts/tinos/Tinos-Bold.ttf'
+    #NotoSerifTC-VariableFont_wght.ttf
+    custom_fonts = {
+        'regular_tc': ['Serif-Regular','app/fonts/NotoSerifTC-Regular.ttf'],
+        'bold_tc': ['Serif-Bold', 'app/fonts/NotoSerifTC-Bold.ttf'],
+        'regular': ['Tinos-Regular','app/fonts/Tinos-Regular.ttf'],
+        'bold': ['Tinos-Bold', 'app/fonts/Tinos-Bold.ttf'],
+        'italic': ['Tinos-Italic', 'app/fonts/Tinos-Italic.ttf'],
+        'bold-italic': ['Tinos-BoldItalic', 'app/fonts/Tinos-BoldItalic.ttf'],
+    }
+    for k, v in custom_fonts.items():
+        pdfmetrics.registerFont(TTFont(v[0], v[1]))
 
-    for regular_path, bold_path in font_paths:
-        if os.path.exists(regular_path):
-            try:
-                # Register regular font
-                if regular_path.endswith('.ttc'):
-                    pdfmetrics.registerFont(TTFont('ChineseFont', regular_path, subfontIndex=0))
-                else:
-                    pdfmetrics.registerFont(TTFont('ChineseFont', regular_path))
+    # Register font family mappings for bold/italic support in HTML tags
+    # not works
+    #addMapping('myfamily', 0, 0, 'Tinos-Regular')     # normal
+    #addMapping('myfamily', 1, 0, 'Tinos-Bold')        # bold
+    #addMapping('myfamily', 0, 1, 'Tinos-Italic')      # italic
+    #addMapping('myfamily', 1, 1, 'Tinos-BoldItalic')  # bold-italic
 
-                # Register bold font if available
-                if os.path.exists(bold_path):
-                    if bold_path.endswith('.ttc'):
-                        pdfmetrics.registerFont(TTFont('ChineseFont-Bold', bold_path, subfontIndex=0))
-                    else:
-                        pdfmetrics.registerFont(TTFont('ChineseFont-Bold', bold_path))
-
-                chinese_font = 'ChineseFont'
-                break
-            except Exception as e:
-                # Log error but continue trying other fonts
-                print(f"Failed to register font {regular_path}: {e}")
-                continue
-
-    # Fallback to Helvetica if no Chinese font found
-    if not chinese_font:
-        chinese_font = 'Helvetica'
+    # Debug code - commented out
+    # for (fam, b, i), fontName in fonts.font_index.items():
+    #     if fam.lower() == family_to_check.lower():
+    #         print(f"  - (Bold={b}, Italic={i}) -> '{fontName}'")
+    #print(pdfmetrics.getRegisteredFontNames())
 
     buffer = BytesIO()
 
@@ -336,11 +348,10 @@ def generate_pdf(data):
     # Define styles
     styles = getSampleStyleSheet()
 
-    # Custom styles with Chinese font support (matching DOCX)
     title_style = ParagraphStyle(
         'CustomTitle',
         parent=styles['Heading1'],
-        fontName=chinese_font,
+        fontName=custom_fonts['regular_tc'][0],
         fontSize=12,  # h2 size
         alignment=TA_CENTER,
         spaceAfter=8,
@@ -350,7 +361,7 @@ def generate_pdf(data):
     author_style = ParagraphStyle(
         'CustomAuthor',
         parent=styles['Heading2'],
-        fontName=chinese_font,
+        fontName=custom_fonts['regular_tc'][0],
         fontSize=11,  # h3 size
         alignment=TA_CENTER,
         spaceAfter=8,
@@ -360,45 +371,56 @@ def generate_pdf(data):
     section_heading_style = ParagraphStyle(
         'SectionHeading',
         parent=styles['Heading2'],
-        fontName=chinese_font,
-        fontSize=11,  # h3 size
+        fontName=custom_fonts['regular_tc'][0],
+        fontSize=12,  # h3 size
         spaceAfter=4,
         spaceBefore=8,
     )
-
+    category_style = ParagraphStyle(
+        'SectionHeading',
+        parent=styles['Heading2'],
+        fontName=custom_fonts['bold_tc'][0],
+        fontSize=12,  # h3 size
+        spaceAfter=4,
+        spaceBefore=8,
+        alignment=TA_CENTER,
+    )
     scientific_name_style = ParagraphStyle(
         'ScientificName',
         parent=styles['Normal'],
-        fontName=chinese_font,
-        fontSize=11,
+        fontName='Helvetica',  # Use Helvetica for HTML tag support
+        fontSize=10,
         spaceAfter=2,
         spaceBefore=0,
-        leading=13,
+        leading=14,
     )
 
     body_style = ParagraphStyle(
         'BodyJustify',
         parent=styles['Normal'],
-        fontName=chinese_font,
+        fontName=custom_fonts['regular_tc'][0], #'Helvetica',  # Use Helvetica for HTML tag support
         alignment=TA_JUSTIFY,
         fontSize=10,
         spaceAfter=2,
-        spaceBefore=0,
-        leading=12,
+        spaceBefore=4,
+        leading=14,
+        firstLineIndent=14,
     )
 
     normal_style = ParagraphStyle(
         'NormalText',
         parent=styles['Normal'],
-        fontName=chinese_font,
+        fontName=custom_fonts['regular_tc'][0],
         fontSize=10,
         spaceAfter=2,
         spaceBefore=0,
-        leading=12,
+        leading=14,
     )
 
     # Add header (single column)
     from reportlab.platypus import NextPageTemplate
+
+
 
     elements.append(NextPageTemplate('SingleCol'))
     elements.append(Paragraph('Biota Taiwanica', title_style))
@@ -413,7 +435,7 @@ def generate_pdf(data):
         elements.append(Paragraph(d['author'], author_style))
 
         # Add literature section (single column)
-        elements.append(Paragraph('LITERATURE', section_heading_style))
+        elements.append(Paragraph('LITERATURE', category_style))
         for lit in d.get('literatures', []):
             if isinstance(lit, dict):
                 content = lit.get('content', '')
@@ -424,6 +446,19 @@ def generate_pdf(data):
 
         elements.append(Spacer(1, 0.2*inch))
 
+        if cat := d.get('item_category'):
+            name = cat[0].get('scientificName', '')
+            names = name.split(',')
+            # HACK: clean name
+            simple_name = sanitize_html(names[0]).replace('<i>', '').replace('</i>', '')
+            if x := cat[0].get('commonNames'):
+                simple_name = f'{simple_name} {x}'
+
+            elements.append(Paragraph(simple_name, category_style))
+            if desc := cat[0].get('description'):
+                elements.append(Paragraph(sanitize_html(desc), body_style))
+
+
         # Switch to two-column layout for species list
         elements.append(NextPageTemplate('TwoCol'))
         elements.append(PageBreak())
@@ -432,13 +467,12 @@ def generate_pdf(data):
         counter = 0
         for i, v in enumerate(d['items']):
             item_elements = []
+            counter += 1
+            #sci_name = f"<b>{counter}. </b><i>{sanitize_html(v['scientificName'])}</i>"
+            # HACK: split name
+            append_sci_name = v['fullScientificName'].split('</i>')[1].strip()
+            sci_name = f"<b>{counter}. {sanitize_html(v['scientificName'])}</b> {append_sci_name}"
 
-            # Scientific name with counter
-            if str(v.get('rank_id', '')) == '34':  # species level
-                counter += 1
-                sci_name = f"<b>{counter}. </b><i>{sanitize_html(v['scientificName'])}</i>"
-            else:
-                sci_name = f"<i>{sanitize_html(v['scientificName'])}</i>"
 
             item_elements.append(Paragraph(sci_name, scientific_name_style))
 
@@ -446,12 +480,13 @@ def generate_pdf(data):
             if v.get('commonNames'):
                 common = pick_first(v['commonNames'], '|', 'zh')
                 if common:
-                    item_elements.append(Paragraph(sanitize_html(common), normal_style))
+                    normal_right_style = normal_style.clone('NormalRightText', alignment=TA_RIGHT, spaceBefore=12, spaceAfter=6)
+                    item_elements.append(Paragraph(sanitize_html(common), normal_right_style))
 
             # Synonyms
             for syn in v.get('synonyms', []):
                 if syn:
-                    item_elements.append(Paragraph(sanitize_html(syn), normal_style))
+                    item_elements.append(Paragraph(sanitize_html(syn), scientific_name_style))
 
             # Description
             if desc := v.get('description'):
@@ -464,8 +499,10 @@ def generate_pdf(data):
             # Specimens
             if specimens := v.get('specimens'):
                 if specimens and len(specimens):
+                    item_elements.append(Spacer(1, 0.1*inch))
                     s = ''
-                    for dist, sp_list in specimens.items():
+                    for county, sp_list in specimens.items():
+                        dist = TAIWAN_COUNTIES.get(county, 'Other').upper()
                         sp_arr = [sanitize_html(x[1]) for x in sp_list]
                         sp_str = '; '.join(sp_arr)
                         s += f'{dist}: {sp_str}. '
@@ -476,10 +513,10 @@ def generate_pdf(data):
             if note := v.get('note'):
                 item_elements.append(Paragraph(sanitize_html(note), body_style))
 
-            # Keep each item together
-            elements.append(KeepTogether(item_elements))
+            # Add all item elements directly without KeepTogether to allow natural flow
+            elements.extend(item_elements)
             # Small space between items (matching DOCX spacing)
-            elements.append(Spacer(1, 3))
+            elements.append(Spacer(1, 6))
 
         # Add page break between namespaces (except for the last one)
         if idx < len(data) - 1:

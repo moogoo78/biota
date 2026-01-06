@@ -349,18 +349,20 @@ def post_publish(item_id):
             'author': pub.author,
             'literatures': [],
             'items': [],
+            'item_category': [],
         }
         for i in pub.literatures:
             data['literatures'].append(i.name)
 
         for i in pub.collections[0].items:
-            #print(i.source_data['usage_references_text'])
+            rank_id = i.source_data.get('rank_id', '') if i.source_data else ''
             item = {
-                'rank_id': i.source_data.get('rank_id', '') if i.source_data else '',
+                'rank_id': rank_id,
                 'commonNames': i.common_names,
                 'description': i.description,
                 'distribution': i.distribution,
-                'scientificName': i.source_data.get('usage_references_text', '') if i.source_data else '',
+                'fullScientificName': i.source_data.get('usage_references_text', '') if i.source_data else '',
+                'scientificName': i.scientific_name,
                 'note': i.note,
                 'synonyms': [],
                 'specimens': [],
@@ -369,8 +371,14 @@ def post_publish(item_id):
                 item['synonyms'].append(s.name)
                 #for j in i.specimens:
                 #    item['specimens'].append(j.text)
-            item['specimens'] = i.get_grouped_specimens()
-            data['items'].append(item)
+                item['specimens'] = i.get_grouped_specimens()
+
+            if int(rank_id) == 34: # species level
+                #print(i.source_data['usage_references_text'])
+                data['items'].append(item)
+            else:
+                data['item_category'].append(item)
+
 
         if fmt == 'docx':
             docx = generate_docx([data])

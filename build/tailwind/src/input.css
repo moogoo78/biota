@@ -1,1 +1,4 @@
 @import "tailwindcss";
+
+@source "/home/mg/d/biota/app/templates/**/*.html";
+@source "/home/mg/d/biota/app/static/**/*.js";

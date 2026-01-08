@@ -6,11 +6,9 @@
     <title>Biota Taiwanica - 臺灣生物誌出版工具</title>
     <!-- Tailwind CSS -->
     <link rel="icon" href="data:,">{# a fake empty favicon #}
-    {#<script src="https://cdn.tailwindcss.com"></script>#}
-    {#<script src="{{ url_for('static', filename='vendor/tailwind.css') }}"></script>#}
     <link href="{{ url_for('static', filename='vendor/tailwind-build.css') }}" rel="stylesheet" />
     <!-- Flowbite CSS and JS -->
-    {% if  config.WEB_ENV == 'dev' %}
+    {% if config.WEB_ENV == 'dev' %}
     <link href="{{ url_for('static', filename='/vendor/flowbite.min.css')}}" rel="stylesheet" />
     {% else %}
     <link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/3.1.2/flowbite.min.css" rel="stylesheet" />
@@ -35,7 +33,6 @@
     {% endblock %}
 </head>
 <body class="bg-gray-50">
-
   <!-- =============================================================== -->
   <!-- Top Navigation Bar                                              -->
   <!-- =================================e============================== -->
@@ -142,7 +139,7 @@
   <!-- =============================================================== -->
   <!-- Main Content Layout (3-column)                                  -->
   <!-- =============================================================== -->
-  <div class="main-layout max-w-screen-2xl mx-auto flex">
+  <div class="main-layout flex">
     {% block main %}{% endblock %}
   </div>
   {% if  config.WEB_ENV == 'dev' %}

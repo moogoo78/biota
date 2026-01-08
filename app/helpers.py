@@ -269,6 +269,61 @@ def generate_pdf(data):
         # ReportLab supports: b, i, u, strike, super, sub, br, a
         return text
 
+    def convert_html_to_custom_fonts(text, base_font='Tinos'):
+        """Convert HTML tags to font tags for custom font support.
+
+        Args:
+            text: HTML text with <b> and <i> tags
+            base_font: Base font family ('Tinos' or 'Serif' for NotoSerifTC)
+
+        Returns:
+            Text with <font> tags instead of <b>/<i>
+        """
+        if not text:
+            return ''
+
+        # Map font combinations
+        #if base_font == 'Tinos':
+        #    fonts_map = {
+        #        'regular': 'Tinos-Regular',
+        #        'bold': 'Tinos-Bold',
+        #        'italic': 'Tinos-Italic',
+        #        'bold-italic': 'Tinos-BoldItalic'
+        #    }
+        #else:  # Serif (NotoSerifTC)
+        fonts_map = {
+            'regular': 'Serif-Regular',
+            'bold': 'Serif-Bold',
+            'italic': 'Serif-Regular',  # No italic variant for NotoSerifTC
+            'bold-italic': 'Serif-Bold'
+        }
+
+        # Handle nested <b><i>...</i></b> or <i><b>...</b></i> -> bold-italic
+        text = re.sub(
+            r'<b>\s*<i>(.*?)</i>\s*</b>|<i>\s*<b>(.*?)</b>\s*</i>',
+            lambda m: f'<font name="{fonts_map["bold-italic"]}">{m.group(1) or m.group(2)}</font>',
+            text,
+            flags=re.DOTALL
+        )
+
+        # Handle remaining <b>...</b> -> bold
+        text = re.sub(
+            r'<b>(.*?)</b>',
+            lambda m: f'<font name="{fonts_map["bold"]}">{m.group(1)}</font>',
+            text,
+            flags=re.DOTALL
+        )
+
+        # Handle remaining <i>...</i> -> italic
+        text = re.sub(
+            r'<i>(.*?)</i>',
+            lambda m: f'<font name="{fonts_map["italic"]}">{m.group(1)}</font>',
+            text,
+            flags=re.DOTALL
+        )
+
+        return text
+
     # Register regular font
     #font_regular2 = 'app/fonts/tinos/Tinos-Regular.ttf'
     #font_bold2 = 'app/fonts/tinos/Tinos-Bold.ttf'
@@ -388,7 +443,7 @@ def generate_pdf(data):
     scientific_name_style = ParagraphStyle(
         'ScientificName',
         parent=styles['Normal'],
-        fontName='Helvetica',  # Use Helvetica for HTML tag support
+        fontName=custom_fonts['regular'][0],  # Tinos-Regular (base font)
         fontSize=10,
         spaceAfter=2,
         spaceBefore=0,
@@ -473,8 +528,9 @@ def generate_pdf(data):
             append_sci_name = v['fullScientificName'].split('</i>')[1].strip()
             sci_name = f"<b>{counter}. {sanitize_html(v['scientificName'])}</b> {append_sci_name}"
 
-
-            item_elements.append(Paragraph(sci_name, scientific_name_style))
+            # Convert HTML tags to font tags for custom font support
+            sci_name_with_fonts = convert_html_to_custom_fonts(sci_name, base_font='Serif')
+            item_elements.append(Paragraph(sci_name_with_fonts, scientific_name_style))
 
             # Common names
             if v.get('commonNames'):
@@ -486,7 +542,8 @@ def generate_pdf(data):
             # Synonyms
             for syn in v.get('synonyms', []):
                 if syn:
-                    item_elements.append(Paragraph(sanitize_html(syn), scientific_name_style))
+                    syn_with_fonts = convert_html_to_custom_fonts(sanitize_html(syn), base_font='Serif')
+                    item_elements.append(Paragraph(syn_with_fonts, scientific_name_style))
 
             # Description
             if desc := v.get('description'):

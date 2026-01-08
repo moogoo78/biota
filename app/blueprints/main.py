@@ -54,11 +54,8 @@ from bs4 import BeautifulSoup
 bp = Blueprint('main', __name__)
 
 @bp.route('/')
-@login_required
 def index():
     return render_template('index.html', subheader='Index')
-
-
 
 @bp.route('/nametool')
 def nametool():

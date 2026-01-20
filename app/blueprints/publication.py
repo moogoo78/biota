@@ -53,10 +53,25 @@ bp = Blueprint('publication', __name__)
 def list_view():
     # create publication
     if namespace_id := request.args.get('namespace_id'):
-        res = put_publication_by_taicol_namespace(current_user, namespace_id)
+        force = request.args.get('force') == '1'
+        res = put_publication_by_taicol_namespace(current_user, namespace_id, force=force)
 
         if res['is_success'] is True:
             return redirect(url_for('publication.detail_view', item_id=res['publication_id']) + '?action=fetchAll#groups')
+        elif res.get('existing_publication_id'):
+            # publication exists, show confirmation alert
+            pub_id = res['existing_publication_id']
+            confirm_url = url_for('publication.list_view', namespace_id=namespace_id, force='1')
+            cancel_url = url_for('publication.list_view')
+            return f'''
+            <script>
+                if (confirm('Publication already exists. Continue will overwrite the existing content. Cancel will go back to publication list.')) {{
+                    window.location.href = '{confirm_url}';
+                }} else {{
+                    window.location.href = '{cancel_url}';
+                }}
+            </script>
+            '''
         else:
             return res['message']
     else:

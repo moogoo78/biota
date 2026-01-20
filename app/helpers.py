@@ -1094,7 +1094,69 @@ def create_collection_by_taicol_namespace(user_id, namespace_id):
     return collection
 
 
-def put_publication_by_taicol_namespace(user, namespace_id):
+def update_collection_by_taicol_namespace(collection):
+    """Update existing collection and items with latest data from TaiCOL"""
+    namespace_id = collection.source_id
+    url = f"{current_app.config['TAICOL_API']}/biota?namespace_id={namespace_id}&token={current_app.config['TAICOL_TOKEN']}"
+    resp = requests.get(url)
+    data = resp.json()
+
+    # Update collection
+    collection.name = data['title']
+    collection.source_data = data
+
+    # Build existing items lookup by name_id
+    existing_items = {}
+    for item in collection.items:
+        if item.source_data and item.source_data.get('name_id'):
+            existing_items[item.source_data['name_id']] = item
+
+    counter = 0
+    for i in data['group']:
+        counter += 1
+        name = i['name'].replace('<i>', '').replace('</i>', '')
+        name_id = i.get('name_id')
+
+        if name_id and name_id in existing_items:
+            # Update existing item
+            item = existing_items[name_id]
+            item.scientific_name = name
+            item.description = i['description']
+            item.distribution = i['distribution']
+            item.note = i['note']
+            item.source_data = i
+            item.common_names = '|'.join(i['common_names'])
+            item.sort = counter
+
+            # Update synonyms: delete old and create new
+            for syn in item.synonyms:
+                session.delete(syn)
+        else:
+            # Create new item
+            item = Item(
+                collection_id=collection.id,
+                description=i['description'],
+                distribution=i['distribution'],
+                note=i['note'],
+                user_id=collection.user_id,
+                scientific_name=name,
+                source_data=i,
+                common_names='|'.join(i['common_names']),
+                sort=counter
+            )
+            session.add(item)
+            session.commit()
+
+        # Add synonyms
+        for syn in i['synonyms']:
+            item_syn = ItemSynonym(item_id=item.id, name=syn['usage_references_text'], ref=f"name_id:{i['name_id']}")
+            session.add(item_syn)
+
+    session.commit()
+    return collection
+
+
+def put_publication_by_taicol_namespace(user, namespace_id, force=False):
     taicol_api = current_app.config['TAICOL_API']
     email = user.email
     resp = requests.get(f'{taicol_api}/user/namespace?email={email}')
@@ -1110,10 +1172,36 @@ def put_publication_by_taicol_namespace(user, namespace_id):
             if pub := Publication.query.join(Collection).filter(
                 Collection.user_id==user.id,
                 Collection.source_id==namespace_id,
-                Collection.source_name=='taicol:namespace').scalar(): # exist: do nothing
+                Collection.source_name=='taicol:namespace').scalar(): # exist
                 current_app.logger.info(f'publication [{pub.id}] already exist')
                 result['message'] = 'publication already exists'
-                # TODO: sync literatures, groups (Item)
+                result['existing_publication_id'] = pub.id
+                if force:
+                    # overwrite: update collection and items
+                    c = pub.collections[0]
+                    update_collection_by_taicol_namespace(c)
+
+                    # Update publication
+                    pub.title = c.name
+                    pub.author = c.source_data.get('author')
+
+                    # Update literatures: check source_id exists or create new
+                    existing_lit = {pl.source_id: pl for pl in pub.literatures}
+                    for i, v in enumerate(c.source_data['literatures']):
+                        ref_id = v['reference_id']
+                        if ref_id in existing_lit:
+                            # Update existing
+                            existing_lit[ref_id].name = v['citation']
+                            existing_lit[ref_id].sort = i + 1
+                        else:
+                            # Create new
+                            pl = PublicationLiterature(publication_id=pub.id, source_id=ref_id, name=v['citation'], sort=i+1)
+                            session.add(pl)
+
+                    session.commit()
+                    result['is_success'] = True
+                    result['publication_id'] = pub.id
+                    return result
 
             else: # create new pub
                 pub = Publication(title='', author='')

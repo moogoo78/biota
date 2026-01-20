@@ -435,7 +435,7 @@ class ItemSynonym(Base):
     __tablename__ = 'item_synonym'
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(1000))
+    name: Mapped[str] = mapped_column(Text)
     ref: Mapped[str] = mapped_column(String(1000))
     item_id: Mapped[int] = mapped_column(ForeignKey('item.id'))
     item: Mapped[Item] = relationship(back_populates='synonyms')

@@ -80,6 +80,43 @@ def list_view():
         return render_template('publication_list.html', publications=publications)
     return abort(404)
 
+
+@bp.route('/<int:item_id>/delete')
+@login_required
+def delete_publication(item_id):
+    if pub := session.get(Publication, item_id):
+        # Check permission
+        if current_user.id not in pub.get_user_id():
+            return abort(401)
+
+        # Delete related items and their children
+        for c in pub.collections:
+            for item in c.items:
+                for syn in item.synonyms:
+                    session.delete(syn)
+                for spec in item.specimens:
+                    session.delete(spec)
+                for img in item.images:
+                    session.delete(img)
+                for dist in item.distributions:
+                    session.delete(dist)
+                session.delete(item)
+            c.publication_id = None
+
+        # Delete literatures
+        for lit in pub.literatures:
+            session.delete(lit)
+
+        # Delete publication
+        session.delete(pub)
+        session.commit()
+
+        flash('稿件已刪除', 'success')
+        return redirect(url_for('publication.list_view'))
+
+    return abort(404)
+
+
 @bp.route('/<int:item_id>')
 @login_required
 def detail_view(item_id):

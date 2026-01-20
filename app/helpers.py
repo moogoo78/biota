@@ -294,7 +294,7 @@ def generate_pdf(data):
         fonts_map = {
             'regular': 'Serif-Regular',
             'bold': 'Serif-Bold',
-            'italic': 'Serif-Regular',  # No italic variant for NotoSerifTC
+            'italic': 'Serif-Italic',  # No italic variant for NotoSerifTC
             'bold-italic': 'Serif-Bold'
         }
 
@@ -331,9 +331,10 @@ def generate_pdf(data):
     custom_fonts = {
         'regular_tc': ['Serif-Regular','app/fonts/NotoSerifTC-Regular.ttf'],
         'bold_tc': ['Serif-Bold', 'app/fonts/NotoSerifTC-Bold.ttf'],
-        'regular': ['Tinos-Regular','app/fonts/Tinos-Regular.ttf'],
+        'regular': ['Tinos-Regular','app/fonts/NotoSerif-Regular.ttf'],
         'bold': ['Tinos-Bold', 'app/fonts/Tinos-Bold.ttf'],
-        'italic': ['Tinos-Italic', 'app/fonts/Tinos-Italic.ttf'],
+        #'italic': ['Tinos-Italic', 'app/fonts/Tinos-Italic.ttf'],
+        'italic': ['Serif-Italic', 'app/fonts/NotoSerif-Italic.ttf'],
         'bold-italic': ['Tinos-BoldItalic', 'app/fonts/Tinos-BoldItalic.ttf'],
     }
     for k, v in custom_fonts.items():
@@ -453,7 +454,7 @@ def generate_pdf(data):
     body_style = ParagraphStyle(
         'BodyJustify',
         parent=styles['Normal'],
-        fontName=custom_fonts['regular_tc'][0], #'Helvetica',  # Use Helvetica for HTML tag support
+        fontName=custom_fonts['regular'][0], #'Helvetica',  # Use Helvetica for HTML tag support
         alignment=TA_JUSTIFY,
         fontSize=10,
         spaceAfter=2,
@@ -465,7 +466,7 @@ def generate_pdf(data):
     normal_style = ParagraphStyle(
         'NormalText',
         parent=styles['Normal'],
-        fontName=custom_fonts['regular_tc'][0],
+        fontName=custom_fonts['regular'][0],
         fontSize=10,
         spaceAfter=2,
         spaceBefore=0,

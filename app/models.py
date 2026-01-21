@@ -93,6 +93,7 @@ class Publication(Base, TimestampMixin):
     status: Mapped[str] = mapped_column(String(500), default='init') # init, fetched, fetchedSpecimen
     literatures: Mapped[List['PublicationLiterature']] = relationship(back_populates='publication', order_by='PublicationLiterature.name')
     collections: Mapped[List['Collection']] = relationship(back_populates='publication')
+    keys: Mapped[List['IdentificationKey']] = relationship(back_populates='publication')
 
     def get_user_id(self):
         return [x.user_id for x in self.collections]
@@ -505,3 +506,30 @@ class User(Base, TimestampMixin, UserMixin):
 
     def get_unread_notifications(self):
         return Notification.query.filter(Notification.user_id==self.id, Notification.read_at==None).all()
+
+
+class IdentificationKey(Base, TimestampMixin):
+    __tablename__ = 'identification_key'
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    title: Mapped[Optional[str]] = mapped_column(String(500))
+    publication_id: Mapped[int] = mapped_column(ForeignKey('publication.id'))
+
+    publication: Mapped[Publication] = relationship(back_populates='keys')
+    entries: Mapped[List['KeyEntry']] = relationship(back_populates='key', order_by='KeyEntry.sort')
+
+
+class KeyEntry(Base):
+    __tablename__ = 'key_entry'
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    key_id: Mapped[int] = mapped_column(ForeignKey('identification_key.id'))
+    number: Mapped[int] = mapped_column(Integer)  # couplet number (1, 2, 3...)
+    indent_level: Mapped[int] = mapped_column(Integer, default=0)
+    description: Mapped[str] = mapped_column(Text)
+    result_couplet: Mapped[Optional[int]] = mapped_column(Integer)  # go to number
+    result_item_id: Mapped[Optional[int]] = mapped_column(ForeignKey('item.id'))  # species
+    sort: Mapped[int] = mapped_column(Integer)  # display order
+
+    key: Mapped[IdentificationKey] = relationship(back_populates='entries')
+    result_item: Mapped[Optional[Item]] = relationship()

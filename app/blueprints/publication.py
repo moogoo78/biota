@@ -36,6 +36,8 @@ from app.models import (
     ItemSynonym,
     ItemImage,
     PublicationLiterature,
+    IdentificationKey,
+    KeyEntry,
 )
 from app.database import session
 from app.helpers import (
@@ -460,3 +462,100 @@ def post_publish(item_id):
             response.headers['filename'] = filename
 
         return response
+
+
+# ===== Identification Key Routes =====
+
+@bp.route('/<int:pub_id>/keys')
+@login_required
+def key_list(pub_id):
+    if pub := session.get(Publication, pub_id):
+        if current_user.id not in pub.get_user_id():
+            return abort(401)
+        return render_template('publication_key_list.html', publication=pub)
+    return abort(404)
+
+
+@bp.route('/<int:pub_id>/keys/create', methods=['GET', 'POST'])
+@login_required
+def key_create(pub_id):
+    if pub := session.get(Publication, pub_id):
+        if current_user.id not in pub.get_user_id():
+            return abort(401)
+
+        if request.method == 'POST':
+            title = request.form.get('title', '')
+            key = IdentificationKey(title=title, publication_id=pub_id)
+            session.add(key)
+            session.commit()
+            return redirect(url_for('publication.key_edit', pub_id=pub_id, key_id=key.id))
+
+        return render_template('publication_key_form.html', publication=pub, key=None)
+    return abort(404)
+
+
+@bp.route('/<int:pub_id>/keys/<int:key_id>')
+@login_required
+def key_edit(pub_id, key_id):
+    if pub := session.get(Publication, pub_id):
+        if current_user.id not in pub.get_user_id():
+            return abort(401)
+
+        if key := session.get(IdentificationKey, key_id):
+            items_raw = pub.collections[0].items if pub.collections else []
+            items = [{'id': item.id, 'scientific_name': item.scientific_name} for item in items_raw]
+            return render_template('publication_key_form.html', publication=pub, key=key, items=items)
+
+    return abort(404)
+
+
+@bp.route('/<int:pub_id>/keys/<int:key_id>/entries', methods=['POST'])
+@login_required
+def key_entry_save(pub_id, key_id):
+    if pub := session.get(Publication, pub_id):
+        if current_user.id not in pub.get_user_id():
+            return abort(401)
+
+        if key := session.get(IdentificationKey, key_id):
+            data = request.json
+
+            # Clear existing entries and recreate
+            for entry in key.entries:
+                session.delete(entry)
+            session.commit()
+
+            # Add new entries
+            for i, entry_data in enumerate(data.get('entries', [])):
+                entry = KeyEntry(
+                    key_id=key_id,
+                    number=entry_data.get('number', 1),
+                    indent_level=entry_data.get('indent_level', 0),
+                    description=entry_data.get('description', ''),
+                    result_couplet=entry_data.get('result_couplet') or None,
+                    result_item_id=entry_data.get('result_item_id') or None,
+                    sort=i + 1
+                )
+                session.add(entry)
+
+            session.commit()
+            return jsonify({'status': 'success', 'message': '檢索表已儲存'})
+
+    return jsonify({'status': 'error', 'message': 'Not found'}), 404
+
+
+@bp.route('/<int:pub_id>/keys/<int:key_id>/delete', methods=['POST', 'GET'])
+@login_required
+def key_delete(pub_id, key_id):
+    if pub := session.get(Publication, pub_id):
+        if current_user.id not in pub.get_user_id():
+            return abort(401)
+
+        if key := session.get(IdentificationKey, key_id):
+            for entry in key.entries:
+                session.delete(entry)
+            session.delete(key)
+            session.commit()
+            flash('檢索表已刪除', 'success')
+            return redirect(url_for('publication.key_list', pub_id=pub_id))
+
+    return abort(404)

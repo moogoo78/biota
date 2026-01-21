@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+
+{% block subheader_title %}{{ _('編輯檢索表') }} - {{ publication.title }}{% endblock %}
+
+{% block style %}
+<style>
+.key-entry {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 8px;
+    border: 1px solid #e5e7eb;
+    border-radius: 4px;
+    margin-bottom: 8px;
+    background: #fff;
+}
+.key-entry:hover {
+    background: #f9fafb;
+}
+.key-entry .indent-marker {
+    color: #9ca3af;
+    min-width: 20px;
+}
+.key-entry input, .key-entry select {
+    padding: 4px 8px;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+}
+.key-entry .description {
+    flex: 1;
+}
+.key-entry .number-input {
+    width: 60px;
+}
+.key-entry .indent-input {
+    width: 60px;
+}
+.key-entry .result-input {
+    width: 80px;
+}
+.key-entry .item-select {
+    width: 200px;
+}
+</style>
+{% endblock %}
+
+{% block main %}
+<main class="flex-1 bg-white p-6 overflow-y-auto">
+    <div class="mb-4">
+        <a href="{{ url_for('publication.key_list', pub_id=publication.id) }}" class="text-blue-600 hover:underline">&larr; {{ _('返回檢索表列表') }}</a>
+    </div>
+
+    {% if key %}
+    <div class="mb-6">
+        <h2 class="text-xl font-bold mb-4">{{ key.title or '(未命名)' }}</h2>
+
+        <div class="mb-4 p-4 bg-gray-50 rounded-lg">
+            <h3 class="font-semibold mb-2">{{ _('使用說明') }}</h3>
+            <ul class="text-sm text-gray-600 list-disc list-inside">
+                <li>{{ _('號碼：同號碼的兩個選項為一組對比') }}</li>
+                <li>{{ _('縮排：控制顯示時的層級深度') }}</li>
+                <li>{{ _('描述：該選項的特徵描述') }}</li>
+                <li>{{ _('跳至：如果還需繼續判斷，填入下一組號碼') }}</li>
+                <li>{{ _('物種：如果是最終結果，選擇對應的物種') }}</li>
+            </ul>
+        </div>
+
+        <div id="entries-container" class="mb-4">
+            <!-- Entries will be rendered here -->
+        </div>
+
+        <div class="flex gap-2 mb-4">
+            <button type="button" onclick="addEntry()" class="focus:outline-none text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5">
+                {{ _('新增項目') }}
+            </button>
+            <button type="button" onclick="saveEntries()" class="focus:outline-none text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5">
+                {{ _('儲存') }}
+            </button>
+        </div>
+
+        <div class="mt-6 p-4 bg-gray-100 rounded-lg">
+            <h3 class="font-semibold mb-2">{{ _('預覽') }}</h3>
+            <div id="preview-container" class="font-mono text-sm whitespace-pre-wrap"></div>
+        </div>
+    </div>
+    {% else %}
+    <div class="mb-6">
+        <h2 class="text-xl font-bold mb-4">{{ _('新增檢索表') }}</h2>
+        <form method="POST">
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">{{ _('標題') }}</label>
+                <input type="text" name="title" class="w-full p-2 border border-gray-300 rounded-lg" placeholder="例：臺灣產XX科檢索表">
+            </div>
+            <button type="submit" class="focus:outline-none text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5">
+                {{ _('建立') }}
+            </button>
+        </form>
+    </div>
+    {% endif %}
+</main>
+{% endblock %}
+
+{% block scripts %}
+{% if key %}
+<script>
+const items = {{ items|tojson if items else '[]'|safe }};
+let entries = {{ key.entries|map(attribute='__dict__')|list|tojson if key else '[]'|safe }};
+
+// Clean up entries data
+entries = entries.map(e => ({
+    number: e.number || 1,
+    indent_level: e.indent_level || 0,
+    description: e.description || '',
+    result_couplet: e.result_couplet || null,
+    result_item_id: e.result_item_id || null
+}));
+
+if (entries.length === 0) {
+    // Initialize with two entries for first couplet
+    entries = [
+        { number: 1, indent_level: 0, description: '', result_couplet: null, result_item_id: null },
+        { number: 1, indent_level: 0, description: '', result_couplet: null, result_item_id: null }
+    ];
+}
+
+function renderEntries() {
+    const container = document.getElementById('entries-container');
+    container.innerHTML = entries.map((entry, index) => `
+        <div class="key-entry" data-index="${index}">
+            <span class="indent-marker">${'─'.repeat(entry.indent_level)}</span>
+            <input type="number" class="number-input" value="${entry.number}" min="1" onchange="updateEntry(${index}, 'number', this.value)" title="號碼">
+            <input type="number" class="indent-input" value="${entry.indent_level}" min="0" max="10" onchange="updateEntry(${index}, 'indent_level', this.value)" title="縮排">
+            <input type="text" class="description" value="${escapeHtml(entry.description)}" onchange="updateEntry(${index}, 'description', this.value)" placeholder="特徵描述">
+            <input type="number" class="result-input" value="${entry.result_couplet || ''}" min="1" onchange="updateEntry(${index}, 'result_couplet', this.value)" placeholder="跳至" title="跳至號碼">
+            <select class="item-select" onchange="updateEntry(${index}, 'result_item_id', this.value)" title="物種">
+                <option value="">-- 選擇物種 --</option>
+                ${items.map(item => `<option value="${item.id}" ${entry.result_item_id == item.id ? 'selected' : ''}>${item.scientific_name}</option>`).join('')}
+            </select>
+            <button type="button" onclick="removeEntry(${index})" class="text-red-600 hover:text-red-800 px-2">&times;</button>
+        </div>
+    `).join('');
+
+    updatePreview();
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function updateEntry(index, field, value) {
+    if (field === 'number' || field === 'indent_level') {
+        entries[index][field] = parseInt(value) || 0;
+    } else if (field === 'result_couplet') {
+        entries[index][field] = value ? parseInt(value) : null;
+    } else if (field === 'result_item_id') {
+        entries[index][field] = value ? parseInt(value) : null;
+    } else {
+        entries[index][field] = value;
+    }
+    updatePreview();
+}
+
+function addEntry() {
+    const lastEntry = entries[entries.length - 1];
+    const newNumber = lastEntry ? lastEntry.number : 1;
+    entries.push({
+        number: newNumber,
+        indent_level: lastEntry ? lastEntry.indent_level : 0,
+        description: '',
+        result_couplet: null,
+        result_item_id: null
+    });
+    renderEntries();
+}
+
+function removeEntry(index) {
+    entries.splice(index, 1);
+    renderEntries();
+}
+
+function updatePreview() {
+    const container = document.getElementById('preview-container');
+    let preview = '';
+
+    entries.forEach(entry => {
+        const indent = '   '.repeat(entry.indent_level);
+        let result = '';
+        if (entry.result_couplet) {
+            result = ` ... ${entry.result_couplet}`;
+        } else if (entry.result_item_id) {
+            const item = items.find(i => i.id === entry.result_item_id);
+            result = item ? ` ... ${item.scientific_name}` : '';
+        }
+        preview += `${indent}${entry.number}. ${entry.description}${result}\n`;
+    });
+
+    container.textContent = preview;
+}
+
+function saveEntries() {
+    fetch('{{ url_for("publication.key_entry_save", pub_id=publication.id, key_id=key.id) }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ entries: entries })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            alert(data.message);
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        alert('Error: ' + error);
+    });
+}
+
+// Initial render
+renderEntries();
+</script>
+{% endif %}
+{% endblock %}

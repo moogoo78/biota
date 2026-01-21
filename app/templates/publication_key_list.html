@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block subheader_title %}{{ _('檢索表') }} - {{ publication.title }}{% endblock %}
+{% block main %}
+<main class="flex-1 bg-white p-6 overflow-y-auto">
+    <div class="mb-4">
+        <a href="{{ url_for('publication.detail_view', item_id=publication.id) }}" class="text-blue-600 hover:underline">&larr; {{ _('返回稿件') }}</a>
+    </div>
+
+    <div class="mb-4">
+        <a href="{{ url_for('publication.key_create', pub_id=publication.id) }}">
+            <button type="button" class="focus:outline-none text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5">
+                {{ _('新增檢索表') }}
+            </button>
+        </a>
+    </div>
+
+    <div class="relative overflow-x-auto">
+        <table class="w-full text-sm text-left rtl:text-right text-gray-500">
+            <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                <tr>
+                    <th scope="col" class="px-6 py-3">{{ _('標題') }}</th>
+                    <th scope="col" class="px-6 py-3">{{ _('項目數') }}</th>
+                    <th scope="col" class="px-6 py-3">{{ _('更新日期') }}</th>
+                    <th scope="col" class="px-6 py-3"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for key in publication.keys %}
+                <tr class="bg-white border-b border-gray-200">
+                    <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
+                        {{ key.title or '(未命名)' }}
+                    </th>
+                    <td class="px-6 py-4">{{ key.entries|length }}</td>
+                    <td class="px-6 py-4">{{ key.updated_at.strftime('%Y.%m.%d') if key.updated_at else '-' }}</td>
+                    <td class="px-6 py-4">
+                        <a href="{{ url_for('publication.key_edit', pub_id=publication.id, key_id=key.id) }}">
+                            <button type="button" class="focus:outline-none text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2">{{ _('編輯') }}</button>
+                        </a>
+                        <button type="button" onclick="deleteKey({{ key.id }}, '{{ key.title }}')" class="focus:outline-none text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2">{{ _('刪除') }}</button>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" class="px-6 py-4 text-center text-gray-400">{{ _('尚無檢索表') }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function deleteKey(id, title) {
+    if (confirm('確定要刪除「' + (title || '此檢索表') + '」嗎？此操作無法復原。')) {
+        window.location.href = '{{ url_for("publication.key_list", pub_id=publication.id) }}/' + id + '/delete';
+    }
+}
+</script>
+{% endblock %}

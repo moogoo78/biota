@@ -55,6 +55,12 @@
         </svg>
         <span class="ml-3">{{ _('分類群 & 標本') }}</span></a>
       </li>
+      <li class="mb-2"><a href="{{ url_for('publication.key_list', pub_id=publication.id) }}" class="flex items-center p-2 text-base font-normal text-gray-500 rounded-lg hover:bg-gray-200">
+        <svg class="w-6 h-6 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+          <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v13m0-13c-2.8183 0-5.3278-1.36145-6.89434-3.47015M12 6c2.8183 0 5.3278-1.36145 6.8943-3.47015M12 19c-2.8183 0-5.3278 1.3615-6.89434 3.4701M12 19c2.8183 0 5.3278 1.3615 6.8943 3.4701"/>
+        </svg>
+        <span class="ml-3">{{ _('檢索表') }}</span></a>
+      </li>
       {#
       <li class="mb-2 sidebar-item" data-main="specimens"><a href="#" class="flex items-center p-2 text-base font-normal text-gray-500 rounded-lg hover:bg-gray-200" id="sidebar-specimens">
         <svg class="w-6 h-6 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">

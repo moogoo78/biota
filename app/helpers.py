@@ -30,9 +30,7 @@ from app.models import (
 )
 from app.database import session
 from app.jinja_func import pick_first
-from app.helpers_taicol import (
-    check_namespace_available,
-)
+
 TAIWAN_COUNTIES = {
     '宜蘭縣': 'Yilan',
     '桃園市': 'Taoyuan',

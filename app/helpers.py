@@ -30,7 +30,9 @@ from app.models import (
 )
 from app.database import session
 from app.jinja_func import pick_first
-
+from app.helpers_taicol import (
+    check_namespace_available,
+)
 TAIWAN_COUNTIES = {
     '宜蘭縣': 'Yilan',
     '桃園市': 'Taoyuan',
@@ -1060,6 +1062,54 @@ def send_email(to, subject, body):
         current_app.logger.error(f"Error sending email: {error_code} - {error_message}")
         return None
 
+
+def put_publication_by_taicol_namespace(user, namespace_id):
+    result = {
+        'message': '',
+        'status': '',
+        'data': {},
+    }
+
+    if is_ok := check_namespace_available(user.email, namespace_id):
+        publication_id = None
+        message = ''
+        if pub := Publication.query.join(Collection).filter(
+            Collection.user_id==user.id,
+            Collection.source_id==namespace_id,
+            Collection.source_name=='taicol:namespace').scalar(): # exist
+            message = f'publication [{pub.id}] already exist'
+            publication_id = pub.id
+            result['status'] = 'exist'
+        else:
+            result['status'] = 'new'
+            pub = Publication(title='', author='')
+            session.add(pub)
+            session.commit()
+
+            c = create_collection_by_taicol_namespace(user.id, namespace_id)
+            pub.title = c.name
+            pub.author = c.source_data.get('author')
+            c.publication_id = pub.id
+
+            for i, v in enumerate(c.source_data['literatures']):
+                pl = PublicationLiterature(publication_id=pub.id, source_id=v['reference_id'], name=v['citation'], sort=i+1)
+                session.add(pl)
+
+            session.commit()
+            publication_id = pl.id
+
+        current_app.logger.info(message)
+        result.update({
+            'message': message,
+            'data': {
+                'publication_id': publication_id,
+            }
+        })
+        return result
+
+    return result
+
+
 def create_collection_by_taicol_namespace(user_id, namespace_id):
     url = f"{current_app.config['TAICOL_API']}/biota?namespace_id={namespace_id}&token={current_app.config['TAICOL_TOKEN']}"
     resp = requests.get(url)
@@ -1081,7 +1131,7 @@ def create_collection_by_taicol_namespace(user_id, namespace_id):
             scientific_name=name,
             source_data=i,
             common_names='|'.join(i['common_names']),
-            sort=counter
+            sort=counter,
         )
         session.add(item)
         session.commit()
@@ -1095,7 +1145,7 @@ def create_collection_by_taicol_namespace(user_id, namespace_id):
     return collection
 
 
-def update_collection_by_taicol_namespace(collection):
+def sync_collection_by_taicol_namespace(collection):
     """Update existing collection and items with latest data from TaiCOL"""
     namespace_id = collection.source_id
     url = f"{current_app.config['TAICOL_API']}/biota?namespace_id={namespace_id}&token={current_app.config['TAICOL_TOKEN']}"
@@ -1106,19 +1156,39 @@ def update_collection_by_taicol_namespace(collection):
     collection.name = data['title']
     collection.source_data = data
 
+    remote_items = [i['name_id'] for i in data['group']]
     # Build existing items lookup by name_id
     existing_items = {}
-    for item in collection.items:
-        if item.source_data and item.source_data.get('name_id'):
-            existing_items[item.source_data['name_id']] = item
+    counter_del = 0
+    counter_new = 0
+    counter_edit = 0
 
+    for item in collection.items:
+        source_id = item.source_data.get('name_id')
+        if item.source_data and source_id:
+            existing_items[source_id] = item
+            if source_id not in remote_items:
+                counter_del += 1
+                for syn in item.synonyms:
+                    session.delete(syn)
+                for spec in item.specimens:
+                    session.delete(spec)
+                for img in item.images:
+                    session.delete(img)
+                for dist in item.distributions:
+                    session.delete(dist)
+                session.delete(item)
+
+    session.commit()
     counter = 0
+
     for i in data['group']:
         counter += 1
         name = i['name'].replace('<i>', '').replace('</i>', '')
         name_id = i.get('name_id')
 
         if name_id and name_id in existing_items:
+            counter_edit += 1
             # Update existing item
             item = existing_items[name_id]
             item.scientific_name = name
@@ -1147,6 +1217,7 @@ def update_collection_by_taicol_namespace(collection):
             )
             session.add(item)
             session.commit()
+            counter_new += 1
 
         # Add synonyms
         for syn in i['synonyms']:
@@ -1154,79 +1225,11 @@ def update_collection_by_taicol_namespace(collection):
             session.add(item_syn)
 
     session.commit()
-    return collection
-
-
-def put_publication_by_taicol_namespace(user, namespace_id, force=False):
-    taicol_api = current_app.config['TAICOL_API']
-    email = user.email
-    resp = requests.get(f'{taicol_api}/user/namespace?email={email}')
-    result = {
-        'message': '',
-        'is_success': False
+    return {
+        'deleted': counter_del,
+        'created': counter_new,
+        'updated': counter_edit,
     }
-    if resp.ok:
-        resp_json = resp.json()
-        available_namespaces = resp_json.get('namespaces', [])
-
-        if int(namespace_id) in available_namespaces:
-            if pub := Publication.query.join(Collection).filter(
-                Collection.user_id==user.id,
-                Collection.source_id==namespace_id,
-                Collection.source_name=='taicol:namespace').scalar(): # exist
-                current_app.logger.info(f'publication [{pub.id}] already exist')
-                result['message'] = 'publication already exists'
-                result['existing_publication_id'] = pub.id
-                if force:
-                    # overwrite: update collection and items
-                    c = pub.collections[0]
-                    update_collection_by_taicol_namespace(c)
-
-                    # Update publication
-                    pub.title = c.name
-                    pub.author = c.source_data.get('author')
-
-                    # Update literatures: check source_id exists or create new
-                    existing_lit = {pl.source_id: pl for pl in pub.literatures}
-                    for i, v in enumerate(c.source_data['literatures']):
-                        ref_id = v['reference_id']
-                        if ref_id in existing_lit:
-                            # Update existing
-                            existing_lit[ref_id].name = v['citation']
-                            existing_lit[ref_id].sort = i + 1
-                        else:
-                            # Create new
-                            pl = PublicationLiterature(publication_id=pub.id, source_id=ref_id, name=v['citation'], sort=i+1)
-                            session.add(pl)
-
-                    session.commit()
-                    result['is_success'] = True
-                    result['publication_id'] = pub.id
-                    return result
-
-            else: # create new pub
-                pub = Publication(title='', author='')
-                session.add(pub)
-                session.commit()
-
-                c = create_collection_by_taicol_namespace(user.id, namespace_id)
-                pub.title = c.name
-                pub.author = c.source_data.get('author')
-                c.publication_id = pub.id
-
-                for i, v in enumerate(c.source_data['literatures']):
-                    pl = PublicationLiterature(publication_id=pub.id, source_id=v['reference_id'], name=v['citation'], sort=i+1)
-                    session.add(pl)
-
-                session.commit()
-                result['is_success'] = True
-                result['publication_id'] = pub.id
-                return result
-        else:
-            result['message'] = 'namespace not available'
-
-    return result
-
 
 def format_specimen_display(data):
     record_number = data.get('recordNumber', '--')
@@ -1235,3 +1238,14 @@ def format_specimen_display(data):
     locality = data.get('locality', '--')
     dataset_name = data.get('datasetName', '--') # institudion ID ?
     return f'{locality}, {recorded_by} {record_number} ({dataset_name}:{catalog_number})'
+
+def check_namespace_available(email, namespace_id):
+    taicol_api = current_app.config['TAICOL_API']
+    resp = requests.get(f'{taicol_api}/user/namespace?email={email}')
+    if resp.ok:
+        resp_json = resp.json()
+        available_namespaces = resp_json.get('namespaces', [])
+        if int(namespace_id) in available_namespaces:
+            return True
+
+    return False

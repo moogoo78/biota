@@ -42,6 +42,7 @@ from app.models import (
 from app.database import session
 from app.helpers import (
     put_publication_by_taicol_namespace,
+    sync_collection_by_taicol_namespace,
     format_specimen_display,
     generate_docx,
     generate_pdf,
@@ -49,23 +50,31 @@ from app.helpers import (
 
 bp = Blueprint('publication', __name__)
 
+@bp.route('/publication/<int:item_id>/sync')
+@login_required
+def sync_publication(item_id):
+    if pub := session.get(Publication, item_id):
+        c = pub.collections[0]
+        actions = sync_collection_by_taicol_namespace(c)
+        msg = f'[CREATE] {actions['created']} new name(s), [UPDATE] {actions['updated']} name(s), [DELETE] {actions['deleted']} name(s)'
+        flash(msg)
+    return redirect(url_for('publication.detail_view', item_id=pub.id) + '?action=fetchAll#groups')
+
 
 @bp.route('/')
 @login_required
 def list_view():
-    # create publication
-    if namespace_id := request.args.get('namespace_id'):
-        force = request.args.get('force') == '1'
-        res = put_publication_by_taicol_namespace(current_user, namespace_id, force=force)
-
-        if res['is_success'] is True:
-            return redirect(url_for('publication.detail_view', item_id=res['publication_id']) + '?action=fetchAll#groups')
-        elif res.get('existing_publication_id'):
-            # publication exists, show confirmation alert
-            pub_id = res['existing_publication_id']
-            confirm_url = url_for('publication.list_view', namespace_id=namespace_id, force='1')
-            cancel_url = url_for('publication.list_view')
-            return f'''
+    namespace_id = request.args.get('namespace_id')
+    if namespace_id:
+        res = put_publication_by_taicol_namespace(current_user, namespace_id)
+        pub_id = res['data'].get('publication_id')
+        if res['status'] == 'new':
+            return redirect(url_for('publication.detail_view', item_id=pub_id) + '?action=fetchAll#groups')
+        elif res['status'] == 'exist':
+            if pub_id := res['data'].get('publication_id'):
+                confirm_url = url_for('publication.sync_publication', item_id=pub_id)
+                cancel_url = url_for('publication.list_view')
+                return f'''
             <script>
                 if (confirm('Publication already exists. Continue will overwrite the existing content. Cancel will go back to publication list.')) {{
                     window.location.href = '{confirm_url}';
@@ -74,13 +83,10 @@ def list_view():
                 }}
             </script>
             '''
-        else:
-            return res['message']
     else:
         collections = Collection.query.filter(Collection.user_id==current_user.id, Collection.publication_id > 0).all()
         publications = [x.publication for x in collections]
         return render_template('publication_list.html', publications=publications)
-    return abort(404)
 
 
 @bp.route('/<int:item_id>/delete')

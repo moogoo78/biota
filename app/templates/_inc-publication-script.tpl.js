@@ -513,7 +513,7 @@
        // Process each scientific name one by one with a small delay
        for (let i = 0; i < itemData.length; i++) {
          const item = itemData[i];
-         if (item.rank_id === 34) { // Only process 'species' rank (shlee)
+         if (['34', '35', '36', '37', '38', '39', '40', '41', '42', '45', '46', '47'].includes(String(item.rank_id))) { // Only process 'species' rank (shlee)
            tbiaLabel.textContent = `fetching... [${item.name}] from TBIA`;
            let pa =  Math.round(((i+1) / itemData.length) * 100);
            tbiaPa.textContent = `${pa}%`;

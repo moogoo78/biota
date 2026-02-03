@@ -515,6 +515,45 @@ def generate_pdf(data):
             if desc := cat[0].get('description'):
                 elements.append(Paragraph(sanitize_html(desc), body_style))
 
+        # Add identification keys if present (after item_category)
+        if keys := d.get('keys'):
+            # Key entries style
+            key_entry_style = ParagraphStyle(
+                'KeyEntry',
+                parent=styles['Normal'],
+                fontName=custom_fonts['regular_tc'][0],
+                fontSize=10,
+                spaceAfter=2,
+                spaceBefore=2,
+                leading=14,
+                leftIndent=0,
+            )
+
+            for key in keys:
+                # Key title
+                key_title = key.get('title', '檢索表')
+                elements.append(Paragraph(f'KEY: {key_title}', section_heading_style))
+                elements.append(Spacer(1, 0.1*inch))
+
+                # Render entries
+                for entry in key.get('entries', []):
+                    indent = '&nbsp;&nbsp;&nbsp;' * entry.get('indent_level', 0)
+                    number = entry.get('number', '')
+                    description = sanitize_html(entry.get('description', ''))
+
+                    # Determine result text
+                    result_text = ''
+                    if result_couplet := entry.get('result_couplet'):
+                        result_text = f' ... {result_couplet}'
+                    elif result_name := entry.get('result_item_name'):
+                        result_text = f' ... <i>{result_name}</i>'
+
+                    entry_text = f'{indent}{number}. {description}{result_text}'
+                    entry_text_with_fonts = convert_html_to_custom_fonts(entry_text, base_font='Serif')
+                    elements.append(Paragraph(entry_text_with_fonts, key_entry_style))
+
+                elements.append(Spacer(1, 0.2*inch))
+
         elements.append(Paragraph('LITERATURE', literature_style))
         for lit in d.get('literatures', []):
             if isinstance(lit, dict):
@@ -585,49 +624,6 @@ def generate_pdf(data):
             elements.extend(item_elements)
             # Small space between items (matching DOCX spacing)
             elements.append(Spacer(1, 6))
-
-        # Add identification keys if present
-        if keys := d.get('keys'):
-            # Switch to single column for keys
-            elements.append(NextPageTemplate('SingleCol'))
-            elements.append(PageBreak())
-
-            for key in keys:
-                # Key title
-                key_title = key.get('title', '檢索表')
-                elements.append(Paragraph(f'KEY: {key_title}', section_heading_style))
-                elements.append(Spacer(1, 0.1*inch))
-
-                # Key entries style
-                key_entry_style = ParagraphStyle(
-                    'KeyEntry',
-                    parent=styles['Normal'],
-                    fontName=custom_fonts['regular_tc'][0],
-                    fontSize=10,
-                    spaceAfter=2,
-                    spaceBefore=2,
-                    leading=14,
-                    leftIndent=0,
-                )
-
-                # Render entries
-                for entry in key.get('entries', []):
-                    indent = '&nbsp;&nbsp;&nbsp;' * entry.get('indent_level', 0)
-                    number = entry.get('number', '')
-                    description = sanitize_html(entry.get('description', ''))
-
-                    # Determine result text
-                    result_text = ''
-                    if result_couplet := entry.get('result_couplet'):
-                        result_text = f' ... {result_couplet}'
-                    elif result_name := entry.get('result_item_name'):
-                        result_text = f' ... <i>{result_name}</i>'
-
-                    entry_text = f'{indent}{number}. {description}{result_text}'
-                    entry_text_with_fonts = convert_html_to_custom_fonts(entry_text, base_font='Serif')
-                    elements.append(Paragraph(entry_text_with_fonts, key_entry_style))
-
-                elements.append(Spacer(1, 0.2*inch))
 
         # Add page break between namespaces (except for the last one)
         if idx < len(data) - 1:

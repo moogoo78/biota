@@ -1,5 +1,26 @@
 <h1 class="mb-2 text-2xl font-bold text-gray-900" id="display-title">{{ publication.title }}</h1>
 <p class="mb-4 text-lg text-gray-700">Author: <span id="display-author">{{ publication.author }}</span></p>
+
+{% if publication.keys|length > 0 %}
+{% for key in publication.keys %}
+<div class="mb-6 p-4 bg-gray-50 rounded-lg">
+  <h2 class="mb-2 text-lg font-semibold text-gray-900">KEY: {{ key.title or '檢索表' }}</h2>
+  <div class="font-mono text-sm">
+    {% for entry in key.entries %}
+    <p class="py-1" style="padding-left: {{ entry.indent_level * 1.5 }}em;">
+      {{ entry.number }}. {{ entry.description }}
+      {% if entry.result_couplet %}
+      <span class="text-gray-500">... {{ entry.result_couplet }}</span>
+      {% elif entry.result_item %}
+      <span class="text-gray-500">... <i>{{ entry.result_item.scientific_name }}</i></span>
+      {% endif %}
+    </p>
+    {% endfor %}
+  </div>
+</div>
+{% endfor %}
+{% endif %}
+
 <h2 class="mb-2 text-lg font-semibold text-gray-900">LITERATURES</h2>
 <ul class="list-disc list-inside space-y-1 text-gray-600 mb-6">
   {% for i in publication.literatures %}

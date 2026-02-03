@@ -410,6 +410,7 @@ def post_publish(item_id):
             'literatures': [],
             'items': [],
             'item_category': [],
+            'keys': [],
         }
         for i in pub.literatures:
             data['literatures'].append(i.name)
@@ -440,6 +441,26 @@ def post_publish(item_id):
             else:
                 data['item_category'].append(item)
 
+        # Build item lookup for identification keys
+        item_lookup = {i.id: i.scientific_name for i in pub.collections[0].items}
+
+        # Add identification keys
+        for key in pub.keys:
+            key_data = {
+                'title': key.title,
+                'entries': []
+            }
+            for entry in key.entries:
+                entry_data = {
+                    'number': entry.number,
+                    'indent_level': entry.indent_level,
+                    'description': entry.description,
+                    'result_couplet': entry.result_couplet,
+                    'result_item_id': entry.result_item_id,
+                    'result_item_name': item_lookup.get(entry.result_item_id, '') if entry.result_item_id else ''
+                }
+                key_data['entries'].append(entry_data)
+            data['keys'].append(key_data)
 
         if fmt == 'docx':
             docx = generate_docx([data])

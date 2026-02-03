@@ -431,9 +431,11 @@ def post_publish(item_id):
             }
             for s in i.synonyms:
                 item['synonyms'].append(s.name)
-                #for j in i.specimens:
-                #    item['specimens'].append(j.text)
-                item['specimens'] = i.get_grouped_specimens()
+
+            # append specimens
+            #for j in i.specimens:
+            #    item['specimens'].append(j.text)
+            item['specimens'] = i.get_grouped_specimens()
 
             if int(rank_id) >= 34: # species level
                 #print(i.source_data['usage_references_text'])

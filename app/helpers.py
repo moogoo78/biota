@@ -329,7 +329,7 @@ def generate_pdf(data):
     #font_bold2 = 'app/fonts/tinos/Tinos-Bold.ttf'
     #NotoSerifTC-VariableFont_wght.ttf
     custom_fonts = {
-        'regular_tc': ['Serif-Regular','app/fonts/NotoSerifTC-Regular.ttf'],
+        'regular_tc': ['Serif-Regular','app/fonts/NotoSerifTC-Light.ttf'],
         'bold_tc': ['Serif-Bold', 'app/fonts/NotoSerifTC-Bold.ttf'],
         'regular': ['Tinos-Regular','app/fonts/NotoSerif-Regular.ttf'],
         'bold': ['Tinos-Bold', 'app/fonts/Tinos-Bold.ttf'],
@@ -438,7 +438,16 @@ def generate_pdf(data):
         fontName=custom_fonts['bold_tc'][0],
         fontSize=12,  # h3 size
         spaceAfter=4,
-        spaceBefore=8,
+        spaceBefore=12,
+        alignment=TA_CENTER,
+    )
+    literature_style = ParagraphStyle(
+        'SectionHeading',
+        parent=styles['Heading2'],
+        fontName=custom_fonts['regular_tc'][0],
+        fontSize=10,  # h3 size
+        spaceAfter=4,
+        spaceBefore=12,
         alignment=TA_CENTER,
     )
     scientific_name_style = ParagraphStyle(
@@ -454,7 +463,7 @@ def generate_pdf(data):
     body_style = ParagraphStyle(
         'BodyJustify',
         parent=styles['Normal'],
-        fontName=custom_fonts['regular'][0], #'Helvetica',  # Use Helvetica for HTML tag support
+        fontName=custom_fonts['regular_tc'][0], #'Helvetica',  # Use Helvetica for HTML tag support
         alignment=TA_JUSTIFY,
         fontSize=10,
         spaceAfter=2,
@@ -466,7 +475,7 @@ def generate_pdf(data):
     normal_style = ParagraphStyle(
         'NormalText',
         parent=styles['Normal'],
-        fontName=custom_fonts['regular'][0],
+        fontName=custom_fonts['regular_tc'][0],
         fontSize=10,
         spaceAfter=2,
         spaceBefore=0,
@@ -490,8 +499,23 @@ def generate_pdf(data):
         elements.append(Paragraph(d['title'], title_style))
         elements.append(Paragraph(d['author'], author_style))
 
-        # Add literature section (single column)
-        elements.append(Paragraph('LITERATURE', category_style))
+        # Add item_category and literature section (single column)
+        elements.append(Spacer(1, 0.2*inch))
+        if cat := d.get('item_category'):
+            name = cat[0].get('scientificName', '')
+            names = name.split(',')
+            # HACK: clean name, (source_data.name_authors)
+            simple_name = sanitize_html(names[0]).replace('<i>', '').replace('</i>', '')
+            if x := cat[0].get('commonNames'):
+                simple_name = f'{simple_name} {x}'
+                if sd := cat[0].get('source_data'):
+                    if authors := sd.get('name_authors'):
+                        simple_name = f'{simple_name} {authors}'
+            elements.append(Paragraph(simple_name, category_style))
+            if desc := cat[0].get('description'):
+                elements.append(Paragraph(sanitize_html(desc), body_style))
+
+        elements.append(Paragraph('LITERATURE', literature_style))
         for lit in d.get('literatures', []):
             if isinstance(lit, dict):
                 content = lit.get('content', '')
@@ -499,21 +523,6 @@ def generate_pdf(data):
                 content = str(lit)
             if content:
                 elements.append(Paragraph(sanitize_html(content), normal_style))
-
-        elements.append(Spacer(1, 0.2*inch))
-
-        if cat := d.get('item_category'):
-            name = cat[0].get('scientificName', '')
-            names = name.split(',')
-            # HACK: clean name
-            simple_name = sanitize_html(names[0]).replace('<i>', '').replace('</i>', '')
-            if x := cat[0].get('commonNames'):
-                simple_name = f'{simple_name} {x}'
-
-            elements.append(Paragraph(simple_name, category_style))
-            if desc := cat[0].get('description'):
-                elements.append(Paragraph(sanitize_html(desc), body_style))
-
 
         # Switch to two-column layout for species list
         elements.append(NextPageTemplate('TwoCol'))
@@ -555,6 +564,7 @@ def generate_pdf(data):
                 item_elements.append(Paragraph(sanitize_html(dist), body_style))
 
             # Specimens
+            print(i, v['specimens'])
             if specimens := v.get('specimens'):
                 if specimens and len(specimens):
                     item_elements.append(Spacer(1, 0.1*inch))

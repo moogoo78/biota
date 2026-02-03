@@ -511,7 +511,14 @@ def key_edit(pub_id, key_id):
         if key := session.get(IdentificationKey, key_id):
             items_raw = pub.collections[0].items if pub.collections else []
             items = [{'id': item.id, 'scientific_name': item.scientific_name} for item in items_raw]
-            return render_template('publication_key_form.html', publication=pub, key=key, items=items)
+            entries = [{
+                'number': e.number,
+                'indent_level': e.indent_level,
+                'description': e.description,
+                'result_couplet': e.result_couplet,
+                'result_item_id': e.result_item_id
+            } for e in key.entries]
+            return render_template('publication_key_form.html', publication=pub, key=key, items=items, entries=entries)
 
     return abort(404)
 

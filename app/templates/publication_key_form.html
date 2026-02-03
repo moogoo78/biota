@@ -104,7 +104,7 @@
 {% if key %}
 <script>
 const items = {{ items|tojson if items else '[]'|safe }};
-let entries = {{ key.entries|map(attribute='__dict__')|list|tojson if key else '[]'|safe }};
+let entries = {{ entries|tojson if entries else '[]'|safe }};
 
 // Clean up entries data
 entries = entries.map(e => ({

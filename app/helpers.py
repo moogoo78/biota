@@ -497,7 +497,6 @@ def generate_pdf(data):
         # Add title and author (single column)
         elements.append(NextPageTemplate('SingleCol'))
         elements.append(Paragraph(d['title'], title_style))
-        elements.append(Paragraph(d['author'], author_style))
 
         # Add item_category and literature section (single column)
         elements.append(Spacer(1, 0.2*inch))
@@ -512,10 +511,22 @@ def generate_pdf(data):
                     if authors := sd.get('name_authors'):
                         simple_name = f'{simple_name} {authors}'
             elements.append(Paragraph(simple_name, category_style))
+
+            elements.append(Paragraph(d['author'], author_style))
+
             if desc := cat[0].get('description'):
                 elements.append(Paragraph(sanitize_html(desc), body_style))
 
-        # Add identification keys if present (after item_category)
+        elements.append(Paragraph('LITERATURE', literature_style))
+        for lit in d.get('literatures', []):
+            if isinstance(lit, dict):
+                content = lit.get('content', '')
+            else:
+                content = str(lit)
+            if content:
+                elements.append(Paragraph(sanitize_html(content), normal_style))
+
+        # Add identification keys if present (after literature)
         if keys := d.get('keys'):
             # Key entries style
             key_entry_style = ParagraphStyle(
@@ -531,8 +542,8 @@ def generate_pdf(data):
 
             for key in keys:
                 # Key title
-                key_title = key.get('title', '檢索表')
-                elements.append(Paragraph(f'KEY: {key_title}', section_heading_style))
+                key_title = key.get('title', '')
+                elements.append(Paragraph(f'檢索表: {key_title}', section_heading_style))
                 elements.append(Spacer(1, 0.1*inch))
 
                 # Render entries
@@ -541,27 +552,18 @@ def generate_pdf(data):
                     number = entry.get('number', '')
                     description = sanitize_html(entry.get('description', ''))
 
-                    # Determine result text
+                    # Determine result text (prioritize species name over couplet)
                     result_text = ''
-                    if result_couplet := entry.get('result_couplet'):
-                        result_text = f' ... {result_couplet}'
-                    elif result_name := entry.get('result_item_name'):
+                    if result_name := entry.get('result_item_name'):
                         result_text = f' ... <i>{result_name}</i>'
+                    elif result_couplet := entry.get('result_couplet'):
+                        result_text = f' ... {result_couplet}'
 
                     entry_text = f'{indent}{number}. {description}{result_text}'
                     entry_text_with_fonts = convert_html_to_custom_fonts(entry_text, base_font='Serif')
                     elements.append(Paragraph(entry_text_with_fonts, key_entry_style))
 
                 elements.append(Spacer(1, 0.2*inch))
-
-        elements.append(Paragraph('LITERATURE', literature_style))
-        for lit in d.get('literatures', []):
-            if isinstance(lit, dict):
-                content = lit.get('content', '')
-            else:
-                content = str(lit)
-            if content:
-                elements.append(Paragraph(sanitize_html(content), normal_style))
 
         # Switch to two-column layout for species list
         elements.append(NextPageTemplate('TwoCol'))
@@ -603,7 +605,6 @@ def generate_pdf(data):
                 item_elements.append(Paragraph(sanitize_html(dist), body_style))
 
             # Specimens
-            print(i, v['specimens'])
             if specimens := v.get('specimens'):
                 if specimens and len(specimens):
                     item_elements.append(Spacer(1, 0.1*inch))

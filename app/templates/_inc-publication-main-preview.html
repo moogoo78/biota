@@ -4,15 +4,15 @@
 {% if publication.keys|length > 0 %}
 {% for key in publication.keys %}
 <div class="mb-6 p-4 bg-gray-50 rounded-lg">
-  <h2 class="mb-2 text-lg font-semibold text-gray-900">KEY: {{ key.title or '檢索表' }}</h2>
+  <h2 class="mb-2 text-lg font-semibold text-gray-900">檢索表: {{ key.title or '' }}</h2>
   <div class="font-mono text-sm">
     {% for entry in key.entries %}
     <p class="py-1" style="padding-left: {{ entry.indent_level * 1.5 }}em;">
       {{ entry.number }}. {{ entry.description }}
-      {% if entry.result_couplet %}
-      <span class="text-gray-500">... {{ entry.result_couplet }}</span>
-      {% elif entry.result_item %}
+      {% if entry.result_item %}
       <span class="text-gray-500">... <i>{{ entry.result_item.scientific_name }}</i></span>
+      {% elif entry.result_couplet %}
+      <span class="text-gray-500">... {{ entry.result_couplet }}</span>
       {% endif %}
     </p>
     {% endfor %}

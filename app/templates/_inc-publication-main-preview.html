@@ -91,6 +91,13 @@
 {% endfor %}
 
 
-<a href="{{ url_for('publication.post_publish', item_id=publication.id) }}?format=docx"><button type="button" class="focus:outline-none text-white bg-purple-700 hover:bg-purple-800 focus:ring-4 focus:ring-purple-300 font-medium rounded-lg text-sm px-5 py-2.5 mb-2" id="download-btn">下載DOCX</button></a>
+<div class="flex items-center gap-2">
+  <div class="relative group inline-block">
+    <button type="button" disabled class="text-white bg-purple-700 font-medium rounded-lg text-sm px-5 py-2.5 mb-2 opacity-50 cursor-not-allowed" id="download-docx-btn">下載DOCX</button>
+    <span class="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover:block whitespace-nowrap rounded bg-gray-900 px-2 py-1 text-xs text-white">暫時關閉</span>
+  </div>
 
-<a href="{{ url_for('publication.post_publish', item_id=publication.id) }}?format=pdf"><button type="button" class="focus:outline-none text-white bg-purple-700 hover:bg-purple-800 focus:ring-4 focus:ring-purple-300 font-medium rounded-lg text-sm px-5 py-2.5 mb-2" id="download-btn">下載PDF</button></a>
+  <a href="{{ url_for('publication.post_publish', item_id=publication.id) }}?format=pdf"><button type="button" class="focus:outline-none text-white bg-purple-700 hover:bg-purple-800 focus:ring-4 focus:ring-purple-300 font-medium rounded-lg text-sm px-5 py-2.5 mb-2" id="download-btn">下載PDF</button></a>
+
+  <a href="{{ url_for('publication.post_publish', item_id=publication.id) }}?format=json" target="_blank"><button type="button" class="focus:outline-none text-white bg-teal-700 hover:bg-teal-800 focus:ring-4 focus:ring-teal-300 font-medium rounded-lg text-sm px-5 py-2.5 mb-2" id="download-json-btn">JSON</button></a>
+</div>

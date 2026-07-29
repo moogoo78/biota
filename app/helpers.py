@@ -244,8 +244,143 @@ def generate_docx(data):
     return biota.as_docx()
 
 
+def generate_json(data):
+    """Build a structured, presentation-free context from namespace data.
+
+    This is the single source of truth for *what* gets published; renderers
+    (PDF, JSON download) only decide *how* it looks. Everything here is plain
+    JSON-serializable data: no fonts, styles or layout.
+
+    Inline markup (<i>, <b>, <br>) is kept as-is inside text fields, since it
+    carries taxonomic meaning rather than styling.
+    """
+    def _strip_italic(text):
+        return (text or '').replace('<i>', '').replace('</i>', '').strip()
+
+    publications = []
+
+    for d in data:
+        pub = {
+            'title': d.get('title', ''),
+            'author': d.get('author', ''),
+            'category': None,
+            'literatures': [],
+            'keys': [],
+            'items': [],
+        }
+
+        # category (higher rank than species), shown as publication heading
+        if cat := d.get('item_category'):
+            c = cat[0]
+            # HACK: clean name, (source_data.name_authors)
+            names = c.get('scientificName', '').split(',')
+            scientific_name = _strip_italic(names[0])
+            common_names = c.get('commonNames', '') or ''
+            authors = ''
+            if sd := c.get('source_data'):
+                authors = sd.get('name_authors', '') or ''
+
+            heading = scientific_name
+            if common_names:
+                heading = f'{heading} | {common_names}'
+            if authors:
+                heading = f'{heading} {authors}'
+
+            pub['category'] = {
+                'scientificName': scientific_name,
+                'commonNames': common_names,
+                'authors': authors,
+                'heading': heading,
+                'description': c.get('description', '') or '',
+            }
+
+        # literatures: normalize dict/str to plain text
+        for lit in d.get('literatures', []):
+            content = lit.get('content', '') if isinstance(lit, dict) else str(lit)
+            if content:
+                pub['literatures'].append(content)
+
+        # identification keys
+        for key in d.get('keys', []):
+            key_data = {
+                'title': key.get('title', ''),
+                'entries': [],
+            }
+            for entry in key.get('entries', []):
+                # result: species name takes precedence over next couplet
+                result = ''
+                result_type = ''
+                if name := entry.get('result_item_name'):
+                    result = name
+                    result_type = 'item'
+                elif couplet := entry.get('result_couplet'):
+                    result = couplet
+                    result_type = 'couplet'
+
+                key_data['entries'].append({
+                    'number': entry.get('number', ''),
+                    'indentLevel': entry.get('indent_level', 0),
+                    'description': entry.get('description', '') or '',
+                    'result': result,
+                    'resultType': result_type,
+                })
+            pub['keys'].append(key_data)
+
+        # items (species)
+        counter = 0
+        for v in d.get('items', []):
+            counter += 1
+
+            # HACK: split name, the part after the canonical name (author, ref...)
+            name_suffix = ''
+            if full_name := v.get('fullScientificName'):
+                parts = full_name.split('</i>')
+                if len(parts) > 1:
+                    name_suffix = parts[1].strip()
+
+            common_name = ''
+            if x := v.get('commonNames'):
+                common_name = pick_first(x, '|', 'zh') or ''
+
+            specimens = []
+            for county, sp_list in (v.get('specimens') or {}).items():
+                records = [x[1] for x in sp_list]
+                if not records:
+                    continue
+                specimens.append({
+                    'county': county,
+                    'region': TAIWAN_COUNTIES.get(county, 'Other').upper(),
+                    'records': records,
+                })
+
+            pub['items'].append({
+                'number': counter,
+                'scientificName': v.get('scientificName', ''),
+                'nameSuffix': name_suffix,
+                'fullScientificName': v.get('fullScientificName', ''),
+                'rankId': v.get('rank_id', ''),
+                'commonName': common_name,
+                'synonyms': [x for x in v.get('synonyms', []) if x],
+                'description': v.get('description', '') or '',
+                'distribution': v.get('distribution', '') or '',
+                'specimens': specimens,
+                'note': v.get('note', '') or '',
+            })
+
+        publications.append(pub)
+
+    return {
+        'generator': 'Biota Taiwanica',
+        'generatedAt': datetime.now().strftime('%Y-%m-%d %H:%M'),
+        'publications': publications,
+    }
+
+
 def generate_pdf(data):
-    """Generate a PDF document from namespace data."""
+    """Generate a PDF document from namespace data.
+
+    Content comes from generate_json(); this function only styles it.
+    """
     from reportlab.lib.pagesizes import letter
     from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
     from reportlab.lib.units import inch
@@ -487,44 +622,34 @@ def generate_pdf(data):
 
 
 
+    # Build the presentation-free content context, then style it below
+    context = generate_json(data)
+    publications = context['publications']
+
     elements.append(NextPageTemplate('SingleCol'))
-    elements.append(Paragraph('Biota Taiwanica', title_style))
-    elements.append(Paragraph(f'Generated: {datetime.now().strftime("%Y-%m-%d %H:%M")}', normal_style))
+    elements.append(Paragraph(context['generator'], title_style))
+    elements.append(Paragraph(f"Generated: {context['generatedAt']}", normal_style))
     elements.append(PageBreak())
 
     # Process each namespace
-    for idx, d in enumerate(data):
+    for idx, d in enumerate(publications):
         # Add title and author (single column)
         elements.append(NextPageTemplate('SingleCol'))
         elements.append(Paragraph(d['title'], title_style))
 
         # Add item_category and literature section (single column)
         elements.append(Spacer(1, 0.2*inch))
-        if cat := d.get('item_category'):
-            name = cat[0].get('scientificName', '')
-            names = name.split(',')
-            # HACK: clean name, (source_data.name_authors)
-            simple_name = sanitize_html(names[0]).replace('<i>', '').replace('</i>', '')
-            if x := cat[0].get('commonNames'):
-                simple_name = f'{simple_name} {x}'
-                if sd := cat[0].get('source_data'):
-                    if authors := sd.get('name_authors'):
-                        simple_name = f'{simple_name} {authors}'
-            elements.append(Paragraph(simple_name, category_style))
+        if cat := d.get('category'):
+            elements.append(Paragraph(sanitize_html(cat['heading']), category_style))
 
             elements.append(Paragraph(d['author'], author_style))
 
-            if desc := cat[0].get('description'):
+            if desc := cat.get('description'):
                 elements.append(Paragraph(sanitize_html(desc), body_style))
 
         elements.append(Paragraph('LITERATURE', literature_style))
-        for lit in d.get('literatures', []):
-            if isinstance(lit, dict):
-                content = lit.get('content', '')
-            else:
-                content = str(lit)
-            if content:
-                elements.append(Paragraph(sanitize_html(content), normal_style))
+        for content in d.get('literatures', []):
+            elements.append(Paragraph(sanitize_html(content), normal_style))
 
         # Add identification keys if present (after literature)
         if keys := d.get('keys'):
@@ -548,16 +673,17 @@ def generate_pdf(data):
 
                 # Render entries
                 for entry in key.get('entries', []):
-                    indent = '&nbsp;&nbsp;&nbsp;' * entry.get('indent_level', 0)
+                    indent = '&nbsp;&nbsp;&nbsp;' * entry.get('indentLevel', 0)
                     number = entry.get('number', '')
                     description = sanitize_html(entry.get('description', ''))
 
-                    # Determine result text (prioritize species name over couplet)
+                    # Item results are scientific names, so they are italicized
                     result_text = ''
-                    if result_name := entry.get('result_item_name'):
-                        result_text = f' ... <i>{result_name}</i>'
-                    elif result_couplet := entry.get('result_couplet'):
-                        result_text = f' ... {result_couplet}'
+                    if result := entry.get('result'):
+                        if entry.get('resultType') == 'item':
+                            result_text = f' ... <i>{result}</i>'
+                        else:
+                            result_text = f' ... {result}'
 
                     entry_text = f'{indent}{number}. {description}{result_text}'
                     entry_text_with_fonts = convert_html_to_custom_fonts(entry_text, base_font='Serif')
@@ -570,31 +696,23 @@ def generate_pdf(data):
         elements.append(PageBreak())
 
         # Process items (species) - will flow into two columns
-        counter = 0
-        for i, v in enumerate(d['items']):
+        for v in d['items']:
             item_elements = []
-            counter += 1
-            #sci_name = f"<b>{counter}. </b><i>{sanitize_html(v['scientificName'])}</i>"
-            # HACK: split name
-            append_sci_name = v['fullScientificName'].split('</i>')[1].strip()
-            sci_name = f"<b>{counter}. {sanitize_html(v['scientificName'])}</b> {append_sci_name}"
+            sci_name = f"<b>{v['number']}. {sanitize_html(v['scientificName'])}</b> {v['nameSuffix']}"
 
             # Convert HTML tags to font tags for custom font support
             sci_name_with_fonts = convert_html_to_custom_fonts(sci_name, base_font='Serif')
             item_elements.append(Paragraph(sci_name_with_fonts, scientific_name_style))
 
             # Common names
-            if v.get('commonNames'):
-                common = pick_first(v['commonNames'], '|', 'zh')
-                if common:
-                    normal_right_style = normal_style.clone('NormalRightText', alignment=TA_RIGHT, spaceBefore=12, spaceAfter=6)
-                    item_elements.append(Paragraph(sanitize_html(common), normal_right_style))
+            if common := v.get('commonName'):
+                normal_right_style = normal_style.clone('NormalRightText', alignment=TA_RIGHT, spaceBefore=12, spaceAfter=6)
+                item_elements.append(Paragraph(sanitize_html(common), normal_right_style))
 
             # Synonyms
             for syn in v.get('synonyms', []):
-                if syn:
-                    syn_with_fonts = convert_html_to_custom_fonts(sanitize_html(syn), base_font='Serif')
-                    item_elements.append(Paragraph(syn_with_fonts, scientific_name_style))
+                syn_with_fonts = convert_html_to_custom_fonts(sanitize_html(syn), base_font='Serif')
+                item_elements.append(Paragraph(syn_with_fonts, scientific_name_style))
 
             # Description
             if desc := v.get('description'):
@@ -606,16 +724,12 @@ def generate_pdf(data):
 
             # Specimens
             if specimens := v.get('specimens'):
-                if specimens and len(specimens):
-                    item_elements.append(Spacer(1, 0.1*inch))
-                    s = ''
-                    for county, sp_list in specimens.items():
-                        dist = TAIWAN_COUNTIES.get(county, 'Other').upper()
-                        sp_arr = [sanitize_html(x[1]) for x in sp_list]
-                        sp_str = '; '.join(sp_arr)
-                        s += f'{dist}: {sp_str}. '
-                    if s:
-                        item_elements.append(Paragraph(s, normal_style))
+                item_elements.append(Spacer(1, 0.1*inch))
+                s = ''
+                for group in specimens:
+                    sp_str = '; '.join([sanitize_html(x) for x in group['records']])
+                    s += f"{group['region']}: {sp_str}. "
+                item_elements.append(Paragraph(s, normal_style))
 
             # Note
             if note := v.get('note'):
@@ -627,7 +741,7 @@ def generate_pdf(data):
             elements.append(Spacer(1, 6))
 
         # Add page break between namespaces (except for the last one)
-        if idx < len(data) - 1:
+        if idx < len(publications) - 1:
             elements.append(PageBreak())
 
     # Build PDF

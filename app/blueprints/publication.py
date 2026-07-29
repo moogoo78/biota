@@ -46,6 +46,7 @@ from app.helpers import (
     format_specimen_display,
     generate_docx,
     generate_pdf,
+    generate_json,
 )
 
 bp = Blueprint('publication', __name__)
@@ -496,6 +497,17 @@ def post_publish(item_id):
             )
             response.headers['Content-Disposition'] = f"attachment; filename*=UTF-8''{filename}" # for unicode
             response.headers['filename'] = filename
+
+        elif fmt == 'json':
+            # structured context (same data the PDF renderer consumes)
+            context = generate_json([data])
+            response = Response(
+                json.dumps(context, ensure_ascii=False, indent=2),
+                mimetype='application/json; charset=utf-8',
+            )
+
+        else:
+            return abort(400)
 
         return response
 

@@ -84,7 +84,13 @@ def list_view():
             </script>
             '''
     else:
-        collections = Collection.query.filter(Collection.user_id==current_user.id, Collection.publication_id > 0).all()
+        collections = (
+            Collection.query
+            .join(Publication)
+            .filter(Collection.user_id == current_user.id, Collection.publication_id > 0)
+            .order_by(Publication.updated_at.desc())
+            .all()
+        )
         publications = [x.publication for x in collections]
         return render_template('publication_list.html', publications=publications)
 

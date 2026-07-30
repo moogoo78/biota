@@ -376,6 +376,83 @@ def generate_json(data):
     }
 
 
+def sanitize_html(text):
+    """Sanitize HTML content for ReportLab compatibility."""
+    if not text:
+        return ''
+    # Convert br tags to self-closing
+    text = re.sub(r'<br\s*>', '<br/>', text, flags=re.IGNORECASE)
+    # Escape special characters but preserve valid HTML tags
+    # ReportLab supports: b, i, u, strike, super, sub, br, a
+    return text
+
+
+def convert_html_to_custom_fonts(text, base_font='Tinos'):
+    """Convert HTML tags to font tags for custom font support.
+
+    Args:
+        text: HTML text with <b> and <i> tags
+        base_font: Base font family ('Tinos' or 'Serif' for NotoSerifTC)
+
+    Returns:
+        Text with <font> tags instead of <b>/<i>
+    """
+    if not text:
+        return ''
+
+    fonts_map = {
+        'regular': 'Serif-Regular',
+        'bold': 'Serif-Bold',
+        'italic': 'Serif-Italic',  # No italic variant for NotoSerifTC
+        'bold-italic': 'Serif-Bold'
+    }
+
+    # Handle nested <b><i>...</i></b> or <i><b>...</b></i> -> bold-italic
+    text = re.sub(
+        r'<b>\s*<i>(.*?)</i>\s*</b>|<i>\s*<b>(.*?)</b>\s*</i>',
+        lambda m: f'<font name="{fonts_map["bold-italic"]}">{m.group(1) or m.group(2)}</font>',
+        text,
+        flags=re.DOTALL
+    )
+
+    # Handle remaining <b>...</b> -> bold
+    text = re.sub(
+        r'<b>(.*?)</b>',
+        lambda m: f'<font name="{fonts_map["bold"]}">{m.group(1)}</font>',
+        text,
+        flags=re.DOTALL
+    )
+
+    # Handle remaining <i>...</i> -> italic
+    text = re.sub(
+        r'<i>(.*?)</i>',
+        lambda m: f'<font name="{fonts_map["italic"]}">{m.group(1)}</font>',
+        text,
+        flags=re.DOTALL
+    )
+
+    return text
+
+
+def register_pdf_fonts():
+    """Register the bundled TTF fonts used by the PDF renderers."""
+    from reportlab.pdfbase import pdfmetrics
+    from reportlab.pdfbase.ttfonts import TTFont
+
+    custom_fonts = {
+        'regular_tc': ['Serif-Regular', 'app/fonts/NotoSerifTC-Light.ttf'],
+        'bold_tc': ['Serif-Bold', 'app/fonts/NotoSerifTC-Bold.ttf'],
+        'regular': ['Tinos-Regular', 'app/fonts/NotoSerif-Regular.ttf'],
+        'bold': ['Tinos-Bold', 'app/fonts/Tinos-Bold.ttf'],
+        'italic': ['Serif-Italic', 'app/fonts/NotoSerif-Italic.ttf'],
+        'bold-italic': ['Tinos-BoldItalic', 'app/fonts/Tinos-BoldItalic.ttf'],
+    }
+    for v in custom_fonts.values():
+        pdfmetrics.registerFont(TTFont(v[0], v[1]))
+
+    return custom_fonts
+
+
 def generate_pdf(data):
     """Generate a PDF document from namespace data.
 
@@ -394,86 +471,7 @@ def generate_pdf(data):
     from xml.sax.saxutils import escape
     import os
 
-    def sanitize_html(text):
-        """Sanitize HTML content for ReportLab compatibility."""
-        if not text:
-            return ''
-        # Convert br tags to self-closing
-        text = re.sub(r'<br\s*>', '<br/>', text, flags=re.IGNORECASE)
-        # Escape special characters but preserve valid HTML tags
-        # ReportLab supports: b, i, u, strike, super, sub, br, a
-        return text
-
-    def convert_html_to_custom_fonts(text, base_font='Tinos'):
-        """Convert HTML tags to font tags for custom font support.
-
-        Args:
-            text: HTML text with <b> and <i> tags
-            base_font: Base font family ('Tinos' or 'Serif' for NotoSerifTC)
-
-        Returns:
-            Text with <font> tags instead of <b>/<i>
-        """
-        if not text:
-            return ''
-
-        # Map font combinations
-        #if base_font == 'Tinos':
-        #    fonts_map = {
-        #        'regular': 'Tinos-Regular',
-        #        'bold': 'Tinos-Bold',
-        #        'italic': 'Tinos-Italic',
-        #        'bold-italic': 'Tinos-BoldItalic'
-        #    }
-        #else:  # Serif (NotoSerifTC)
-        fonts_map = {
-            'regular': 'Serif-Regular',
-            'bold': 'Serif-Bold',
-            'italic': 'Serif-Italic',  # No italic variant for NotoSerifTC
-            'bold-italic': 'Serif-Bold'
-        }
-
-        # Handle nested <b><i>...</i></b> or <i><b>...</b></i> -> bold-italic
-        text = re.sub(
-            r'<b>\s*<i>(.*?)</i>\s*</b>|<i>\s*<b>(.*?)</b>\s*</i>',
-            lambda m: f'<font name="{fonts_map["bold-italic"]}">{m.group(1) or m.group(2)}</font>',
-            text,
-            flags=re.DOTALL
-        )
-
-        # Handle remaining <b>...</b> -> bold
-        text = re.sub(
-            r'<b>(.*?)</b>',
-            lambda m: f'<font name="{fonts_map["bold"]}">{m.group(1)}</font>',
-            text,
-            flags=re.DOTALL
-        )
-
-        # Handle remaining <i>...</i> -> italic
-        text = re.sub(
-            r'<i>(.*?)</i>',
-            lambda m: f'<font name="{fonts_map["italic"]}">{m.group(1)}</font>',
-            text,
-            flags=re.DOTALL
-        )
-
-        return text
-
-    # Register regular font
-    #font_regular2 = 'app/fonts/tinos/Tinos-Regular.ttf'
-    #font_bold2 = 'app/fonts/tinos/Tinos-Bold.ttf'
-    #NotoSerifTC-VariableFont_wght.ttf
-    custom_fonts = {
-        'regular_tc': ['Serif-Regular','app/fonts/NotoSerifTC-Light.ttf'],
-        'bold_tc': ['Serif-Bold', 'app/fonts/NotoSerifTC-Bold.ttf'],
-        'regular': ['Tinos-Regular','app/fonts/NotoSerif-Regular.ttf'],
-        'bold': ['Tinos-Bold', 'app/fonts/Tinos-Bold.ttf'],
-        #'italic': ['Tinos-Italic', 'app/fonts/Tinos-Italic.ttf'],
-        'italic': ['Serif-Italic', 'app/fonts/NotoSerif-Italic.ttf'],
-        'bold-italic': ['Tinos-BoldItalic', 'app/fonts/Tinos-BoldItalic.ttf'],
-    }
-    for k, v in custom_fonts.items():
-        pdfmetrics.registerFont(TTFont(v[0], v[1]))
+    custom_fonts = register_pdf_fonts()
 
     # Register font family mappings for bold/italic support in HTML tags
     # not works
@@ -748,6 +746,329 @@ def generate_pdf(data):
     doc.build(elements)
 
     # Reset buffer position to beginning for reading
+    buffer.seek(0)
+
+    return buffer
+
+
+def generate_pdf2(data):
+    """Generate a journal-article style PDF ("Biota Journal" layout).
+
+    Same content as generate_pdf() -- both render generate_json() -- but laid
+    out as a journal article: A4/18mm page with a running head and footer, a
+    full-width front block (section 1: centered title, taxon heading, author and
+    description; section 2: LITERATURE list), then a two-column body with
+    the species treatments and the identification keys. The design's specimen
+    data table and figure slots are intentionally not rendered.
+    """
+    from io import BytesIO
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib.styles import ParagraphStyle
+    from reportlab.lib.units import mm
+    from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY
+    from reportlab.lib.colors import HexColor
+    from reportlab.platypus import (
+        BaseDocTemplate, Frame, PageTemplate, Paragraph, Table,
+        TableStyle, PageBreak, FrameBreak, NextPageTemplate,
+    )
+    from reportlab.platypus.flowables import HRFlowable
+
+    custom_fonts = register_pdf_fonts()
+    F_TC = custom_fonts['regular_tc'][0]
+    F_TC_BOLD = custom_fonts['bold_tc'][0]
+
+    # palette taken from the journal layout design
+    DARK = HexColor('#1A1A1A')
+    TEXT = HexColor('#333333')
+    MUTED = HexColor('#767676')
+    RULE = HexColor('#E6E6E6')
+    RULE_STRONG = HexColor('#949494')
+
+    page_w, page_h = A4
+    MARGIN = 18 * mm
+    HEAD_RESERVE = 30  # running head strip above the content area
+    FOOT_RESERVE = 24  # running footer strip below the content area
+    COL_GAP = 20
+    MIN_BODY_HEIGHT = 140  # keep at least this much of page 1 for the columns
+
+    frame_w = page_w - 2 * MARGIN
+    col_w = (frame_w - COL_GAP) / 2
+    content_top = page_h - MARGIN - HEAD_RESERVE
+    content_bottom = MARGIN + FOOT_RESERVE
+    usable_h = content_top - content_bottom
+    frame_pad = {
+        'leftPadding': 0,
+        'rightPadding': 0,
+        'topPadding': 0,
+        'bottomPadding': 0,
+        'showBoundary': 0,
+    }
+
+    context = generate_json(data)
+    publications = context['publications']
+
+    def plain(text):
+        """Strip inline markup, for text drawn directly on the canvas."""
+        return re.sub(r'<[^>]+>', '', text or '').strip()
+
+    def markup(text):
+        """Prepare inline markup (<i>, <b>, <br>) for the custom fonts."""
+        return convert_html_to_custom_fonts(sanitize_html(text))
+
+    def bold(text):
+        return f'<font name="{F_TC_BOLD}">{text}</font>'
+
+    running_title = plain(publications[0]['title']) if publications else ''
+    if len(running_title) > 70:
+        running_title = f'{running_title[:69]}…'
+
+    def draw_furniture(canvas, doc_):
+        """Running head and footer, drawn on every page."""
+        canvas.saveState()
+
+        top = page_h - MARGIN
+        canvas.setFont(F_TC_BOLD, 8.5)
+        canvas.setFillColor(DARK)
+        canvas.drawString(MARGIN, top - 9, context['generator'])
+        canvas.setFont(F_TC, 8.5)
+        canvas.setFillColor(MUTED)
+        canvas.drawRightString(page_w - MARGIN, top - 9, running_title)
+        canvas.setStrokeColor(RULE_STRONG)
+        canvas.setLineWidth(0.6)
+        canvas.line(MARGIN, top - 15, page_w - MARGIN, top - 15)
+
+        base = MARGIN + 15
+        canvas.setStrokeColor(RULE)
+        canvas.setLineWidth(0.6)
+        canvas.line(MARGIN, base, page_w - MARGIN, base)
+        canvas.setFont(F_TC, 8)
+        canvas.setFillColor(MUTED)
+        canvas.drawString(MARGIN, base - 10, context['generatedAt'])
+        canvas.drawRightString(page_w - MARGIN, base - 10, str(doc_.page))
+
+        canvas.restoreState()
+
+    # --- styles ---------------------------------------------------------
+    title_style = ParagraphStyle(
+        'JTitle', fontName=F_TC_BOLD, fontSize=21, leading=27, textColor=DARK,
+        alignment=TA_CENTER, spaceBefore=2, spaceAfter=10)
+    author_style = ParagraphStyle(
+        'JAuthor', fontName=F_TC_BOLD, fontSize=11.2, leading=17, textColor=DARK,
+        spaceAfter=2)
+    description_style = ParagraphStyle(
+        'JDescription', fontName=F_TC, fontSize=10.1, leading=17, textColor=TEXT,
+        alignment=TA_JUSTIFY, spaceBefore=6, spaceAfter=7)
+    taxon_heading_style = ParagraphStyle(
+        'JTaxonHeading', fontName=F_TC_BOLD, fontSize=14, leading=20, textColor=DARK,
+        spaceBefore=2, spaceAfter=6)
+    section_style = ParagraphStyle(
+        'JSection', fontName=F_TC_BOLD, fontSize=12.4, leading=16, textColor=DARK,
+        spaceBefore=12, spaceAfter=6, keepWithNext=1)
+    literature_heading_style = ParagraphStyle(
+        'JLiteratureHeading', parent=section_style, alignment=TA_CENTER)
+    taxon_style = ParagraphStyle(
+        'JTaxon', fontName=F_TC, fontSize=11.3, leading=15, textColor=DARK,
+        spaceBefore=9, spaceAfter=2, keepWithNext=1)
+    common_style = ParagraphStyle(
+        'JCommon', fontName=F_TC, fontSize=9.8, leading=14, textColor=MUTED,
+        spaceAfter=4)
+    synonym_style = ParagraphStyle(
+        'JSynonym', fontName=F_TC, fontSize=9.8, leading=14, textColor=TEXT,
+        leftIndent=10.5, firstLineIndent=-10.5, spaceAfter=1)
+    body_style = ParagraphStyle(
+        'JBody', fontName=F_TC, fontSize=10.9, leading=17.6, textColor=TEXT,
+        alignment=TA_JUSTIFY, spaceBefore=4, spaceAfter=6)
+    key_number_style = ParagraphStyle(
+        'JKeyNumber', fontName=F_TC_BOLD, fontSize=10.2, leading=15, textColor=DARK)
+    key_text_style = ParagraphStyle(
+        'JKeyText', fontName=F_TC, fontSize=10.2, leading=15, textColor=TEXT)
+    reference_style = ParagraphStyle(
+        'JReference', fontName=F_TC, fontSize=9.4, leading=15, textColor=TEXT,
+        leftIndent=10.5, firstLineIndent=-10.5, spaceAfter=5)
+
+    # --- title block (full page width) ----------------------------------
+    def build_header(pub):
+        flow = []
+
+        # section 1: title, taxon heading, author, description
+        flow.append(Paragraph(markup(pub['title']), title_style))
+
+        cat = pub.get('category')
+        if cat and (heading := cat.get('heading')):
+            # italicize the leading scientific name, keep the rest upright
+            name = cat.get('scientificName', '')
+            if name and heading.startswith(name):
+                heading = f'<i>{name}</i>{heading[len(name):]}'
+            flow.append(Paragraph(bold(markup(heading)), taxon_heading_style))
+
+        if author := pub.get('author'):
+            flow.append(Paragraph(markup(author), author_style))
+
+        if cat and (desc := cat.get('description')):
+            flow.append(Paragraph(markup(desc), description_style))
+
+        # section 2: literature list, full width
+        if literatures := pub.get('literatures'):
+            flow.append(Paragraph('LITERATURE', literature_heading_style))
+            for content in literatures:
+                flow.append(Paragraph(markup(content), reference_style))
+            flow.append(HRFlowable(
+                width='100%', thickness=0.6, color=RULE, spaceBefore=6, spaceAfter=0))
+
+        return flow
+
+    # --- two-column body ------------------------------------------------
+    def build_body(pub):
+        flow = []
+
+        # the taxon heading and its description live in the title block
+        for v in pub['items']:
+            name = f"{bold(str(v['number']) + '.')} <i>{sanitize_html(v['scientificName'])}</i>"
+            if suffix := v.get('nameSuffix'):
+                name = f'{name} {suffix}'
+            flow.append(Paragraph(markup(name), taxon_style))
+
+            if common := v.get('commonName'):
+                flow.append(Paragraph(markup(common), common_style))
+
+            for syn in v.get('synonyms', []):
+                flow.append(Paragraph(markup(syn), synonym_style))
+
+            if desc := v.get('description'):
+                flow.append(Paragraph(markup(desc), body_style))
+
+            if dist := v.get('distribution'):
+                flow.append(Paragraph(
+                    f'{bold("Distribution.")} {markup(dist)}', body_style))
+
+            if specimens := v.get('specimens'):
+                groups = []
+                for group in specimens:
+                    records = '; '.join(sanitize_html(x) for x in group['records'])
+                    groups.append(f"{group['region']}: {records}.")
+                flow.append(Paragraph(
+                    f'{bold("Material examined.")} {markup(" ".join(groups))}',
+                    body_style))
+
+            if note := v.get('note'):
+                flow.append(Paragraph(f'{bold("Note.")} {markup(note)}', body_style))
+
+        for key in pub.get('keys', []):
+            title = key.get('title') or ''
+            flow.append(Paragraph(
+                f'檢索表 Key{": " + title if title else ""}', section_style))
+
+            rows = []
+            for entry in key.get('entries', []):
+                result = ''
+                if r := entry.get('result'):
+                    result = f' … <i>{r}</i>' if entry.get('resultType') == 'item' else f' … {r}'
+                indent = entry.get('indentLevel', 0) * 10
+                text_style = key_text_style
+                if indent:
+                    text_style = key_text_style.clone(
+                        f'JKeyText{indent}', leftIndent=indent)
+                rows.append([
+                    Paragraph(str(entry.get('number', '')), key_number_style),
+                    Paragraph(
+                        markup(f"{sanitize_html(entry.get('description', ''))}{result}"),
+                        text_style),
+                ])
+
+            if rows:
+                table = Table(rows, colWidths=[15, col_w - 15.5])
+                table.setStyle(TableStyle([
+                    ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                    ('LEFTPADDING', (0, 0), (-1, -1), 0),
+                    ('RIGHTPADDING', (0, 0), (-1, -1), 0),
+                    ('TOPPADDING', (0, 0), (-1, -1), 5),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
+                    ('LINEABOVE', (0, 0), (-1, 0), 0.6, RULE_STRONG),
+                    ('LINEBELOW', (0, 0), (-1, -1), 0.5, RULE),
+                ]))
+                flow.append(table)
+
+        return flow
+
+    def measure(flowables, width):
+        """Height the title block needs, so the columns can start below it."""
+        total = 0.0
+        pending = 0.0
+        for f in flowables:
+            try:
+                _, h = f.wrap(width, usable_h)
+                space_before, space_after = f.getSpaceBefore(), f.getSpaceAfter()
+            except Exception:
+                return None
+            total += max(space_before, pending) + h
+            pending = space_after
+        return total + pending
+
+    # --- page templates: one title page per publication, plus columns ---
+    blocks = []
+    templates = []
+    for idx, pub in enumerate(publications):
+        header = build_header(pub)
+        body = build_body(pub)
+
+        header_h = measure(header, frame_w)
+        # if the title block cannot leave room for a usable column pair,
+        # give it a page of its own and start the body on the next page
+        own_page = header_h is None or header_h > usable_h - MIN_BODY_HEIGHT
+        if own_page:
+            frames = [Frame(MARGIN, content_bottom, frame_w, usable_h,
+                            id=f'head{idx}', **frame_pad)]
+        else:
+            header_h += 6  # slack, so the block never spills into the columns
+            body_h = usable_h - header_h - 12
+            frames = [
+                Frame(MARGIN, content_top - header_h, frame_w, header_h,
+                      id=f'head{idx}', **frame_pad),
+                Frame(MARGIN, content_bottom, col_w, body_h,
+                      id=f'first_left{idx}', **frame_pad),
+                Frame(MARGIN + col_w + COL_GAP, content_bottom, col_w, body_h,
+                      id=f'first_right{idx}', **frame_pad),
+            ]
+
+        templates.append(PageTemplate(
+            id=f'Head{idx}', frames=frames, onPage=draw_furniture))
+        blocks.append((header, body, own_page))
+
+    templates.append(PageTemplate(id='TwoCol', frames=[
+        Frame(MARGIN, content_bottom, col_w, usable_h, id='col_left', **frame_pad),
+        Frame(MARGIN + col_w + COL_GAP, content_bottom, col_w, usable_h,
+              id='col_right', **frame_pad),
+    ], onPage=draw_furniture))
+
+    buffer = BytesIO()
+    doc = BaseDocTemplate(
+        buffer,
+        pagesize=A4,
+        leftMargin=MARGIN,
+        rightMargin=MARGIN,
+        topMargin=MARGIN + HEAD_RESERVE,
+        bottomMargin=MARGIN + FOOT_RESERVE,
+        title=running_title,
+        author=publications[0]['author'] if publications else '',
+    )
+    doc.addPageTemplates(templates)
+
+    elements = []
+    for idx, (header, body, own_page) in enumerate(blocks):
+        if idx:
+            elements.append(NextPageTemplate(f'Head{idx}'))
+            elements.append(PageBreak())
+
+        elements.extend(header)
+        if own_page:
+            elements.append(NextPageTemplate('TwoCol'))
+            elements.append(PageBreak())
+        else:
+            elements.append(FrameBreak())
+            elements.append(NextPageTemplate('TwoCol'))
+        elements.extend(body)
+
+    doc.build(elements)
     buffer.seek(0)
 
     return buffer

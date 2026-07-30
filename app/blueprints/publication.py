@@ -46,6 +46,7 @@ from app.helpers import (
     format_specimen_display,
     generate_docx,
     generate_pdf,
+    generate_pdf2,
     generate_json,
 )
 
@@ -489,6 +490,19 @@ def post_publish(item_id):
         elif fmt == 'pdf':
             pdf_buffer = generate_pdf([data])
             filename = quote(f"output-biota-pub-{pub.title}.pdf")
+            response = send_file(
+                pdf_buffer,
+                as_attachment=True,
+                download_name=filename,
+                mimetype='application/pdf'
+            )
+            response.headers['Content-Disposition'] = f"attachment; filename*=UTF-8''{filename}" # for unicode
+            response.headers['filename'] = filename
+
+        elif fmt == 'pdf2':
+            # journal-article layout
+            pdf_buffer = generate_pdf2([data])
+            filename = quote(f"output-biota-pub-{pub.title}-journal.pdf")
             response = send_file(
                 pdf_buffer,
                 as_attachment=True,

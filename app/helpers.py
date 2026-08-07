@@ -280,11 +280,10 @@ def generate_json(data):
             if sd := c.get('source_data'):
                 authors = sd.get('name_authors', '') or ''
 
-            heading = scientific_name
-            if common_names:
-                heading = f'{heading} | {common_names}'
-            if authors:
-                heading = f'{heading} {authors}'
+            # heading: {scientificName} {authors} {commonNames}, skipping the
+            # parts that are empty
+            heading = ' '.join(
+                x for x in (scientific_name, authors, common_names) if x)
 
             pub['category'] = {
                 'scientificName': scientific_name,
@@ -441,6 +440,11 @@ def register_pdf_fonts():
 
     custom_fonts = {
         'regular_tc': ['Serif-Regular', 'app/fonts/NotoSerifTC-Light.ttf'],
+        # 400-weight TC face: matches NotoSerif-Italic, which <i> maps to, so a
+        # mixed italic/upright line does not look two-toned
+        'text_tc': ['Serif-Text', 'app/fonts/NotoSerifTC-Regular.ttf'],
+        # 500-weight TC face, for emphasis that should stay short of bold
+        'medium_tc': ['Serif-Medium', 'app/fonts/NotoSerifTC-Medium.ttf'],
         'bold_tc': ['Serif-Bold', 'app/fonts/NotoSerifTC-Bold.ttf'],
         'regular': ['Tinos-Regular', 'app/fonts/NotoSerif-Regular.ttf'],
         'bold': ['Tinos-Bold', 'app/fonts/Tinos-Bold.ttf'],
@@ -751,6 +755,88 @@ def generate_pdf(data):
     return buffer
 
 
+# Metrics for the journal layout. generate_pdf2() renders JOURNAL_LAYOUT;
+# generate_pdf3() renders JOURNAL_LAYOUT_COMPACT -- the same layout with
+# smaller type, tighter leading and narrower margins, so more fits on a page.
+# Type entries are (fontSize, leading) pairs; 'space' scales every
+# spaceBefore / spaceAfter in the styles.
+JOURNAL_LAYOUT = {
+    # page
+    'margin_mm': 18,
+    'head_reserve': 30,       # running head strip above the content area
+    'foot_reserve': 24,       # running footer strip below the content area
+    'foot_rule_offset': 15,   # footer rule, above the bottom margin
+    'col_gap': 20,
+    'min_body_height': 140,   # keep at least this much of page 1 for the columns
+    'head_slack': 6,          # so the front block never spills into the columns
+    'head_gap': 12,           # between the front block and the columns
+    'running_title_max': 70,
+    # front block: what is shown, and how it is aligned
+    'show_title': True,       # FM-TITLE; when off it survives in the running head
+    'taxon_align': 'left',    # FM-TAXON:  left | center
+    'taxon_weight': 'bold',   # FM-TAXON:  bold | regular
+    'taxon_authors_font': None,  # FM-TAXON.authors: font role, or None for
+                                 # the same weight as the rest of the heading
+    'author_align': 'left',   # FM-AUTHOR: left | center
+    # type: (fontSize, leading)
+    'head_font': 8.5,
+    'foot_font': 8,
+    'title': (21, 27),
+    'taxon_heading': (14, 20),
+    'author': (11.2, 17),
+    'description': (10.1, 17),
+    'section': (12.4, 16),
+    'taxon': (11.3, 15),
+    'common': (9.8, 14),
+    'synonym': (9.8, 14),
+    'body': (10.9, 17.6),
+    'key': (10.2, 15),
+    'reference': (9.4, 15),
+    # spacing and indents
+    'space': 1.0,
+    'indent': 10.5,           # hanging indent, synonyms and references
+    'key_indent': 10,         # per indentLevel
+    'key_number_w': 15,
+    'key_pad': 5,             # row padding in the key table
+}
+
+JOURNAL_LAYOUT_COMPACT = {
+    **JOURNAL_LAYOUT,
+    'margin_mm': 15,
+    'head_reserve': 26,
+    'foot_reserve': 20,
+    'foot_rule_offset': 12,
+    'col_gap': 16,
+    'min_body_height': 120,
+    'head_slack': 5,
+    'head_gap': 10,
+    'running_title_max': 82,
+    'show_title': False,
+    'taxon_align': 'center',
+    'taxon_weight': 'regular',
+    'taxon_authors_font': 'medium_tc',
+    'author_align': 'center',
+    'head_font': 7.5,
+    'foot_font': 7,
+    'title': (16.5, 21),
+    'taxon_heading': (11.5, 16),
+    'author': (11.5, 16),     # matches taxon_heading, and stays bold
+    'description': (8.8, 13.6),
+    'section': (10.4, 13.5),
+    'taxon': (9.6, 12.8),
+    'common': (8.4, 11.6),
+    'synonym': (8.4, 11.6),
+    'body': (9.2, 13.8),
+    'key': (8.8, 12.4),
+    'reference': (8.2, 12),
+    'space': 0.8,
+    'indent': 9,
+    'key_indent': 8,
+    'key_number_w': 13,
+    'key_pad': 3.5,
+}
+
+
 def generate_pdf2(data):
     """Generate a journal-article style PDF ("Biota Journal" layout).
 
@@ -761,11 +847,32 @@ def generate_pdf2(data):
     the species treatments and the identification keys. The design's specimen
     data table and figure slots are intentionally not rendered.
     """
+    return build_journal_pdf(data, JOURNAL_LAYOUT)
+
+
+def generate_pdf3(data):
+    """Generate the compact variant of the journal layout.
+
+    Same structure and content as generate_pdf2(), rendered with
+    JOURNAL_LAYOUT_COMPACT: smaller type throughout, tighter leading and
+    spacing, 15mm margins and a narrower column gap, so a treatment takes
+    noticeably less space on the page.
+    """
+    return build_journal_pdf(data, JOURNAL_LAYOUT_COMPACT)
+
+
+def build_journal_pdf(data, layout):
+    """Render the journal layout with the given metrics.
+
+    `layout` is a JOURNAL_LAYOUT-shaped dict: it carries every page dimension,
+    font size and spacing this renderer uses, so a variant only has to override
+    the numbers it changes. See generate_pdf2() / generate_pdf3().
+    """
     from io import BytesIO
     from reportlab.lib.pagesizes import A4
     from reportlab.lib.styles import ParagraphStyle
     from reportlab.lib.units import mm
-    from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY
+    from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT
     from reportlab.lib.colors import HexColor
     from reportlab.platypus import (
         BaseDocTemplate, Frame, PageTemplate, Paragraph, Table,
@@ -775,7 +882,10 @@ def generate_pdf2(data):
 
     custom_fonts = register_pdf_fonts()
     F_TC = custom_fonts['regular_tc'][0]
+    F_TC_TEXT = custom_fonts['text_tc'][0]
     F_TC_BOLD = custom_fonts['bold_tc'][0]
+    F_AUTHORS = (custom_fonts[layout['taxon_authors_font']][0]
+                 if layout['taxon_authors_font'] else None)
 
     # palette taken from the journal layout design
     DARK = HexColor('#1A1A1A')
@@ -785,11 +895,14 @@ def generate_pdf2(data):
     RULE_STRONG = HexColor('#949494')
 
     page_w, page_h = A4
-    MARGIN = 18 * mm
-    HEAD_RESERVE = 30  # running head strip above the content area
-    FOOT_RESERVE = 24  # running footer strip below the content area
-    COL_GAP = 20
-    MIN_BODY_HEIGHT = 140  # keep at least this much of page 1 for the columns
+    MARGIN = layout['margin_mm'] * mm
+    HEAD_RESERVE = layout['head_reserve']
+    FOOT_RESERVE = layout['foot_reserve']
+    COL_GAP = layout['col_gap']
+    MIN_BODY_HEIGHT = layout['min_body_height']
+    SP = layout['space']
+    INDENT = layout['indent']
+    ALIGN = {'left': TA_LEFT, 'center': TA_CENTER, 'justify': TA_JUSTIFY}
 
     frame_w = page_w - 2 * MARGIN
     col_w = (frame_w - COL_GAP) / 2
@@ -819,87 +932,124 @@ def generate_pdf2(data):
         return f'<font name="{F_TC_BOLD}">{text}</font>'
 
     running_title = plain(publications[0]['title']) if publications else ''
-    if len(running_title) > 70:
-        running_title = f'{running_title[:69]}…'
+    title_max = layout['running_title_max']
+    if len(running_title) > title_max:
+        running_title = f'{running_title[:title_max - 1]}…'
 
     def draw_furniture(canvas, doc_):
         """Running head and footer, drawn on every page."""
         canvas.saveState()
 
+        head_font = layout['head_font']
         top = page_h - MARGIN
-        canvas.setFont(F_TC_BOLD, 8.5)
+        canvas.setFont(F_TC_BOLD, head_font)
         canvas.setFillColor(DARK)
-        canvas.drawString(MARGIN, top - 9, context['generator'])
-        canvas.setFont(F_TC, 8.5)
+        canvas.drawString(MARGIN, top - (head_font + 0.5), context['generator'])
+        canvas.setFont(F_TC, head_font)
         canvas.setFillColor(MUTED)
-        canvas.drawRightString(page_w - MARGIN, top - 9, running_title)
+        canvas.drawRightString(page_w - MARGIN, top - (head_font + 0.5), running_title)
         canvas.setStrokeColor(RULE_STRONG)
         canvas.setLineWidth(0.6)
-        canvas.line(MARGIN, top - 15, page_w - MARGIN, top - 15)
+        rule_y = top - (head_font + 6.5)
+        canvas.line(MARGIN, rule_y, page_w - MARGIN, rule_y)
 
-        base = MARGIN + 15
+        foot_font = layout['foot_font']
+        base = MARGIN + layout['foot_rule_offset']
         canvas.setStrokeColor(RULE)
         canvas.setLineWidth(0.6)
         canvas.line(MARGIN, base, page_w - MARGIN, base)
-        canvas.setFont(F_TC, 8)
+        canvas.setFont(F_TC, foot_font)
         canvas.setFillColor(MUTED)
-        canvas.drawString(MARGIN, base - 10, context['generatedAt'])
-        canvas.drawRightString(page_w - MARGIN, base - 10, str(doc_.page))
+        canvas.drawString(MARGIN, base - (foot_font + 2), context['generatedAt'])
+        canvas.drawRightString(page_w - MARGIN, base - (foot_font + 2), str(doc_.page))
 
         canvas.restoreState()
 
     # --- styles ---------------------------------------------------------
     title_style = ParagraphStyle(
-        'JTitle', fontName=F_TC_BOLD, fontSize=21, leading=27, textColor=DARK,
-        alignment=TA_CENTER, spaceBefore=2, spaceAfter=10)
+        'JTitle', fontName=F_TC_BOLD, fontSize=layout['title'][0],
+        leading=layout['title'][1], textColor=DARK,
+        alignment=TA_CENTER, spaceBefore=2 * SP, spaceAfter=10 * SP)
     author_style = ParagraphStyle(
-        'JAuthor', fontName=F_TC_BOLD, fontSize=11.2, leading=17, textColor=DARK,
-        spaceAfter=2)
+        'JAuthor', fontName=F_TC_BOLD, fontSize=layout['author'][0],
+        leading=layout['author'][1], textColor=DARK,
+        alignment=ALIGN[layout['author_align']], spaceAfter=2 * SP)
     description_style = ParagraphStyle(
-        'JDescription', fontName=F_TC, fontSize=10.1, leading=17, textColor=TEXT,
-        alignment=TA_JUSTIFY, spaceBefore=6, spaceAfter=7)
+        'JDescription', fontName=F_TC, fontSize=layout['description'][0],
+        leading=layout['description'][1], textColor=TEXT,
+        alignment=TA_JUSTIFY, spaceBefore=6 * SP, spaceAfter=7 * SP)
+    # the unbold heading uses the 400-weight face, not the Light one, so the
+    # italic scientific name and the upright authors carry the same weight
+    taxon_bold = layout['taxon_weight'] == 'bold'
     taxon_heading_style = ParagraphStyle(
-        'JTaxonHeading', fontName=F_TC_BOLD, fontSize=14, leading=20, textColor=DARK,
-        spaceBefore=2, spaceAfter=6)
+        'JTaxonHeading', fontName=F_TC_BOLD if taxon_bold else F_TC_TEXT,
+        fontSize=layout['taxon_heading'][0],
+        leading=layout['taxon_heading'][1], textColor=DARK,
+        alignment=ALIGN[layout['taxon_align']],
+        spaceBefore=2 * SP, spaceAfter=6 * SP)
     section_style = ParagraphStyle(
-        'JSection', fontName=F_TC_BOLD, fontSize=12.4, leading=16, textColor=DARK,
-        spaceBefore=12, spaceAfter=6, keepWithNext=1)
+        'JSection', fontName=F_TC_BOLD, fontSize=layout['section'][0],
+        leading=layout['section'][1], textColor=DARK,
+        spaceBefore=12 * SP, spaceAfter=6 * SP, keepWithNext=1)
     literature_heading_style = ParagraphStyle(
         'JLiteratureHeading', parent=section_style, alignment=TA_CENTER)
     taxon_style = ParagraphStyle(
-        'JTaxon', fontName=F_TC, fontSize=11.3, leading=15, textColor=DARK,
-        spaceBefore=9, spaceAfter=2, keepWithNext=1)
+        'JTaxon', fontName=F_TC, fontSize=layout['taxon'][0],
+        leading=layout['taxon'][1], textColor=DARK,
+        spaceBefore=9 * SP, spaceAfter=2 * SP, keepWithNext=1)
     common_style = ParagraphStyle(
-        'JCommon', fontName=F_TC, fontSize=9.8, leading=14, textColor=MUTED,
-        spaceAfter=4)
+        'JCommon', fontName=F_TC, fontSize=layout['common'][0],
+        leading=layout['common'][1], textColor=MUTED,
+        spaceAfter=4 * SP)
     synonym_style = ParagraphStyle(
-        'JSynonym', fontName=F_TC, fontSize=9.8, leading=14, textColor=TEXT,
-        leftIndent=10.5, firstLineIndent=-10.5, spaceAfter=1)
+        'JSynonym', fontName=F_TC, fontSize=layout['synonym'][0],
+        leading=layout['synonym'][1], textColor=TEXT,
+        leftIndent=INDENT, firstLineIndent=-INDENT, spaceAfter=1 * SP)
     body_style = ParagraphStyle(
-        'JBody', fontName=F_TC, fontSize=10.9, leading=17.6, textColor=TEXT,
-        alignment=TA_JUSTIFY, spaceBefore=4, spaceAfter=6)
+        'JBody', fontName=F_TC, fontSize=layout['body'][0],
+        leading=layout['body'][1], textColor=TEXT,
+        alignment=TA_JUSTIFY, spaceBefore=4 * SP, spaceAfter=6 * SP)
     key_number_style = ParagraphStyle(
-        'JKeyNumber', fontName=F_TC_BOLD, fontSize=10.2, leading=15, textColor=DARK)
+        'JKeyNumber', fontName=F_TC_BOLD, fontSize=layout['key'][0],
+        leading=layout['key'][1], textColor=DARK)
     key_text_style = ParagraphStyle(
-        'JKeyText', fontName=F_TC, fontSize=10.2, leading=15, textColor=TEXT)
+        'JKeyText', fontName=F_TC, fontSize=layout['key'][0],
+        leading=layout['key'][1], textColor=TEXT)
     reference_style = ParagraphStyle(
-        'JReference', fontName=F_TC, fontSize=9.4, leading=15, textColor=TEXT,
-        leftIndent=10.5, firstLineIndent=-10.5, spaceAfter=5)
+        'JReference', fontName=F_TC, fontSize=layout['reference'][0],
+        leading=layout['reference'][1], textColor=TEXT,
+        leftIndent=INDENT, firstLineIndent=-INDENT, spaceAfter=5 * SP)
 
     # --- title block (full page width) ----------------------------------
     def build_header(pub):
         flow = []
 
         # section 1: title, taxon heading, author, description
-        flow.append(Paragraph(markup(pub['title']), title_style))
+        if layout['show_title']:
+            flow.append(Paragraph(markup(pub['title']), title_style))
 
         cat = pub.get('category')
         if cat and (heading := cat.get('heading')):
-            # italicize the leading scientific name, keep the rest upright
+            # italicize the leading scientific name, keep the rest upright,
+            # and optionally set the name-authors in their own weight
             name = cat.get('scientificName', '')
-            if name and heading.startswith(name):
+            authors = cat.get('authors', '')
+            common = cat.get('commonNames', '')
+            if heading == ' '.join(x for x in (name, authors, common) if x):
+                # the documented "{sci} {authors} {common}" join: rebuild it
+                # part by part, so each part can be styled on its own
+                parts = [f'<i>{name}</i>'] if name else []
+                if authors:
+                    parts.append(f'<font name="{F_AUTHORS}">{authors}</font>'
+                                 if F_AUTHORS else authors)
+                if common:
+                    parts.append(common)
+                heading = ' '.join(parts)
+            elif name and heading.startswith(name):
                 heading = f'<i>{name}</i>{heading[len(name):]}'
-            flow.append(Paragraph(bold(markup(heading)), taxon_heading_style))
+            text = markup(heading)
+            flow.append(Paragraph(
+                bold(text) if taxon_bold else text, taxon_heading_style))
 
         if author := pub.get('author'):
             flow.append(Paragraph(markup(author), author_style))
@@ -913,7 +1063,8 @@ def generate_pdf2(data):
             for content in literatures:
                 flow.append(Paragraph(markup(content), reference_style))
             flow.append(HRFlowable(
-                width='100%', thickness=0.6, color=RULE, spaceBefore=6, spaceAfter=0))
+                width='100%', thickness=0.6, color=RULE,
+                spaceBefore=6 * SP, spaceAfter=0))
 
         return flow
 
@@ -963,7 +1114,7 @@ def generate_pdf2(data):
                 result = ''
                 if r := entry.get('result'):
                     result = f' … <i>{r}</i>' if entry.get('resultType') == 'item' else f' … {r}'
-                indent = entry.get('indentLevel', 0) * 10
+                indent = entry.get('indentLevel', 0) * layout['key_indent']
                 text_style = key_text_style
                 if indent:
                     text_style = key_text_style.clone(
@@ -976,13 +1127,14 @@ def generate_pdf2(data):
                 ])
 
             if rows:
-                table = Table(rows, colWidths=[15, col_w - 15.5])
+                number_w = layout['key_number_w']
+                table = Table(rows, colWidths=[number_w, col_w - number_w - 0.5])
                 table.setStyle(TableStyle([
                     ('VALIGN', (0, 0), (-1, -1), 'TOP'),
                     ('LEFTPADDING', (0, 0), (-1, -1), 0),
                     ('RIGHTPADDING', (0, 0), (-1, -1), 0),
-                    ('TOPPADDING', (0, 0), (-1, -1), 5),
-                    ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
+                    ('TOPPADDING', (0, 0), (-1, -1), layout['key_pad']),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), layout['key_pad']),
                     ('LINEABOVE', (0, 0), (-1, 0), 0.6, RULE_STRONG),
                     ('LINEBELOW', (0, 0), (-1, -1), 0.5, RULE),
                 ]))
@@ -1019,8 +1171,8 @@ def generate_pdf2(data):
             frames = [Frame(MARGIN, content_bottom, frame_w, usable_h,
                             id=f'head{idx}', **frame_pad)]
         else:
-            header_h += 6  # slack, so the block never spills into the columns
-            body_h = usable_h - header_h - 12
+            header_h += layout['head_slack']
+            body_h = usable_h - header_h - layout['head_gap']
             frames = [
                 Frame(MARGIN, content_top - header_h, frame_w, header_h,
                       id=f'head{idx}', **frame_pad),

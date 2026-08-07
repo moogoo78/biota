@@ -819,8 +819,8 @@ JOURNAL_LAYOUT_COMPACT = {
     'head_font': 7.5,
     'foot_font': 7,
     'title': (16.5, 21),
-    'taxon_heading': (11.5, 16),
-    'author': (11.5, 16),     # matches taxon_heading, and stays bold
+    'taxon_heading': (13.5, 18),
+    'author': (9.5, 13.5),    # below the heading, and stays bold
     'description': (8.8, 13.6),
     'section': (10.4, 13.5),
     'taxon': (9.6, 12.8),

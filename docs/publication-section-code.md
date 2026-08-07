@@ -83,7 +83,7 @@ Source: `app/helpers.py:919` (`draw_furniture`). PDF has no furniture; it prints
 | `FM-BADGE`     | Article type / access | 文章類型   | —                            | ⬜   | ⬜  | ✅     |
 | `FM-TITLE`     | Article title         | 標題       | `publications[].title`       | ✅ / PDF3 hidden⁰ | ✅  | ✅     |
 | `FM-TAXON`     | Taxon heading         | 分類群標題 | `…category.heading`          | ✅ left, bold / PDF3 centered, regular | ✅ centered, bold | ✅ (as genus header) |
-| `FM-AUTHOR`    | Authors               | 作者       | `publications[].author`      | ✅ left, bold / PDF3 centered, bold at `FM-TAXON` size | ✅¹ centered, bold | ✅     |
+| `FM-AUTHOR`    | Authors               | 作者       | `publications[].author`      | ✅ left, bold / PDF3 centered, bold, smaller than `FM-TAXON` | ✅¹ centered, bold | ✅     |
 | `FM-AFFIL`     | Affiliations          | 單位       | —                            | ⬜   | ⬜  | ✅     |
 | `FM-CORR`      | Corresponding author / editor | 通訊作者 | —                    | ⬜   | ⬜  | ✅     |
 | `FM-ABSTRACT`  | Abstract              | 摘要       | `…category.description`      | ⚠️²  | ⚠️² | ✅     |
@@ -232,8 +232,8 @@ Type entries are `(fontSize, leading)`; `space` scales every `spaceBefore` /
 | `min_body_height`   | 140 pt                  | 120 pt                          |
 | running head / foot | 8.5 / 8 pt              | 7.5 / 7 pt                      |
 | `FM-TITLE`          | 21 / 27                 | 16.5 / 21                       |
-| `FM-TAXON`          | 14 / 20                 | 11.5 / 16                       |
-| `FM-AUTHOR`         | 11.2 / 17               | 11.5 / 16 — matches `FM-TAXON`  |
+| `FM-TAXON`          | 14 / 20                 | 13.5 / 18                       |
+| `FM-AUTHOR`         | 11.2 / 17               | 9.5 / 13.5 — under `FM-TAXON`   |
 | `FM-ABSTRACT`       | 10.1 / 17               | 8.8 / 13.6                      |
 | `FM-LIT` entry      | 9.4 / 15                | 8.2 / 12                        |
 | `TX-NAME`           | 11.3 / 15               | 9.6 / 12.8                      |

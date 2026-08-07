@@ -6,7 +6,7 @@ A stable name for every part of a generated publication, so we can point at one
 Scope: the journal / preprint layout (`?format=pdf2`, `generate_pdf2()`) and its compact
 variant (`?format=pdf3`, `generate_pdf3()`), the content context (`?format=json`,
 `generate_json()`), the older PDF (`?format=pdf`, `generate_pdf()`), and the design
-mockup `Biota Journal PDF Layout.zip` (`Biota Journal Article.dc.html`).
+mockup `docs/design/biota-journal-article.dc.html`.
 
 PDF3 draws the same sections as PDF2 from the same context, with three deliberate
 differences: `FM-TITLE` is hidden (it survives only in the running head, `PG-HEAD-R`),
@@ -362,4 +362,4 @@ following the same camelCase, presentation-free style.
 | PDF (older layout)  | `app/helpers.py:456` `generate_pdf()`             |
 | Format routing      | `app/blueprints/publication.py:476` (`docx` / `pdf` / `pdf2` / `pdf3` / `json`) |
 | Download buttons    | `app/templates/_inc-publication-main-preview.html:100` |
-| Design reference    | `Biota Journal PDF Layout.zip` → `Biota Journal Article.dc.html` |
+| Design reference    | `docs/design/biota-journal-article.dc.html` (extracted from `Biota Journal PDF Layout.zip`, which is gitignored — the 10 MB habitat photo is not committed, so that one image slot renders as a placeholder) |

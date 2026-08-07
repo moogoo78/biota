@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,400;0,700;1,400;1,700&family=Noto+Sans+TC:wght@400;700&family=Noto+Sans+Mono:wght@400&display=swap" rel="stylesheet" />
+<style>
+  doc-page:not(:defined) { visibility: hidden; }
+  body { margin: 0; font-family: "Noto Sans", "Noto Sans TC", sans-serif; color: #333333; }
+  a { color: #0017C1; text-decoration: none; }
+  a:hover { color: #00118F; text-decoration: underline; }
+  em { font-style: italic; }
+</style>
+<script src="./doc-page.js"></script>
+<script src="./image-slot.js"></script>
+</helmet>
+<doc-page ref="{{ rootRef }}" size="a4" margin="18mm">
+
+  <div slot="header" style="display:flex; justify-content:space-between; align-items:baseline; gap:16px; padding-bottom:6px; border-bottom:1px solid #949494; font-size:11px; letter-spacing:0.04em; color:#767676; text-transform:uppercase">
+    <span style="font-weight:700; color:#1A1A1A">Biota · Journal of Systematic Biology</span>
+    <span>12(3): 211–218 · 2026</span>
+  </div>
+
+  <div slot="footer" style="display:flex; justify-content:space-between; align-items:baseline; gap:16px; padding-top:6px; border-top:1px solid #E6E6E6; font-size:10.5px; color:#767676">
+    <span>doi:10.48550/biota.2026.12.3.211</span>
+    <span>Chen, Lin &amp; Watanabe · Two new <em>Sinodytes</em> from Taiwan</span>
+  </div>
+
+  <header style="margin:0 0 22px">
+    <div style="display:flex; justify-content:space-between; align-items:baseline; gap:16px; font-size:11.5px; letter-spacing:0.06em; text-transform:uppercase; color:var(--art-accent, #0017C1); font-weight:700">
+      <span>Research Article · 研究論文</span>
+      <span style="color:#767676; font-weight:400">Open Access · CC BY 4.0</span>
+    </div>
+    <div style="height:4px; background:var(--art-accent, #0017C1); margin:8px 0 18px"></div>
+    <h1 style="margin:0 0 14px; font-size:29px; line-height:1.28; font-weight:700; color:#1A1A1A; letter-spacing:-0.01em; text-wrap:balance">Two new species of <em>Sinodytes</em> Guéorguiev, 1968 (Coleoptera: Dytiscidae) from montane headwater streams of Taiwan, with a key to the Taiwanese species</h1>
+    <p style="margin:0 0 4px; font-size:15px; line-height:1.5; color:#1A1A1A"><span style="font-weight:700">Yen-Chih Chen</span><sup>1,2</sup>, <span style="font-weight:700">Ming-Hui Lin</span><sup>1</sup>, <span style="font-weight:700">Tetsuya Watanabe</span><sup>3</sup></p>
+    <p style="margin:0 0 3px; font-size:12.5px; line-height:1.55; color:#767676">1 · Department of Entomology, National Taiwan University, Taipei 106319, Taiwan &nbsp;|&nbsp; 2 · Biodiversity Research Center, Academia Sinica, Taipei 115201, Taiwan &nbsp;|&nbsp; 3 · Laboratory of Aquatic Zoology, Kyoto University, Kyoto 606-8502, Japan</p>
+    <p style="margin:0 0 18px; font-size:12.5px; line-height:1.55; color:#767676">Corresponding author: Yen-Chih Chen (<a href="mailto:yc.chen@example.edu">yc.chen@example.edu</a>) &nbsp;|&nbsp; Academic editor: A. Nilsson</p>
+
+    <div style="background:#F2F2F2; border-radius:16px; padding:20px 22px; margin:0 0 14px; break-inside:avoid">
+      <h2 style="margin:0 0 8px; font-size:12px; letter-spacing:0.08em; text-transform:uppercase; color:#1A1A1A; font-weight:700">Abstract</h2>
+      <p style="margin:0 0 10px; font-size:13.5px; line-height:1.68; orphans:3; widows:3">Two new species of the predaceous diving beetle genus <em>Sinodytes</em> Guéorguiev, 1968 are described from montane headwater streams in central Taiwan: <em>S. nantouensis</em> Chen &amp; Lin, <span style="font-style:italic">sp. nov.</span> (南投溪龍蝨) from the Zhuoshui River basin, and <em>S. yushanensis</em> Chen &amp; Watanabe, <span style="font-style:italic">sp. nov.</span> (玉山溪龍蝨) from the upper Nanzixian River. Both species are diagnosed against the four congeners previously known from the island by the shape of the median lobe, the density of the elytral microreticulation, and the proportions of the metatarsal claws. Mitochondrial <em>cox1</em> sequences recovered the two new species as reciprocally monophyletic lineages separated by 6.8–7.4% uncorrected pairwise distance, consistent with the morphological evidence.</p>
+      <p style="margin:0 0 10px; font-size:13.5px; line-height:1.68; orphans:3; widows:3">All known localities lie between 1 480 and 2 260 m elevation in shaded, cobble-bedded first- and second-order streams with mean summer water temperatures below 16 °C. Both species appear narrowly endemic and are provisionally assessed here as Vulnerable under IUCN criterion B1ab(iii). A key to the six Taiwanese species of <em>Sinodytes</em> is provided, and the generic diagnosis is emended to accommodate the reduced metacoxal lines observed in the new taxa.</p>
+      <p style="margin:0; font-size:13px; line-height:1.6"><span style="font-weight:700">Keywords</span> &nbsp;aquatic Coleoptera, endemism, headwater streams, integrative taxonomy, Taiwan, 龍蝨科, 溪流生態</p>
+    </div>
+
+    <div style="display:flex; flex-wrap:wrap; gap:6px 28px; font-size:12px; color:#767676; padding-bottom:14px; border-bottom:1px solid #949494">
+      <span>Received: 14 January 2026</span>
+      <span>Accepted: 3 April 2026</span>
+      <span>Published: 29 July 2026</span>
+      <span>ZooBank: urn:lsid:zoobank.org:pub:8F2C41A0</span>
+    </div>
+  </header>
+
+  <div ref="{{ bodyRef }}" style="column-count:2; column-gap:26px; column-rule:1px solid #E6E6E6; font-size:14.5px; line-height:1.62; hyphens:auto">
+
+    <h2 style="margin:0 0 8px; font-size:16.5px; font-weight:700; color:#1A1A1A">Introduction</h2>
+    <p style="margin:0 0 10px; orphans:3; widows:3">The dytiscid genus <em>Sinodytes</em> Guéorguiev, 1968 comprises small, stream-dwelling beetles distributed along the eastern margin of continental Asia and on the adjacent island arcs. Until now four species have been recorded from Taiwan, all described between 1971 and 2004 and all known from fewer than twenty specimens each (Guéorguiev 1971; Satô 1988; Wang &amp; Yang 2004). The genus is diagnosed within Hydroporinae by the strongly punctate pronotal base, the incomplete metacoxal lines, and the asymmetrical metatarsal claws.</p>
+    <p style="margin:0 0 10px; orphans:3; widows:3">Taiwan's montane drainages are steep, short and hydrologically isolated from one another above roughly 1 200 m, a configuration that has repeatedly produced narrow-range endemism in aquatic insects (陳彥志・林明輝 2019). Recent surveys of first- and second-order streams in the Central Mountain Range have consequently yielded a number of undescribed lineages, particularly in taxa with limited dispersal capacity such as flightless or brachypterous water beetles.</p>
+    <p style="margin:0 0 10px; orphans:3; widows:3">During fieldwork carried out between 2021 and 2024 in the Zhuoshui and Nanzixian basins we collected two series of <em>Sinodytes</em> that could not be assigned to any described species. Examination of the male genitalia, elytral sculpture and tarsal proportions, combined with mitochondrial sequence data, supports their recognition as distinct taxa. Here we describe both as new, emend the generic diagnosis, and provide an identification key to the six Taiwanese species now known.</p>
+
+    <h2 style="margin:16px 0 8px; font-size:16.5px; font-weight:700; color:#1A1A1A">Materials and methods</h2>
+    <h3 style="margin:0 0 6px; font-size:14.5px; font-weight:700; color:#1A1A1A">Sampling</h3>
+    <p style="margin:0 0 10px; orphans:3; widows:3">Specimens were collected by kick-netting cobble riffles with a 250 µm hand net and by hand-picking from submerged leaf packs. Sampling effort was standardised at three 5-minute kicks per 20 m reach. Water temperature, conductivity and pH were recorded at each site with a calibrated multiprobe; substrate composition was estimated visually in ten 0.25 m² quadrats per reach.</p>
+    <h3 style="margin:0 0 6px; font-size:14.5px; font-weight:700; color:#1A1A1A">Morphology</h3>
+    <p style="margin:0 0 10px; orphans:3; widows:3">Specimens were relaxed in warm water, and genitalia were dissected after 12 h in 10% KOH at room temperature, examined in glycerol, and afterwards stored in a microvial pinned beneath the specimen. Measurements were taken with an ocular micrometer at 40× and are given in millimetres as the range followed by the mean in parentheses. Habitus images were assembled from 40–60 focal planes.</p>
+    <h3 style="margin:0 0 6px; font-size:14.5px; font-weight:700; color:#1A1A1A">Abbreviations</h3>
+    <p style="margin:0 0 10px; orphans:3; widows:3"><span style="font-weight:700">TL</span> total length; <span style="font-weight:700">MW</span> maximum width; <span style="font-weight:700">ML</span> median lobe; <span style="font-weight:700">NTU</span> National Taiwan University Insect Collection; <span style="font-weight:700">TARI</span> Taiwan Agricultural Research Institute; <span style="font-weight:700">KUZ</span> Kyoto University Zoological Collection.</p>
+    <h3 style="margin:0 0 6px; font-size:14.5px; font-weight:700; color:#1A1A1A">Molecular data</h3>
+    <p style="margin:0 0 10px; orphans:3; widows:3">A 658 bp fragment of <em>cox1</em> was amplified from two legs of each of 14 specimens using the primers LCO1490/HCO2198. Uncorrected pairwise distances were calculated in MEGA 11 with pairwise deletion of missing data. All sequences are deposited in GenBank (accessions PQ441120–PQ441133) and the corresponding vouchers are listed in Appendix 1.</p>
+
+    <figure style="margin:14px 0 16px; break-inside:avoid; column-span:all">
+      <image-slot id="fig-habitat" shape="rounded" radius="8" src="assets/habitat.jpg" style="width:100%; height:250px" placeholder="Drop habitat photograph — type locality, Aowanda"></image-slot>
+      <figcaption style="margin:8px 0 0; font-size:12px; line-height:1.55; color:#767676"><span style="font-weight:700; color:#1A1A1A">Figure 1.</span> Type locality of <em>Sinodytes nantouensis</em> <span style="font-style:italic">sp. nov.</span>, Aowanda, Nantou County, 1 620 m. Photograph: M.-H. Lin, 12 June 2022.</figcaption>
+    </figure>
+
+    <h2 style="margin:6px 0 8px; font-size:16.5px; font-weight:700; color:#1A1A1A">Taxonomy</h2>
+    <p style="margin:0 0 4px; font-size:15.5px; font-weight:700; color:#1A1A1A"><em>Sinodytes</em> Guéorguiev, 1968</p>
+    <p style="margin:0 0 10px; orphans:3; widows:3">Type species: <em>Sinodytes sinensis</em> Guéorguiev, 1968, by original designation. <span style="font-weight:700">Emended diagnosis.</span> Body 3.1–4.6 mm, oblong-oval, moderately convex; pronotum with a complete lateral bead; metacoxal lines incomplete anteriorly, in the two new species reduced to a short basal remnant not reaching the metacoxal process; metatarsal claws distinctly unequal, the anterior claw 1.3–1.7× the length of the posterior; median lobe asymmetrical in ventral view, with a sclerotised subapical tooth.</p>
+
+    <h3 style="margin:12px 0 4px; font-size:15px; font-weight:700; color:#1A1A1A"><em>Sinodytes nantouensis</em> Chen &amp; Lin, <span style="font-style:italic">sp. nov.</span></h3>
+    <p style="margin:0 0 10px; font-size:13.5px; color:#767676">Suggested common name: 南投溪龍蝨 · Nantou stream diving beetle</p>
+    <p style="margin:0 0 10px; orphans:3; widows:3"><span style="font-weight:700">Type material.</span> Holotype: ♂, TAIWAN, Nantou County, Ren'ai Township, Aowanda, 23.9142° N, 121.1836° E, 1 620 m, 12.vi.2022, M.-H. Lin leg. (NTU-COL-004112). Paratypes: 9 ♂, 14 ♀, same data as holotype (NTU, TARI); 3 ♂, 2 ♀, same locality, 4.viii.2023, Y.-C. Chen leg. (KUZ).</p>
+    <p style="margin:0 0 10px; orphans:3; widows:3"><span style="font-weight:700">Diagnosis.</span> Distinguished from all congeners by the combination of a coarsely microreticulated elytron with the meshes 1.5–2× wider than the interstitial punctures, the median lobe evenly arcuate in lateral view with the subapical tooth situated at 0.82 of its length, and the anterior metatarsal claw 1.6× the posterior. Most similar to <em>S. formosanus</em> Satô, 1988, from which it differs in the shorter, blunter apex of the median lobe and the paler testaceous pronotal margin.</p>
+    <p style="margin:0 0 10px; orphans:3; widows:3"><span style="font-weight:700">Description.</span> TL 3.6–4.1 (3.84) mm; MW 1.9–2.2 (2.05) mm. Dorsum piceous with a narrow testaceous border along the pronotal and elytral margins; venter reddish brown. Head 0.58× as wide as pronotal base, with a fine transverse impressed line behind the eyes; punctation dense laterally, sparse medially. Pronotum 2.4× as wide as long, widest just before the base, lateral bead complete, basal punctation coarse and confluent in a narrow band. Elytra with three rows of setigerous punctures, the sutural row indistinct in the basal third. Metacoxal lines reduced to a basal remnant 0.2× the metacoxal length. Legs testaceous, protibia with a distinct apical spur in the male.</p>
+    <p style="margin:0 0 10px; orphans:3; widows:3"><span style="font-weight:700">Etymology.</span> Named after Nantou County, to which the species is presently restricted. The name is a noun in the genitive case.</p>
+    <p style="margin:0 0 10px; orphans:3; widows:3"><span style="font-weight:700">Distribution and habitat.</span> Known from three reaches within a 9 km stretch of the upper Zhuoshui basin, 1 480–1 780 m. All records come from shaded second-order streams with cobble substrate, mean summer water temperature 14.2–15.8 °C and conductivity below 90 µS cm⁻¹.</p>
+
+    <figure style="margin:8px 0 16px; break-inside:avoid">
+      <image-slot id="plate-nantouensis" shape="rounded" radius="8" placeholder="Drop habitus plate — S. nantouensis, dorsal + genitalia"></image-slot>
+      <figcaption style="margin:8px 0 0; font-size:12px; line-height:1.55; color:#767676"><span style="font-weight:700; color:#1A1A1A">Figure 2.</span> <em>Sinodytes nantouensis</em> <span style="font-style:italic">sp. nov.</span>, holotype ♂: <span style="font-weight:700">A</span> habitus, dorsal; <span style="font-weight:700">B</span> median lobe, lateral; <span style="font-weight:700">C</span> median lobe, ventral; <span style="font-weight:700">D</span> metatarsal claws. Scale bars: 1 mm (A), 0.2 mm (B–D).</figcaption>
+    </figure>
+
+    <h3 style="margin:12px 0 4px; font-size:15px; font-weight:700; color:#1A1A1A"><em>Sinodytes yushanensis</em> Chen &amp; Watanabe, <span style="font-style:italic">sp. nov.</span></h3>
+    <p style="margin:0 0 10px; font-size:13.5px; color:#767676">Suggested common name: 玉山溪龍蝨 · Yushan stream diving beetle</p>
+    <p style="margin:0 0 10px; orphans:3; widows:3"><span style="font-weight:700">Type material.</span> Holotype: ♂, TAIWAN, Kaohsiung City, Taoyuan District, upper Nanzixian River below Meishan, 23.2914° N, 120.8672° E, 2 180 m, 27.v.2023, Y.-C. Chen &amp; T. Watanabe leg. (NTU-COL-004330). Paratypes: 6 ♂, 8 ♀, same data (NTU, KUZ); 1 ♂, tributary 2.4 km NE, 2 260 m, 28.v.2023, T. Watanabe leg. (KUZ).</p>
+    <p style="margin:0 0 10px; orphans:3; widows:3"><span style="font-weight:700">Diagnosis.</span> Smaller and more strongly convex than <em>S. nantouensis</em>, with a finely microreticulated elytron whose meshes are subequal to the interstitial punctures, the median lobe abruptly bent at 0.6 of its length in lateral view, and the anterior metatarsal claw only 1.3× the posterior. The male protibial spur is absent, a state otherwise unknown in Taiwanese <em>Sinodytes</em>.</p>
+    <p style="margin:0 0 10px; orphans:3; widows:3"><span style="font-weight:700">Description.</span> TL 3.1–3.5 (3.28) mm; MW 1.6–1.9 (1.74) mm. Dorsum uniformly dark castaneous, without a distinct pale margin; venter piceous. Pronotum 2.6× as wide as long, lateral bead complete but very fine. Elytra with the setigerous punctures reduced to two irregular rows. Metacoxal lines as in the preceding species. Female dimorphic: 3 of 8 examined paratypes have the elytra matt and finely granulate throughout.</p>
+    <p style="margin:0 0 10px; orphans:3; widows:3"><span style="font-weight:700">Etymology.</span> Named after Yushan (玉山) National Park, within whose boundary all known localities lie.</p>
+    <p style="margin:0 0 10px; orphans:3; widows:3"><span style="font-weight:700">Distribution and habitat.</span> Known only from two first-order tributaries of the upper Nanzixian River, 2 180–2 260 m, in <em>Chamaecyparis</em>-dominated forest. Mean summer water temperature 12.6–13.4 °C.</p>
+
+    <figure style="margin:8px 0 16px; break-inside:avoid">
+      <image-slot id="plate-yushanensis" shape="rounded" radius="8" placeholder="Drop habitus plate — S. yushanensis, dorsal + genitalia"></image-slot>
+      <figcaption style="margin:8px 0 0; font-size:12px; line-height:1.55; color:#767676"><span style="font-weight:700; color:#1A1A1A">Figure 3.</span> <em>Sinodytes yushanensis</em> <span style="font-weight:700">sp. nov.</span>, holotype ♂ (A–C) and paratype ♀ (D): <span style="font-weight:700">A</span> habitus, dorsal; <span style="font-weight:700">B</span> median lobe, lateral; <span style="font-weight:700">C</span> parameres; <span style="font-weight:700">D</span> granulate elytral morph. Scale bars: 1 mm (A, D), 0.2 mm (B, C).</figcaption>
+    </figure>
+
+    <h2 style="margin:6px 0 8px; font-size:16.5px; font-weight:700; color:#1A1A1A">Key to the Taiwanese species of <em>Sinodytes</em></h2>
+    <div style="border-top:1px solid #949494; margin:0 0 12px">
+      <div style="display:flex; gap:10px; padding:7px 0; border-bottom:1px solid #E6E6E6; break-inside:avoid"><span style="flex:0 0 22px; font-weight:700; color:#1A1A1A">1</span><span>Metacoxal lines complete, reaching the metacoxal process … <span style="font-weight:700">2</span><br />– Metacoxal lines reduced to a short basal remnant … <span style="font-weight:700">4</span></span></div>
+      <div style="display:flex; gap:10px; padding:7px 0; border-bottom:1px solid #E6E6E6; break-inside:avoid"><span style="flex:0 0 22px; font-weight:700; color:#1A1A1A">2</span><span>TL &gt; 4.2 mm; elytra with a distinct pale humeral spot … <em>S. taiwanicus</em> Guéorguiev, 1971<br />– TL &lt; 4.2 mm; humeral spot absent … <span style="font-weight:700">3</span></span></div>
+      <div style="display:flex; gap:10px; padding:7px 0; border-bottom:1px solid #E6E6E6; break-inside:avoid"><span style="flex:0 0 22px; font-weight:700; color:#1A1A1A">3</span><span>Median lobe with a long acuminate apex … <em>S. formosanus</em> Satô, 1988<br />– Median lobe apex truncate … <em>S. alishanensis</em> Wang &amp; Yang, 2004</span></div>
+      <div style="display:flex; gap:10px; padding:7px 0; border-bottom:1px solid #E6E6E6; break-inside:avoid"><span style="flex:0 0 22px; font-weight:700; color:#1A1A1A">4</span><span>Male protibia with an apical spur; elytral meshes 1.5–2× the punctures … <span style="font-weight:700">5</span><br />– Male protibia without a spur; elytral meshes subequal to the punctures … <em>S. yushanensis</em> <span style="font-style:italic">sp. nov.</span></span></div>
+      <div style="display:flex; gap:10px; padding:7px 0; border-bottom:1px solid #E6E6E6; break-inside:avoid"><span style="flex:0 0 22px; font-weight:700; color:#1A1A1A">5</span><span>Pronotal margin broadly testaceous; subapical tooth at 0.82 ML … <em>S. nantouensis</em> <span style="font-style:italic">sp. nov.</span><br />– Pronotal margin concolorous; subapical tooth at 0.70 ML … <em>S. nanhuensis</em> Wang &amp; Yang, 2004</span></div>
+    </div>
+
+    <h2 style="margin:16px 0 8px; font-size:16.5px; font-weight:700; color:#1A1A1A">Discussion</h2>
+    <p style="margin:0 0 10px; orphans:3; widows:3">The reduction of the metacoxal lines shared by the two new species is, as far as we can determine, unique within <em>Sinodytes</em> and is not accompanied by any other obvious apomorphy. Because the two species are not each other's closest relatives in the <em>cox1</em> tree — <em>S. yushanensis</em> is recovered as sister to <em>S. alishanensis</em> with 94% bootstrap support — the character is most parsimoniously interpreted as having arisen twice. A nuclear marker will be needed to test this.</p>
+    <p style="margin:0 0 10px; orphans:3; widows:3">The elevational separation between the two new species (1 480–1 780 m versus 2 180–2 260 m) mirrors the pattern reported for Taiwanese <em>Hydraena</em> by 王志文 (2021)「臺灣沼梭科之分布模式」, and is consistent with thermal rather than geographic limitation: the intervening drainages are continuous but warmer. Under the mid-century warming projections used by the Taiwan Climate Change Projection Information Platform, the thermally suitable band for <em>S. yushanensis</em> contracts by an estimated 38%.</p>
+    <p style="margin:0 0 10px; orphans:3; widows:3">Both species meet the thresholds for Vulnerable under IUCN criterion B1ab(iii): extent of occurrence below 5 000 km², fewer than ten locations, and a projected decline in habitat quality. We recommend that the Aowanda reaches be included in the existing stream-monitoring network, and that a targeted survey of the 1 800–2 100 m band be undertaken to test whether the apparent elevational gap is real.</p>
+
+    <h2 style="margin:16px 0 8px; font-size:16.5px; font-weight:700; color:#1A1A1A">Acknowledgements</h2>
+    <p style="margin:0 0 10px; font-size:13.5px; line-height:1.6; orphans:3; widows:3">We thank the Yushan and Taroko National Park headquarters for collecting permits (YS-2023-081, TR-2022-114), C.-F. Huang for assistance in the field, and two anonymous reviewers for comments that improved the manuscript. This study was supported by the National Science and Technology Council (NSTC 112-2621-B-002-011).</p>
+
+    <h2 style="margin:16px 0 8px; font-size:16.5px; font-weight:700; color:#1A1A1A">References</h2>
+    <div style="font-size:12.5px; line-height:1.6; color:#333333">
+      <p style="margin:0 0 7px; padding-left:14px; text-indent:-14px; orphans:2; widows:2">Guéorguiev VB (1968) Essai de classification des Dytiscidae de l'Asie orientale. Bulletin de l'Institut de Zoologie 26: 5–41.</p>
+      <p style="margin:0 0 7px; padding-left:14px; text-indent:-14px; orphans:2; widows:2">Guéorguiev VB (1971) Notes on the Dytiscidae of Taiwan. Annotationes Zoologicae Japonenses 44: 118–126.</p>
+      <p style="margin:0 0 7px; padding-left:14px; text-indent:-14px; orphans:2; widows:2">Miller KB, Bergsten J (2016) Diving beetles of the world: systematics and biology of the Dytiscidae. Johns Hopkins University Press, Baltimore, 320 pp.</p>
+      <p style="margin:0 0 7px; padding-left:14px; text-indent:-14px; orphans:2; widows:2">Nilsson AN, Hájek J (2025) A world catalogue of the family Dytiscidae, version 1.I.2025. Available from the author's website.</p>
+      <p style="margin:0 0 7px; padding-left:14px; text-indent:-14px; orphans:2; widows:2">Satô M (1988) The aquatic Coleoptera of Taiwan, part 2. Elytra 16: 33–47.</p>
+      <p style="margin:0 0 7px; padding-left:14px; text-indent:-14px; orphans:2; widows:2">Wang C-W, Yang P-S (2004) Two new species of <em>Sinodytes</em> from central Taiwan. Journal of the Entomological Society of Taiwan 24: 201–210.</p>
+      <p style="margin:0 0 7px; padding-left:14px; text-indent:-14px; orphans:2; widows:2">陳彥志・林明輝 (2019)「臺灣山地溪流水生鞘翅目名錄與分布」《臺灣昆蟲》39: 45–68.</p>
+      <p style="margin:0 0 7px; padding-left:14px; text-indent:-14px; orphans:2; widows:2">王志文 (2021)「臺灣沼梭科之海拔分布模式」《國立臺灣博物館學刊》74(2): 113–129.</p>
+      <p style="margin:0 0 7px; padding-left:14px; text-indent:-14px; orphans:2; widows:2">Watanabe T, Kubota K (2018) Thermal limits of montane stream Coleoptera in the Japanese archipelago. Freshwater Biology 63: 1442–1455.</p>
+      <p style="margin:0 0 7px; padding-left:14px; text-indent:-14px; orphans:2; widows:2">Folmer O, Black M, Hoeh W, Lutz R, Vrijenhoek R (1994) DNA primers for amplification of mitochondrial cytochrome c oxidase subunit I. Molecular Marine Biology and Biotechnology 3: 294–299.</p>
+    </div>
+  </div>
+
+  <section ref="{{ appendixRef }}" style="break-before:page; padding-top:4px">
+    <h2 style="margin:0 0 4px; font-size:16.5px; font-weight:700; color:#1A1A1A">Appendix 1</h2>
+    <p style="margin:0 0 14px; font-size:13px; line-height:1.6; color:#767676">Material examined, with collection data, voucher depositories and GenBank accessions for the sequenced specimens. Coordinates are given in WGS 84.</p>
+    <table style="width:100%; border-collapse:collapse; font-size:11.5px; line-height:1.5">
+      <thead>
+        <tr style="background:#F2F2F2">
+          <th style="text-align:left; padding:8px 10px; font-weight:700; color:#1A1A1A; border-bottom:1px solid #949494; white-space:nowrap">Voucher</th>
+          <th style="text-align:left; padding:8px 10px; font-weight:700; color:#1A1A1A; border-bottom:1px solid #949494">Taxon</th>
+          <th style="text-align:left; padding:8px 10px; font-weight:700; color:#1A1A1A; border-bottom:1px solid #949494">Locality</th>
+          <th style="text-align:right; padding:8px 10px; font-weight:700; color:#1A1A1A; border-bottom:1px solid #949494; white-space:nowrap">Elev. (m)</th>
+          <th style="text-align:left; padding:8px 10px; font-weight:700; color:#1A1A1A; border-bottom:1px solid #949494; white-space:nowrap">Date</th>
+          <th style="text-align:left; padding:8px 10px; font-weight:700; color:#1A1A1A; border-bottom:1px solid #949494; white-space:nowrap">Dep.</th>
+          <th style="text-align:left; padding:8px 10px; font-weight:700; color:#1A1A1A; border-bottom:1px solid #949494; white-space:nowrap">GenBank</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td style="padding:7px 10px; border-bottom:1px solid #E6E6E6; white-space:nowrap">NTU-COL-004112</td><td style="padding:7px 10px; border-bottom:1px solid #E6E6E6"><em>S. nantouensis</em> ♂ HT</td><td style="padding:7px 10px; border-bottom:1px solid #E6E6E6">Aowanda, Ren'ai, Nantou</td><td style="padding:7px 10px; border-bottom:1px solid #E6E6E6; text-align:right">1 620</td><td style="padding:7px 10px; border-bottom:1px solid #E6E6E6; white-space:nowrap">12.vi.2022</td><td style="padding:7px 10px; border-bottom:1px solid #E6E6E6">NTU</td><td style="padding:7px 10px; border-bottom:1px solid #E6E6E6">PQ441120</td></tr>
+        <tr><td style="padding:7px 10px; border-bottom:1px solid #E6E6E6; white-space:nowrap">NTU-COL-004113</td><td style="padding:7px 10px; border-bottom:1px solid #E6E6E6"><em>S. nantouensis</em> ♀ PT</td><td style="padding:7px 10px; border-bottom:1px solid #E6E6E6">Aowanda, Ren'ai, Nantou</td><td style="padding:7px 10px; border-bottom:1px solid #E6E6E6; text-align:right">1 620</td><td style="padding:7px 10px; border-bottom:1px solid #E6E6E6; white-space:nowrap">12.vi.2022</td><td style="padding:7px 10px; border-bottom:1px solid #E6E6E6">NTU</td><td style="padding:7px 10px; border-bottom:1px solid #E6E6E6">PQ441121</td></tr>
+        <tr><td style="padding:7px 10px; border-bottom:1px solid #E6E6E6; white-space:nowrap">NTU-COL-004118</td><td style="padding:7px 10px; border-bottom:1px solid #E6E6E6"><em>S. nantouensis</em> ♂ PT</td><td style="padding:7px 10px; border-bottom:1px solid #E6E6E6">Wanda Stream, Nantou</td><td style="padding:7px 10px; border-bottom:1px solid #E6E6E6; text-align:right">1 480</td><td style="padding:7px 10px; border-bottom:1px solid #E6E6E6; white-space:nowrap">14.vi.2022</td><td style="padding:7px 10px; border-bottom:1px solid #E6E6E6">TARI</td><td style="padding:7px 10px; border-bottom:1px solid #E6E6E6">PQ441122</td></tr>
+        <tr><td style="padding:7px 10px; border-bottom:1px solid #E6E6E6; white-space:nowrap">KUZ-CO-11207</td><td style="padding:7px 10px; border-bottom:1px solid #E6E6E6"><em>S. nantouensis</em> ♂ PT</td><td style="padding:7px 10px; border-bottom:1px solid #E6E6E6">Aowanda, Ren'ai, Nantou</td><td style="padding:7px 10px; border-bottom:1px solid #E6E6E6; text-align:right">1 780</td><td style="padding:7px 10px; border-bottom:1px solid #E6E6E6; white-space:nowrap">4.viii.2023</td><td style="padding:7px 10px; border-bottom:1px solid #E6E6E6">KUZ</td><td style="padding:7px 10px; border-bottom:1px solid #E6E6E6">PQ441125</td></tr>
+        <tr><td style="padding:7px 10px; border-bottom:1px solid #E6E6E6; white-space:nowrap">NTU-COL-004330</td><td style="padding:7px 10px; border-bottom:1px solid #E6E6E6"><em>S. yushanensis</em> ♂ HT</td><td style="padding:7px 10px; border-bottom:1px solid #E6E6E6">Upper Nanzixian R., Taoyuan Dist.</td><td style="padding:7px 10px; border-bottom:1px solid #E6E6E6; text-align:right">2 180</td><td style="padding:7px 10px; border-bottom:1px solid #E6E6E6; white-space:nowrap">27.v.2023</td><td style="padding:7px 10px; border-bottom:1px solid #E6E6E6">NTU</td><td style="padding:7px 10px; border-bottom:1px solid #E6E6E6">PQ441128</td></tr>
+        <tr><td style="padding:7px 10px; border-bottom:1px solid #E6E6E6; white-space:nowrap">NTU-COL-004331</td><td style="padding:7px 10px; border-bottom:1px solid #E6E6E6"><em>S. yushanensis</em> ♀ PT</td><td style="padding:7px 10px; border-bottom:1px solid #E6E6E6">Upper Nanzixian R., Taoyuan Dist.</td><td style="padding:7px 10px; border-bottom:1px solid #E6E6E6; text-align:right">2 180</td><td style="padding:7px 10px; border-bottom:1px solid #E6E6E6; white-space:nowrap">27.v.2023</td><td style="padding:7px 10px; border-bottom:1px solid #E6E6E6">NTU</td><td style="padding:7px 10px; border-bottom:1px solid #E6E6E6">PQ441129</td></tr>
+        <tr><td style="padding:7px 10px; border-bottom:1px solid #E6E6E6; white-space:nowrap">KUZ-CO-11340</td><td style="padding:7px 10px; border-bottom:1px solid #E6E6E6"><em>S. yushanensis</em> ♂ PT</td><td style="padding:7px 10px; border-bottom:1px solid #E6E6E6">Tributary NE of Meishan</td><td style="padding:7px 10px; border-bottom:1px solid #E6E6E6; text-align:right">2 260</td><td style="padding:7px 10px; border-bottom:1px solid #E6E6E6; white-space:nowrap">28.v.2023</td><td style="padding:7px 10px; border-bottom:1px solid #E6E6E6">KUZ</td><td style="padding:7px 10px; border-bottom:1px solid #E6E6E6">PQ441132</td></tr>
+        <tr><td style="padding:7px 10px; border-bottom:1px solid #E6E6E6; white-space:nowrap">NTU-COL-003907</td><td style="padding:7px 10px; border-bottom:1px solid #E6E6E6"><em>S. alishanensis</em> ♂</td><td style="padding:7px 10px; border-bottom:1px solid #E6E6E6">Alishan, Chiayi</td><td style="padding:7px 10px; border-bottom:1px solid #E6E6E6; text-align:right">2 040</td><td style="padding:7px 10px; border-bottom:1px solid #E6E6E6; white-space:nowrap">9.v.2021</td><td style="padding:7px 10px; border-bottom:1px solid #E6E6E6">NTU</td><td style="padding:7px 10px; border-bottom:1px solid #E6E6E6">PQ441133</td></tr>
+      </tbody>
+    </table>
+    <p style="margin:16px 0 0; font-size:11.5px; line-height:1.6; color:#767676">HT = holotype; PT = paratype. Full collecting data for the remaining 18 non-sequenced paratypes are available in the Supplementary Material (Table S1).</p>
+  </section>
+
+</doc-page>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;accent&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#0017C1&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;options&quot;:[&quot;#0017C1&quot;,&quot;#1A1A1A&quot;,&quot;#197A4B&quot;,&quot;#C74700&quot;],&quot;section&quot;:&quot;Layout&quot;},&quot;columns&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:2,&quot;tsType&quot;:&quot;number&quot;,&quot;options&quot;:[1,2],&quot;section&quot;:&quot;Layout&quot;},&quot;showAppendix&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Layout&quot;}}">
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.rootRef = React.createRef();
+    this.bodyRef = React.createRef();
+    this.appendixRef = React.createRef();
+  }
+  apply() {
+    const root = this.rootRef.current, body = this.bodyRef.current, app = this.appendixRef.current;
+    if (root) root.style.setProperty('--art-accent', this.props.accent ?? '#0017C1');
+    if (body) body.style.columnCount = String(this.props.columns ?? 2);
+    if (app) app.style.display = (this.props.showAppendix ?? true) ? '' : 'none';
+  }
+  componentDidMount() { this.apply(); }
+  componentDidUpdate() { this.apply(); }
+  renderVals() {
+    return { rootRef: this.rootRef, bodyRef: this.bodyRef, appendixRef: this.appendixRef };
+  }
+}
+
+</script>
+</body>
+</html>

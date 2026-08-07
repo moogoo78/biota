@@ -17,3 +17,25 @@ compose.prod-vhosts.yml
 #app/templates/sites/*
 #app/static/sites/*
 
+# Claude Code: per-developer settings (.claude/settings.json is shared)
+.claude/settings.local.json
+
+# generated output
+/output-biota*.pdf
+/docs/PROJECT_OVERVIEW_TC.pdf
+
+# design source; docs/design/ holds the extracted page
+/Biota Journal PDF Layout.zip
+
+# scratch / local working files
+/a.txt
+/char*.txt
+/next.py
+/tmp.py
+/tmp/
+/tmp-*.html
+/key.png
+/auth-fake-login.diff
+/screenshot/
+/Screenshot*.png
+

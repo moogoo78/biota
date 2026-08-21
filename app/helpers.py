@@ -331,9 +331,13 @@ def generate_json(data):
             counter += 1
 
             # HACK: split name, the part after the canonical name (author, ref...)
+            # split on the LAST </i>: infraspecific names italicize more than
+            # one part (<i>Camphora officinarum</i> var. <i>nominale</i> ...),
+            # and splitting on the first one would cut the name in half and
+            # leave an unbalanced <i> for ReportLab to choke on
             name_suffix = ''
             if full_name := v.get('fullScientificName'):
-                parts = full_name.split('</i>')
+                parts = full_name.rsplit('</i>', 1)
                 if len(parts) > 1:
                     name_suffix = parts[1].strip()
 
@@ -384,6 +388,45 @@ def sanitize_html(text):
     # Escape special characters but preserve valid HTML tags
     # ReportLab supports: b, i, u, strike, super, sub, br, a
     return text
+
+
+# rank connectors and qualifiers that stay upright inside an otherwise
+# italicized scientific name (botanical convention: the name parts are
+# italic, the abbreviation joining them is not)
+UPRIGHT_NAME_PARTS = {
+    'var.', 'subvar.', 'subsp.', 'ssp.', 'f.', 'fo.', 'forma', 'subf.',
+    'nothovar.', 'nothosubsp.', 'sect.', 'subsect.', 'ser.', 'cv.',
+    'sp.', 'spp.', 'aff.', 'cf.', 'x', '×',
+}
+
+
+def italicize_name(name):
+    """Wrap a scientific name in <i>, keeping rank connectors upright.
+
+    "Camphora officinarum var. nominale" becomes
+    "<i>Camphora officinarum</i> var. <i>nominale</i>".
+    """
+    name = sanitize_html(name)
+    if not name:
+        return ''
+
+    out = []
+    italic = []
+
+    def flush():
+        if italic:
+            out.append(f"<i>{' '.join(italic)}</i>")
+            italic.clear()
+
+    for word in name.split():
+        if word.lower() in UPRIGHT_NAME_PARTS:
+            flush()
+            out.append(word)
+        else:
+            italic.append(word)
+    flush()
+
+    return ' '.join(out)
 
 
 def convert_html_to_custom_fonts(text, base_font='Tinos'):
@@ -683,7 +726,7 @@ def generate_pdf(data):
                     result_text = ''
                     if result := entry.get('result'):
                         if entry.get('resultType') == 'item':
-                            result_text = f' ... <i>{result}</i>'
+                            result_text = f' ... {italicize_name(result)}'
                         else:
                             result_text = f' ... {result}'
 
@@ -1038,7 +1081,7 @@ def build_journal_pdf(data, layout):
             if heading == ' '.join(x for x in (name, authors, common) if x):
                 # the documented "{sci} {authors} {common}" join: rebuild it
                 # part by part, so each part can be styled on its own
-                parts = [f'<i>{name}</i>'] if name else []
+                parts = [italicize_name(name)] if name else []
                 if authors:
                     parts.append(f'<font name="{F_AUTHORS}">{authors}</font>'
                                  if F_AUTHORS else authors)
@@ -1046,7 +1089,7 @@ def build_journal_pdf(data, layout):
                     parts.append(common)
                 heading = ' '.join(parts)
             elif name and heading.startswith(name):
-                heading = f'<i>{name}</i>{heading[len(name):]}'
+                heading = f'{italicize_name(name)}{heading[len(name):]}'
             text = markup(heading)
             flow.append(Paragraph(
                 bold(text) if taxon_bold else text, taxon_heading_style))
@@ -1074,7 +1117,7 @@ def build_journal_pdf(data, layout):
 
         # the taxon heading and its description live in the title block
         for v in pub['items']:
-            name = f"{bold(str(v['number']) + '.')} <i>{sanitize_html(v['scientificName'])}</i>"
+            name = f"{bold(str(v['number']) + '.')} {italicize_name(v['scientificName'])}"
             if suffix := v.get('nameSuffix'):
                 name = f'{name} {suffix}'
             flow.append(Paragraph(markup(name), taxon_style))
@@ -1113,7 +1156,8 @@ def build_journal_pdf(data, layout):
             for entry in key.get('entries', []):
                 result = ''
                 if r := entry.get('result'):
-                    result = f' … <i>{r}</i>' if entry.get('resultType') == 'item' else f' … {r}'
+                    result = (f' … {italicize_name(r)}'
+                              if entry.get('resultType') == 'item' else f' … {r}')
                 indent = entry.get('indentLevel', 0) * layout['key_indent']
                 text_style = key_text_style
                 if indent:

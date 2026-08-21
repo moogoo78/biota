@@ -62,6 +62,7 @@ def apply_extensions(app):
     app.jinja_env.globals['get_lang_path'] = get_lang_path
     app.jinja_env.globals['str_to_date'] = str_to_date
     app.jinja_env.globals['pick_first'] = pick_first
+    app.jinja_env.globals['italicize_name'] = italicize_name
 
     # login
     login_manager = LoginManager()

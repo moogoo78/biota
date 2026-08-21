@@ -34,6 +34,7 @@ from sqlalchemy.orm import (
 )
 from sqlalchemy.dialects.postgresql import JSONB
 
+from app.jinja_func import italicize_name
 from app.database import (
     Base,
     session,
@@ -426,10 +427,22 @@ class Item(Base, TimestampMixin, SourceMixin):
         return list(set(dist))
 
     def get_title_format(self):
-        if usage := self.source_data.get('usage_references_text'):
-            if m := re.match(r'^<i>(.*?)</i>(.+)', usage):
-                return [m.group(1), m.group(2)]
-        return [usage, '']
+        """Split the reference text into (name markup, author/citation).
+
+        usage_references_text already carries the taxonomic italics, e.g.
+        "<i>Camphora officinarum</i> var. <i>nominale</i> (Hayata) ...", so
+        the name part is returned as HTML and the caller renders it as-is.
+        Infraspecific names italicize more than one part: split on the LAST
+        </i>, or the name would be cut in half and the citation lost.
+        """
+        usage = (self.source_data or {}).get('usage_references_text') or ''
+        if not usage:
+            return ['', '']
+
+        name, sep, suffix = usage.rpartition('</i>')
+        if sep:
+            return [f'{name}{sep}', suffix.strip()]
+        return [italicize_name(usage), '']
 
 
 class ItemSynonym(Base):

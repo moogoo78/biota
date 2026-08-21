@@ -29,7 +29,7 @@ from app.models import (
     ItemSynonym,
 )
 from app.database import session
-from app.jinja_func import pick_first
+from app.jinja_func import pick_first, italicize_name
 
 TAIWAN_COUNTIES = {
     '宜蘭縣': 'Yilan',
@@ -388,45 +388,6 @@ def sanitize_html(text):
     # Escape special characters but preserve valid HTML tags
     # ReportLab supports: b, i, u, strike, super, sub, br, a
     return text
-
-
-# rank connectors and qualifiers that stay upright inside an otherwise
-# italicized scientific name (botanical convention: the name parts are
-# italic, the abbreviation joining them is not)
-UPRIGHT_NAME_PARTS = {
-    'var.', 'subvar.', 'subsp.', 'ssp.', 'f.', 'fo.', 'forma', 'subf.',
-    'nothovar.', 'nothosubsp.', 'sect.', 'subsect.', 'ser.', 'cv.',
-    'sp.', 'spp.', 'aff.', 'cf.', 'x', '×',
-}
-
-
-def italicize_name(name):
-    """Wrap a scientific name in <i>, keeping rank connectors upright.
-
-    "Camphora officinarum var. nominale" becomes
-    "<i>Camphora officinarum</i> var. <i>nominale</i>".
-    """
-    name = sanitize_html(name)
-    if not name:
-        return ''
-
-    out = []
-    italic = []
-
-    def flush():
-        if italic:
-            out.append(f"<i>{' '.join(italic)}</i>")
-            italic.clear()
-
-    for word in name.split():
-        if word.lower() in UPRIGHT_NAME_PARTS:
-            flush()
-            out.append(word)
-        else:
-            italic.append(word)
-    flush()
-
-    return ' '.join(out)
 
 
 def convert_html_to_custom_fonts(text, base_font='Tinos'):

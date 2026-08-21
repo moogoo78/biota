@@ -1007,7 +1007,9 @@
      toItemSelect[0] = new Option('-- choose --', '');
      let counter = 0;
      itemData.forEach( x => {
-       if (x.rank_id == 34) {
+       // species and below (subspecies, variety, form...): the same set the
+       // TBIA fetch walks, so any of them can hold specimens
+       if (x.rank_id >= 34) {
          counter += 1;
          toItemSelect[counter] = new Option(`${counter}. ${x.name}`, x.item_id);
        }

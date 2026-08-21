@@ -93,12 +93,12 @@
               </svg>
               <span class="sr-only">Loading...</span>
             </div>
-            <button type="button" class="{% if publication.status != "fetched" or i.source_data.rank_id != 34 %}hidden {%endif %}select-specimen-btn text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-3 py-1.5 focus:outline-none" data-modal-target="specimen-modal" data-modal-toggle="specimen-modal">
+            <button type="button" class="{% if publication.status != "fetched" or (i.source_data.rank_id or 0) < 34 %}hidden {%endif %}select-specimen-btn text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-3 py-1.5 focus:outline-none" data-modal-target="specimen-modal" data-modal-toggle="specimen-modal">
               {{ _('選擇標本') }}
             </button>
           </td>
           <td class="px-6 py-4 item-action">
-            <button type="button" class="{% if publication.status != "fetched" or i.source_data.rank_id != 34 %}hidden {%endif %}specimen-edit-btn text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-3 py-1.5 focus:outline-none" data-modal-target="specimen-edit-modal" data-modal-toggle="specimen-edit-modal">
+            <button type="button" class="{% if publication.status != "fetched" or (i.source_data.rank_id or 0) < 34 %}hidden {%endif %}specimen-edit-btn text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-3 py-1.5 focus:outline-none" data-modal-target="specimen-edit-modal" data-modal-toggle="specimen-edit-modal">
               {{ _('修改標本資訊') }}
             </button>
           </td>
